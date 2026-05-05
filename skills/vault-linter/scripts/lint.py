@@ -170,30 +170,32 @@ def normalize_link_target(target: str, vault_root: Path, source_file: Path) -> P
     """Resolve a [[link]] target into an absolute path, or None if unresolvable.
 
     Rules:
-    - If target has an extension, use as-is.
-    - Otherwise append .md.
-    - Targets are resolved as vault-relative first, then relative to source.
+    - Try target as-is (vault-relative, then source-relative).
+    - If not found, also try with .md appended — slugs like
+      arxiv-2602.20867 look like they have an extension but don't.
+    - This way both [[wiki/sources/foo]] and [[wiki/sources/foo.md]] work,
+      and slugs containing dots resolve correctly.
     """
     target = target.strip()
     if not target:
         return None
 
-    candidate = Path(target)
-    if candidate.suffix == "":
-        candidate = candidate.with_suffix(".md")
+    base = Path(target)
+    candidates = [base]
+    if base.suffix != ".md":
+        candidates.append(base.with_name(base.name + ".md"))
 
-    # Try vault-relative
-    abs_vault = vault_root / candidate
-    if abs_vault.exists():
-        return abs_vault
+    # Try each candidate vault-relative, then source-relative.
+    for cand in candidates:
+        abs_vault = vault_root / cand
+        if abs_vault.exists():
+            return abs_vault
+        abs_local = source_file.parent / cand
+        if abs_local.exists():
+            return abs_local.resolve()
 
-    # Try source-relative
-    abs_local = source_file.parent / candidate
-    if abs_local.exists():
-        return abs_local.resolve()
-
-    # Return the vault-relative path anyway (for error reporting)
-    return abs_vault
+    # Fall back to first candidate vault-relative (for error reporting).
+    return vault_root / candidates[0]
 
 
 def slugify(s: str) -> str:
