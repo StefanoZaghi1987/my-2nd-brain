@@ -32,13 +32,14 @@ from datetime import date, datetime, timedelta
 from pathlib import Path
 from typing import Iterable
 
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).parent.parent.parent / "shared"))
+from vault_state import load_config, read_state, write_state as _write_state
+
 
 # --- Constants --------------------------------------------------------------
 
 WIKI_SUBDIRS = ("pages", "sources", "views")
-STALE_SOURCE_DAYS = 180
-VIEW_STALE_DAYS = 30
-DUPLICATE_SIMILARITY_THRESHOLD = 0.75
 
 # Files allowed to be "orphan" (no incoming wiki links)
 ORPHAN_EXCEPTIONS = {
@@ -244,6 +245,16 @@ def parse_date(s: str) -> date | None:
     return None
 
 
+def strip_wikilink(s: str) -> str:
+    """Remove surrounding [[ and ]] from a wiki-link string."""
+    s = s.strip()
+    if s.startswith("[["):
+        s = s[2:]
+    if s.endswith("]]"):
+        s = s[:-2]
+    return s
+
+
 # --- Loading ----------------------------------------------------------------
 
 def load_wiki(vault: Path) -> dict[str, WikiPage]:
@@ -304,6 +315,62 @@ def check_dead_links(pages: dict[str, WikiPage], vault: Path) -> list[Finding]:
     return findings
 
 
+def check_based_on_links(pages: dict[str, "WikiPage"], vault: Path) -> list[Finding]:
+    """
+    Validate that every entry in a view's based_on frontmatter list
+    resolves to an existing file.
+    """
+    findings = []
+    for page in pages.values():
+        if page.type != "view":
+            continue
+        based_on = page.frontmatter.get("based_on", [])
+        if not isinstance(based_on, list):
+            continue
+        for raw_entry in based_on:
+            target = strip_wikilink(raw_entry)
+            if "|" in target:
+                target = target.split("|", 1)[0]
+            resolved = normalize_link_target(target, vault, page.path)
+            if resolved is None or not resolved.exists():
+                findings.append(Finding(
+                    severity="blocking",
+                    check="based_on_dead_links",
+                    file=page.rel,
+                    detail=f"based_on entry [[{target}]] does not resolve",
+                ))
+    return findings
+
+
+def check_pdf_index(vault: Path) -> list[Finding]:
+    """
+    Verify that raw/papers/ follows the folder convention: each paper
+    lives in its own subdirectory with a companion index.md.
+    """
+    findings = []
+    papers_dir = vault / "raw" / "papers"
+    if not papers_dir.is_dir():
+        return findings
+
+    for entry in papers_dir.iterdir():
+        if entry.is_dir():
+            if not (entry / "index.md").exists():
+                findings.append(Finding(
+                    severity="advisory",
+                    check="missing_pdf_index",
+                    file=str(entry.relative_to(vault)),
+                    detail="raw/papers/ subdirectory has no index.md",
+                ))
+        elif entry.suffix.lower() == ".pdf":
+            findings.append(Finding(
+                severity="advisory",
+                check="legacy_flat_pdf",
+                file=str(entry.relative_to(vault)),
+                detail="flat .pdf in raw/papers/ — move into a <slug>/ subdirectory",
+            ))
+    return findings
+
+
 def check_orphans(pages: dict[str, WikiPage], vault: Path) -> list[Finding]:
     # Build incoming-link map
     incoming: dict[str, int] = defaultdict(int)
@@ -335,7 +402,7 @@ def check_orphans(pages: dict[str, WikiPage], vault: Path) -> list[Finding]:
     return findings
 
 
-def check_duplicates(pages: dict[str, WikiPage]) -> list[Finding]:
+def check_duplicates(pages: dict[str, WikiPage], duplicate_threshold: float = 0.75) -> list[Finding]:
     findings = []
     # Compare titles within same subdir only (pages vs pages, views vs views)
     by_subdir: dict[str, list[WikiPage]] = defaultdict(list)
@@ -351,7 +418,7 @@ def check_duplicates(pages: dict[str, WikiPage]) -> list[Finding]:
                 t1 = p1.title or p1.path.stem
                 t2 = p2.title or p2.path.stem
                 sim = title_similarity(t1, t2)
-                if sim >= DUPLICATE_SIMILARITY_THRESHOLD:
+                if sim >= duplicate_threshold:
                     pair = tuple(sorted([p1.rel, p2.rel]))
                     if pair in seen_pairs:
                         continue
@@ -419,9 +486,9 @@ def check_inconsistent_naming(pages: dict[str, WikiPage]) -> list[Finding]:
     return findings
 
 
-def check_stale_sources(pages: dict[str, WikiPage]) -> list[Finding]:
+def check_stale_sources(pages: dict[str, WikiPage], stale_source_days: int = 180) -> list[Finding]:
     findings = []
-    threshold = date.today() - timedelta(days=STALE_SOURCE_DAYS)
+    threshold = date.today() - timedelta(days=stale_source_days)
     for page in pages.values():
         if not page.rel.startswith("wiki/sources/"):
             continue
@@ -476,7 +543,7 @@ def check_gaps(pages: dict[str, WikiPage]) -> list[Finding]:
     return findings
 
 
-def check_view_staleness(pages: dict[str, WikiPage]) -> list[Finding]:
+def check_view_staleness(pages: dict[str, WikiPage], view_stale_days: int = 30) -> list[Finding]:
     """An evolving view (shareable: false) is stale when its based_on
     pages have been updated significantly after the view's own updated
     date. Shareable views are frozen by design and not checked."""
@@ -500,7 +567,7 @@ def check_view_staleness(pages: dict[str, WikiPage]) -> list[Finding]:
 
         stale_deps = []
         for dep in based_on:
-            dep_clean = dep.strip().lstrip("[").rstrip("]")
+            dep_clean = strip_wikilink(dep)
             if "|" in dep_clean:
                 dep_clean = dep_clean.split("|", 1)[0]
             dep_path = dep_clean if dep_clean.endswith(".md") else dep_clean + ".md"
@@ -511,7 +578,7 @@ def check_view_staleness(pages: dict[str, WikiPage]) -> list[Finding]:
             if not dep_updated:
                 continue
             days_diff = (dep_updated - view_updated).days
-            if days_diff > VIEW_STALE_DAYS:
+            if days_diff > view_stale_days:
                 stale_deps.append(f"{dep_path} (+{days_diff}d)")
 
         if stale_deps:
@@ -625,27 +692,14 @@ def write_report(findings: list[Finding], vault: Path, quiet: bool = False) -> N
         print(f"Report written to {report_path.relative_to(vault)}")
 
 
-def write_state(vault: Path, findings: list[Finding], exit_code: int) -> None:
-    lint_dir = vault / ".lint"
-    lint_dir.mkdir(exist_ok=True)
-    state_path = lint_dir / "state.yaml"
-
-    # Preserve ingests counter — this gets reset here because a lint was run
-    lines = [
-        f"last_lint: {date.today().isoformat()}",
-        f"ingests_since_last_lint: 0",
-        f"last_exit_code: {exit_code}",
-        f"last_findings_count: {len(findings)}",
-        f"blocking: {sum(1 for f in findings if f.severity == 'blocking')}",
-        f"important: {sum(1 for f in findings if f.severity == 'important')}",
-        f"advisory: {sum(1 for f in findings if f.severity == 'advisory')}",
-    ]
-    state_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-
-
 # --- Orchestration ----------------------------------------------------------
 
 def run_lint(vault: Path, quiet: bool = False) -> int:
+    cfg = load_config(vault)
+    stale_source_days = cfg["lint"]["stale_source_days"]
+    view_stale_days = cfg["lint"]["view_stale_days"]
+    duplicate_threshold = 0.75  # structural constant, not a user-facing knob
+
     if not (vault / "wiki").is_dir():
         print(f"ERROR: no wiki/ directory in {vault}", file=sys.stderr)
         return 2
@@ -656,22 +710,26 @@ def run_lint(vault: Path, quiet: bool = False) -> int:
 
     all_checks = [
         ("dead_links", check_dead_links),
+        ("based_on_dead_links", check_based_on_links),
         ("orphans", check_orphans),
-        ("duplicates", check_duplicates),
+        ("duplicates", lambda p: check_duplicates(p, duplicate_threshold)),
         ("missing_metadata", check_missing_metadata),
         ("inconsistent_naming", check_inconsistent_naming),
-        ("stale_sources", check_stale_sources),
+        ("stale_sources", lambda p: check_stale_sources(p, stale_source_days)),
         ("gaps", check_gaps),
-        ("view_staleness", check_view_staleness),
+        ("view_staleness", lambda p: check_view_staleness(p, view_stale_days)),
         ("missing_cross_references", check_missing_cross_references),
+        ("pdf_index", check_pdf_index),
     ]
 
     findings: list[Finding] = []
     for name, fn in all_checks:
         try:
             # Not all checks accept vault; use signature-based dispatch
-            if name in ("dead_links", "orphans"):
+            if name in ("dead_links", "orphans", "based_on_dead_links"):
                 out = fn(pages, vault)
+            elif name in ("pdf_index",):
+                out = fn(vault)
             else:
                 out = fn(pages)
         except Exception as e:
@@ -686,7 +744,15 @@ def run_lint(vault: Path, quiet: bool = False) -> int:
 
     exit_code = 0 if not findings else 1
     write_report(findings, vault, quiet=quiet)
-    write_state(vault, findings, exit_code)
+    _write_state(vault, {
+        "last_lint": date.today().isoformat(),
+        "ingests_since_last_lint": 0,
+        "last_exit_code": exit_code,
+        "last_findings_count": len(findings),
+        "blocking": sum(1 for f in findings if f.severity == "blocking"),
+        "important": sum(1 for f in findings if f.severity == "important"),
+        "advisory": sum(1 for f in findings if f.severity == "advisory"),
+    })
 
     if not quiet:
         counts_str = (
