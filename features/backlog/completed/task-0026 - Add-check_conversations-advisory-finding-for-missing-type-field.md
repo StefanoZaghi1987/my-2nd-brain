@@ -1,10 +1,10 @@
 ---
 id: TASK-0026
 title: 'Add check_conversations: advisory finding for missing type field'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 12:33'
-updated_date: '2026-05-28 12:41'
+updated_date: '2026-05-28 13:41'
 labels:
   - wave-1
   - linter
@@ -38,3 +38,9 @@ Conversation files in conversations/ have no enforced frontmatter schema. A lint
 <!-- SECTION:NOTES:BEGIN -->
 In `skills/vault-linter/scripts/lint.py`: (1) Add `check_conversations(vault: Path) -> list[Finding]` after `check_missing_cross_references`. It scans `conversations/*.md`, calls `parse_frontmatter()` on each, and emits an advisory finding with check name `missing_conversation_type` if `fm.get("type") != "conversation"`. Full function in plan Task 6 Step 3. (2) In `run_lint()`, add `("conversations", check_conversations)` to the end of `all_checks`. (3) Update the dispatcher `elif` branch to: `elif name in ("pdf_index", "conversations"): out = fn(vault)`. Full registration code in plan Task 6 Step 4. Write tests first. Test: `pytest tests/test_lint.py -v`
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added `check_conversations(vault: Path) -> list[Finding]` to lint.py. Scans `conversations/*.md` for missing `type: conversation` frontmatter; emits advisory `missing_conversation_type` finding. Registered in `all_checks` and `elif name in ("pdf_index", "conversations"):` dispatcher branch. 3 new tests in `TestCheckConversations`. All 48 tests pass. Commit: c606d64.
+<!-- SECTION:FINAL_SUMMARY:END -->

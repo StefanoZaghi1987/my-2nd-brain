@@ -1,10 +1,10 @@
 ---
 id: TASK-0027
 title: 'Add check_index_sync: advisory finding when source absent from index.md'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 12:33'
-updated_date: '2026-05-28 12:41'
+updated_date: '2026-05-28 13:41'
 labels:
   - wave-1
   - linter
@@ -39,3 +39,9 @@ CLAUDE.md invariant #6 requires updating wiki/index.md after every write, but th
 <!-- SECTION:NOTES:BEGIN -->
 In `skills/vault-linter/scripts/lint.py`: (1) Add `check_index_sync(pages: dict[str, WikiPage], vault: Path) -> list[Finding]` after `check_conversations`. It gets `pages.get("wiki/index.md")`, reads its `body_text`, then for each `wiki/sources/<slug>.md` checks if `Path(rel).stem` (the slug) appears as a substring of the index body. Advisory finding with check name `index_sync` when missing. Full function in plan Task 7 Step 3. (2) In `run_lint()` add `("index_sync", check_index_sync)` to `all_checks`. (3) Update the two-argument dispatcher branch to: `if name in ("dead_links", "orphans", "based_on_dead_links", "index_sync"):`. Full registration in plan Task 7 Step 4. This task must be done after TASK-0026 since both edit the same dispatcher block. Test: `pytest tests/test_lint.py -v`
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added `check_index_sync(pages, vault) -> list[Finding]` to lint.py. Reads `wiki/index.md` body_text; emits advisory `index_sync` finding for any `wiki/sources/` slug absent as substring. Registered in `all_checks` and `("dead_links", "orphans", "based_on_dead_links", "index_sync")` dispatcher branch. 3 new tests in `TestCheckIndexSync`. All 51 tests pass. Commit: a4a2594.
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -1,10 +1,10 @@
 ---
 id: TASK-0034
 title: Add Obsidian minimal skeleton to init-vault.sh
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 12:34'
-updated_date: '2026-05-28 12:40'
+updated_date: '2026-05-28 13:42'
 labels:
   - wave-2
   - obsidian
@@ -37,3 +37,9 @@ The vault is Obsidian-compatible but ships no Obsidian config. Without useMarkdo
 <!-- SECTION:NOTES:BEGIN -->
 In `init-vault.sh`: (1) Find the DIRS=( block (~line 87) and add `".obsidian"` as the last entry before the closing ). (2) After the `.gitignore` creation block (the line `ok ".gitignore"`), insert the new `# --- Obsidian config` section that creates `.obsidian/app.json` using a heredoc (skip if file already exists). The JSON must include `useMarkdownLinks: false` — this is the critical field that keeps Obsidian writing [[wikilinks]] instead of [text](path) links. Full bash code in plan Task 14 Steps 1-2. Verify with: `bash init-vault.sh /tmp/test-vault && cat /tmp/test-vault/.obsidian/app.json && rm -rf /tmp/test-vault`
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added `.obsidian` to `DIRS` array in `init-vault.sh` and inserted `.obsidian/app.json` creation block after the `.gitignore` section. Config sets `useMarkdownLinks: false` (critical for linter link tracking), `newLinkFormat: relative`, `readableLineLength: true`, `attachmentFolderPath: wiki/views/assets`. Idempotent: skips if file exists. Verified via temp vault bootstrap. Commit: 59ba793.
+<!-- SECTION:FINAL_SUMMARY:END -->

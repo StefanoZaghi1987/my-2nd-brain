@@ -1,10 +1,10 @@
 ---
 id: TASK-0030
 title: Add missing sixth invariant to README design principles
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 12:33'
-updated_date: '2026-05-28 12:41'
+updated_date: '2026-05-28 13:41'
 labels:
   - wave-2
   - docs
@@ -34,3 +34,9 @@ README.md ## Design principles says "Five invariants" and lists five. CLAUDE.md 
 <!-- SECTION:NOTES:BEGIN -->
 In `README.md`, find the `## Design principles` section. Change the heading line from "Five invariants:" to "Six invariants:". Add a sixth numbered entry after entry 5: `6. **Touch ≤15 files per operation.** If more are needed, stop and ask — split the work across sessions.` No tests needed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Changed "Five invariants:" to "Six invariants:" in README.md `## Design principles` and added the missing 6th: "Touch ≤15 files per operation. If more are needed, stop and ask — split the work across sessions." Commit: 58bd0ff.
+<!-- SECTION:FINAL_SUMMARY:END -->

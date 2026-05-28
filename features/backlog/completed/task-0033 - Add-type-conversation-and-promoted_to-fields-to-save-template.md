@@ -1,10 +1,10 @@
 ---
 id: TASK-0033
 title: 'Add type:conversation and promoted_to fields to /save template'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 12:34'
-updated_date: '2026-05-28 12:42'
+updated_date: '2026-05-28 13:42'
 labels:
   - wave-2
   - commands
@@ -35,3 +35,9 @@ The /save command template frontmatter has date and tags but no type field. The 
 <!-- SECTION:NOTES:BEGIN -->
 In `commands/save.md`, find the `## Template` section. Inside the fenced code block, find the frontmatter block that starts with `---` and has `date:` as the first field. Add `type: conversation` as the first field (before `date:`), and add `promoted_to: []` as the last field before the closing `---`. The `promoted_to` field is populated by /promote and read by /reflect. This task depends on TASK-0026 (check_conversations expects type:conversation; save.md is the authoritative source for the schema). No tests needed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added `type: conversation` as first field and `promoted_to: []` as last field to the frontmatter template in `commands/save.md`. Enables the new `check_conversations` linter check and lets `/promote` track promotion status. Commit: efacb52.
+<!-- SECTION:FINAL_SUMMARY:END -->

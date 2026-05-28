@@ -1,10 +1,10 @@
 ---
 id: TASK-0029
 title: Align gaps severity in vault-linter SKILL.md with code
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 12:33'
-updated_date: '2026-05-28 12:41'
+updated_date: '2026-05-28 13:41'
 labels:
   - wave-2
   - docs
@@ -34,3 +34,9 @@ The ## Output section of skills/vault-linter/SKILL.md lists "gaps" under Importa
 <!-- SECTION:NOTES:BEGIN -->
 In `skills/vault-linter/SKILL.md`, find the `## Output` section, then the `.lint/report.md` subsection. Find the two bullet lines: `- **Important** — orphans, gaps.` and `- **Advisory** — duplicates, stale, naming, view staleness.` Replace them with: `- **Important** — orphans.` and `- **Advisory** — duplicates, stale, naming, view staleness, gaps, missing cross-references.` No tests needed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Moved `gaps` from Important to Advisory in `skills/vault-linter/SKILL.md` severity table. Also added `missing cross-references` to Advisory. Aligns docs with the `severity="advisory"` the code has always emitted for gaps. Commit: dee2cea.
+<!-- SECTION:FINAL_SUMMARY:END -->

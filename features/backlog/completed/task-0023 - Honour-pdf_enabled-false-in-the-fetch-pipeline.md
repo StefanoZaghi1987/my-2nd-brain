@@ -1,10 +1,10 @@
 ---
 id: TASK-0023
 title: 'Honour pdf_enabled: false in the fetch pipeline'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 12:32'
-updated_date: '2026-05-28 12:40'
+updated_date: '2026-05-28 13:41'
 labels:
   - wave-1
   - fetch
@@ -38,3 +38,9 @@ vault.config.yml has a `fetch.pdf_enabled` key that is loaded by `process_vault(
 <!-- SECTION:NOTES:BEGIN -->
 In `skills/inbox-fetcher/scripts/fetch_inbox.py`, find `process_vault()`. In the config-loading block at the top of the function, add: `pdf_enabled = cfg["fetch"]["pdf_enabled"]`. Then find the routing block inside the loop where `is_pdf_url(fetch_url)` is checked. Wrap the `fetch_pdf()` call with: `if not pdf_enabled: r = FetchResult(url=fetch_url, ok=False, kind="failed", reason="PDF fetch disabled (pdf_enabled: false in vault.config.yml)")` else call `fetch_pdf(...)` as before. Full replacement code is in the plan Task 3 Step 3. Test with: `pytest tests/test_fetch_inbox.py -v`
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Extracted `pdf_enabled = cfg["fetch"]["pdf_enabled"]` in `process_vault` and added a guard in the `is_pdf_url` branch: if disabled, produces a `FetchResult(ok=False)` with an actionable reason string. New test in `TestPdfEnabled` with a 403 safety net. All 17 fetch tests pass. Commits: f786ad6, 54ee8c1.
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -1,10 +1,10 @@
 ---
 id: TASK-0022
 title: Fix update_inbox leaving orphaned sub-bullets on successful fetch
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 12:32'
-updated_date: '2026-05-28 12:41'
+updated_date: '2026-05-28 13:41'
 labels:
   - wave-1
   - fetch
@@ -38,3 +38,9 @@ When a URL entry in inbox.md has indented sub-bullets (`- tags:`, `- note:`) and
 <!-- SECTION:NOTES:BEGIN -->
 In `skills/inbox-fetcher/scripts/fetch_inbox.py`, find the `update_inbox` function (~line 323). The current implementation uses `for line in lines:` which cannot skip ahead past sub-bullets. Replace the entire function body with a `while i < len(lines):` loop. The key logic: for each URL line, calculate sub-bullet extent `j` by advancing while `lines[j]` is indented; on success drop `lines[i+1:j]`; on failure keep them; when URL not in batch preserve `lines[i:j]`. Full replacement implementation in plan Task 2 Step 3. Write three tests first (test_successful_url_drops_sub_bullets, test_failed_url_keeps_sub_bullets, test_unprocessed_url_keeps_sub_bullets) and verify they fail before implementing. Test: `pytest tests/test_fetch_inbox.py -v`
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Replaced the `for line in lines:` loop in `update_inbox` with a `while i < len(lines):` index-based loop that computes sub-bullet extent via forward scan. Success: drops sub-bullets (captured in raw frontmatter). Failure: keeps sub-bullets for retry context. Unprocessed: preserves unchanged. 3 new tests in `TestUpdateInboxSubBullets`, all 16 fetch tests pass. Commit: 3966500.
+<!-- SECTION:FINAL_SUMMARY:END -->
