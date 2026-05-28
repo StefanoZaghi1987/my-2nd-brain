@@ -184,3 +184,31 @@ class TestUpdateInboxSubBullets:
                                 processed_section="## Processed")
         assert "- [ ] https://example.com/other" in new_text
         assert "tags: other" in new_text
+
+
+class TestPdfEnabled:
+    def test_pdf_url_skipped_when_disabled(self, tmp_path, requests_mock):
+        from fetch_inbox import process_vault
+        (tmp_path / "vault.config.yml").write_text(
+            "fetch:\n  pdf_enabled: false\n"
+        )
+        (tmp_path / "inbox.md").write_text(
+            "- [ ] https://arxiv.org/pdf/2405.12345.pdf\n"
+        )
+        (tmp_path / "raw" / "papers").mkdir(parents=True)
+        (tmp_path / "raw" / "web").mkdir(parents=True)
+        # Safety net: if fetch_pdf is incorrectly called, this 403 makes it fail loudly
+        requests_mock.get(
+            "https://arxiv.org/pdf/2405.12345.pdf",
+            status_code=403,
+        )
+        process_vault(tmp_path)
+        inbox_text = (tmp_path / "inbox.md").read_text()
+        # Check that the URL was marked as failed with pdf_enabled message
+        assert "- [ ]" in inbox_text  # Still unchecked
+        assert "pdf_enabled" in inbox_text  # Contains our error message
+        # Verify no PDF file was actually downloaded
+        assert not any(
+            entry.is_file()
+            for entry in (tmp_path / "raw" / "papers").rglob("*")
+        )

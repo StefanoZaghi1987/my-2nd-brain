@@ -391,6 +391,7 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
     html_timeout = cfg["fetch"]["html_timeout_seconds"]
     pdf_timeout = cfg["fetch"]["pdf_timeout_seconds"]
     max_pdf_mb = cfg["fetch"]["max_pdf_size_mb"]
+    pdf_enabled = cfg["fetch"]["pdf_enabled"]
     walled = frozenset(cfg["fetch"]["walled_domains"])
 
     inbox_path = vault / "inbox.md"
@@ -423,9 +424,15 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
             print(f"\n→ {e.url}")
 
         if is_pdf_url(fetch_url):
-            r = fetch_pdf(fetch_url, papers_dir, slug_override=slug_override,
-                          pdf_timeout=pdf_timeout, max_pdf_mb=max_pdf_mb,
-                          tags=e.tags, note=e.note)
+            if not pdf_enabled:
+                r = FetchResult(
+                    url=fetch_url, ok=False, kind="failed",
+                    reason="PDF fetch disabled (pdf_enabled: false in vault.config.yml)",
+                )
+            else:
+                r = fetch_pdf(fetch_url, papers_dir, slug_override=slug_override,
+                              pdf_timeout=pdf_timeout, max_pdf_mb=max_pdf_mb,
+                              tags=e.tags, note=e.note)
         elif is_walled(fetch_url, walled):
             host = urlparse(fetch_url).netloc.lower()
             r = FetchResult(
