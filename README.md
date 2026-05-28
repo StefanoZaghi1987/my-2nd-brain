@@ -50,11 +50,12 @@ vault-bundle/
 ```bash
 git clone https://github.com/maeste/my-2nd-brain.git
 cd my-2nd-brain
-./init-vault.sh                    # → ./second-brain-vault
+./init-vault.sh                    # → ./second-brain-vault  (Unix/macOS/WSL)
+# or — cross-platform (Linux, WSL, Windows):
+python3 init_vault.py              # → ./second-brain-vault
 # or
-./init-vault.sh ~/knowledge/X      # explicit path
-# or
-./init-vault.sh --here             # current directory
+python3 init_vault.py ~/knowledge/X      # explicit path
+python3 init_vault.py --here             # current directory
 ```
 
 Script is idempotent — safe to re-run.
@@ -128,6 +129,8 @@ Six invariants:
 ```bash
 pip install trafilatura requests python-slugify
 ```
+
+> **Windows:** use `python` if `python3` is not recognised.
 
 **For `vault-linter`** and **`view-builder`**:
 Python standard library only. For charts (optional):
