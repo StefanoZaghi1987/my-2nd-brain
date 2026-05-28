@@ -30,10 +30,7 @@ Both arguments are optional:
    > "Claim: [claim text]. Add to [[wiki/pages/<target>]]?"
    Never write without explicit per-claim confirmation.
 
-4. **For each confirmed claim:** append it to `wiki/pages/<target>.md`
-   with a citation: `[[wiki/sources/conv-<slug>]]`.
-
-5. **Create `wiki/sources/conv-<slug>.md`** (if not already created):
+4. **Create `wiki/sources/conv-<slug>.md`** (if not already created):
    ```yaml
    ---
    type: source
@@ -46,6 +43,10 @@ Both arguments are optional:
    
    One-line summary of what was promoted from this conversation.
    ```
+
+5. **For each confirmed claim:** append it to `wiki/pages/<target>.md`
+   with a citation: `[[wiki/sources/conv-<slug>]]`.
+   `/promote` targets one wiki page per run. Run it again for a second target page.
 
 6. **Update the conversation file frontmatter** — add or append to `promoted_to`:
    ```yaml
