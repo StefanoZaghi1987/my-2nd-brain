@@ -45,6 +45,10 @@ _DEFAULTS: dict[str, Any] = {
         "max_new_pages_before_confirm": 3,
         "max_files_per_operation": 15,
     },
+    "drop_zone": {
+        "path": "raw/drop",
+        "enabled": True,
+    },
 }
 
 
