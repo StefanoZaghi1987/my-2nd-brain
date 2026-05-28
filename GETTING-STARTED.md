@@ -122,9 +122,12 @@ For everything else, just ask in plain language.
 
 ## First week
 
-**Day 1: bootstrap.** Run `./init-vault.sh`. Add 5-10 URLs to
-`inbox.md`. Tell the agent: *"process the inbox, then ingest the new
+**Day 1: bootstrap.** Run `./init-vault.sh` (Unix/macOS/WSL) or
+`python3 init_vault.py` (Windows or any platform with Python). Add 5-10
+URLs to `inbox.md`. Tell the agent: *"process the inbox, then ingest the new
 content"*. You'll have your first few pages and sources.
+
+> **Windows:** use `python` if `python3` is not recognised.
 
 Tip: annotate URLs with optional sub-bullets before fetching — the
 agent carries them through into the wiki summary:
