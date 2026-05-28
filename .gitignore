@@ -1,3 +1,13 @@
 # Default vault path when init-vault.sh runs with no args.
 # The repo is the template, not a live vault.
 /second-brain-vault/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+
+# Runtime lint output — belongs in deployed vaults, not the bundle template
+.lint/

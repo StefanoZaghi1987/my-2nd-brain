@@ -20,6 +20,18 @@ graph TD
     B -.related.- C
 ```
 
+<details>
+<summary>Text fallback</summary>
+
+<!-- Populate this list with the same nodes and edges as the Mermaid diagram above.
+     Format: - Source Node → Target Node
+     Both blocks must remain in sync — same nodes, same directed edges. -->
+
+- {{Node A}} → {{Node B}}
+- {{Node A}} → {{Node C}}
+
+</details>
+
 **Legend:** solid arrows = direct dependency, dotted lines = related.
 
 ## Linked pages

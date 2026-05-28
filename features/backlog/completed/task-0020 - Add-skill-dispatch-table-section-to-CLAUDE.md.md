@@ -1,10 +1,10 @@
 ---
 id: TASK-0020
 title: Add skill dispatch table section to CLAUDE.md
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 07:41'
-updated_date: '2026-05-28 08:26'
+updated_date: '2026-05-28 10:44'
 labels:
   - skill-manifest
   - claude-md
@@ -51,3 +51,9 @@ This is the only change to CLAUDE.md in this task.
 <!-- SECTION:NOTES:BEGIN -->
 **ALREADY FULFILLED by TASK-0016.** The "## Skill dispatch" table is added to CLAUDE.md in Task 16 Step 4 of the plan. See **Task 20** in the plan — verification only. Confirm the `## Skill dispatch` section exists in CLAUDE.md after TASK-0016 is complete. No new work needed.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Skill dispatch table added to CLAUDE.md as part of TASK-0016. Table appears at lines 195-207 with all 9 operations (FETCH, LINT, VIEW, INGEST, QUERY, REFLECT, PROMOTE, REFRESH). LLM-only operations correctly show (LLM only) in Skill column and — in Backed by.
+<!-- SECTION:FINAL_SUMMARY:END -->

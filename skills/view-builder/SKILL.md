@@ -1,6 +1,11 @@
 ---
 name: view-builder
 description: Build views from vault content. A view is an alternative representation: timeline, comparison, concept map, chart, slides, report, or post. Use whenever the user says "make a timeline", "compare X and Y", "draft slides", "chart the sources", "/view", or asks for any elaborated output grounded in the wiki. Writes to wiki/views/ with frontmatter that includes provenance (based_on). Views with shareable:false evolve in place; shareable:true views are treated as frozen snapshots.
+provides: view
+config_section: null
+requires:
+  python: ">=3.10"
+  packages: [matplotlib]
 ---
 
 # View Builder
@@ -102,6 +107,9 @@ purpose: "One-sentence description of what this view helps see."
   slides, reports with >5 sections).
 - **Update in place** for `shareable: false`. Bump `updated`.
 - **Don't modify** `shareable: true` views without explicit ok.
+- **Concept-map sync.** When filling `view-concept-map.md`, populate both
+  the Mermaid block and the `<details>` adjacency list from the same source
+  data. Every node and directed edge must appear in both representations.
 
 ## What this skill doesn't do
 

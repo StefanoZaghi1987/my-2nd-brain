@@ -1,10 +1,10 @@
 ---
 id: TASK-0012
 title: Add advisory lint check for raw/papers subfolders missing index.md
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 07:32'
-updated_date: '2026-05-28 08:25'
+updated_date: '2026-05-28 09:25'
 labels:
   - feature-a
   - lint
@@ -45,3 +45,9 @@ Register both checks in `run_lint()`. Neither requires the `pages` dict — they
 <!-- SECTION:NOTES:BEGIN -->
 **ALREADY FULFILLED by TASK-0005.** `check_pdf_index()` is implemented in Task 5 of the plan (lint.py migration). See **Task 12** in the plan — verification only. Run `pytest tests/test_lint.py::TestCheckPdfIndex -v` to confirm. No new code to write.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Verification only — check_pdf_index implemented in TASK-0005. TestCheckPdfIndex (5 tests) all pass.
+<!-- SECTION:FINAL_SUMMARY:END -->

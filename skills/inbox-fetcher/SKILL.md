@@ -1,6 +1,11 @@
 ---
 name: inbox-fetcher
 description: Processes a queue of URLs listed in inbox.md for a second brain vault, downloading each page as clean markdown in raw/web/<slug>/index.md with images in an assets/ subdirectory. Use this skill whenever the user mentions "inbox", "fetch", "process links", "scrape URLs", "download articles", or adds URLs to inbox.md. Run this BEFORE any ingest operation so the agent has clean raw files to work from. Handles HTML articles via trafilatura, direct PDF downloads, and per-URL failures (paywalls, JS-rendered pages, timeouts) gracefully without blocking the rest of the queue. Walled domains (X/Twitter, LinkedIn, Threads, Facebook, Instagram) are flagged for an agent-driven Playwright MCP fallback instead of being attempted with trafilatura. Arxiv abstract/html URLs are rewritten to the PDF endpoint so the paper itself is archived, not the landing page.
+provides: fetch
+config_section: fetch
+requires:
+  python: ">=3.10"
+  packages: [trafilatura, requests, python-slugify]
 ---
 
 # Inbox Fetcher

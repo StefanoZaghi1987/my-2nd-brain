@@ -1,10 +1,10 @@
 ---
 id: TASK-0008
 title: Parse inbox sub-bullets into InboxEntry tags and note fields
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 07:31'
-updated_date: '2026-05-28 08:25'
+updated_date: '2026-05-28 09:25'
 labels:
   - feature-b
   - fetch
@@ -43,3 +43,9 @@ The parsed values are attached to the `InboxEntry` and passed through to `fetch_
 <!-- SECTION:NOTES:BEGIN -->
 **ALREADY FULFILLED by TASK-0004.** InboxEntry tags/note fields and updated `find_unchecked_entries()` are implemented in Task 4 of the plan. See **Task 8** in the plan — verification only. Run `pytest tests/test_fetch_inbox.py::TestFindUncheckedEntries -v` to confirm. No new code to write.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Verification only — sub-bullet parsing implemented in TASK-0004. TestFindUncheckedEntries (8 tests) all pass.
+<!-- SECTION:FINAL_SUMMARY:END -->

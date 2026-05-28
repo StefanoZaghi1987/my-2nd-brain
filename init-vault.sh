@@ -95,6 +95,7 @@ DIRS=(
     ".claude/skills/inbox-fetcher/scripts"
     ".claude/skills/vault-linter/scripts"
     ".claude/skills/view-builder/templates"
+    ".claude/skills/shared"
     ".claude/commands"
 )
 for d in "${DIRS[@]}"; do
@@ -122,6 +123,14 @@ fi
 # --- Base files ------------------------------------------------------------
 info "Writing base files"
 
+# vault.config.yml — skip if user has already customised it
+if [ ! -f "$VAULT_DIR/vault.config.yml" ]; then
+    cp "$SCRIPT_DIR/vault.config.yml" "$VAULT_DIR/vault.config.yml"
+    ok "vault.config.yml"
+else
+    skip "vault.config.yml (exists — keeping user copy)"
+fi
+
 if [ ! -f "$VAULT_DIR/inbox.md" ]; then
     cat > "$VAULT_DIR/inbox.md" <<'EOF'
 # Inbox
@@ -136,7 +145,7 @@ the URLs into `raw/web/`. Check items after fetching.
 - [ ] https://arxiv.org/abs/2024.12345
 -->
 
-## Done
+## Processed
 
 <!-- Automatically moved here after fetch. -->
 EOF
@@ -294,9 +303,18 @@ else
     warn "view-builder skill not found in bundle"
 fi
 
+# shared utilities — always refreshed so vault_state API stays in sync
+if [ -d "$SCRIPT_DIR/skills/shared" ]; then
+    cp "$SCRIPT_DIR/skills/shared/vault_state.py" \
+       "$VAULT_DIR/.claude/skills/shared/vault_state.py"
+    ok "shared: vault_state.py"
+else
+    warn "skills/shared not found in bundle"
+fi
+
 # --- Slash commands --------------------------------------------------------
 info "Installing slash commands"
-for cmd in save view reflect forget; do
+for cmd in save view reflect forget lint promote refresh; do
     if [ -f "$SCRIPT_DIR/commands/$cmd.md" ]; then
         cp "$SCRIPT_DIR/commands/$cmd.md" \
            "$VAULT_DIR/.claude/commands/$cmd.md"
@@ -326,15 +344,32 @@ fi
 info "Checking Python dependencies"
 if command -v python3 >/dev/null 2>&1; then
     ok "python3 found: $(python3 --version 2>&1)"
+
+    # Collect packages from all installed skill manifests
+    all_packages=""
+    for skill_md in "$VAULT_DIR"/.claude/skills/*/SKILL.md; do
+        [ -f "$skill_md" ] || continue
+        pkgs=$(grep -A1 "^  packages:" "$skill_md" 2>/dev/null | \
+               grep -o '\[.*\]' | tr -d '[]' | tr ',' '\n' | \
+               sed 's/[[:space:]]//g' | grep -v '^$')
+        all_packages="$all_packages $pkgs"
+    done
+
     missing=()
-    for pkg in trafilatura requests slugify; do
-        if ! python3 -c "import $pkg" 2>/dev/null; then
+    for pkg in $(echo "$all_packages" | tr ' ' '\n' | sort -u); do
+        [ -z "$pkg" ] && continue
+        imp_name="$pkg"
+        case "$pkg" in
+            python-slugify) imp_name=slugify ;;
+        esac
+        if ! python3 -c "import $imp_name" 2>/dev/null; then
             missing+=("$pkg")
         fi
     done
+
     if [ ${#missing[@]} -gt 0 ]; then
-        warn "missing Python packages (needed by inbox-fetcher): ${missing[*]}"
-        echo "      install with: pip install trafilatura requests python-slugify"
+        warn "missing Python packages: ${missing[*]}"
+        echo "      install with: pip install ${missing[*]}"
     else
         ok "all Python dependencies installed"
     fi

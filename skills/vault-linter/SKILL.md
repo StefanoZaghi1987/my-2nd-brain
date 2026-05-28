@@ -1,6 +1,11 @@
 ---
 name: vault-linter
 description: Runs deterministic health checks on a second brain wiki vault (dead links, orphan pages, duplicates, missing metadata, inconsistent naming, stale sources, gaps, view staleness, missing cross-references) and writes a report to .lint/report.md. Use this skill when the user says "lint", "check the vault", "vault health", "find broken links". Also run periodically — triggered when 5+ ingests have occurred since last lint OR 7+ days have passed. Supports unattended mode via --unattended flag. Fast, no LLM tokens consumed.
+provides: lint
+config_section: lint
+requires:
+  python: ">=3.10"
+  packages: []
 ---
 
 # Vault Linter

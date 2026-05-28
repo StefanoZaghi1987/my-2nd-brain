@@ -3,10 +3,10 @@ id: TASK-0016
 title: >-
   Update CLAUDE.md: add PROMOTE and REFRESH operations + extend source_path
   convention
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 07:37'
-updated_date: '2026-05-28 08:26'
+updated_date: '2026-05-28 10:44'
 labels:
   - feature-c
   - feature-d
@@ -51,3 +51,9 @@ Update the "Seven operations" heading to "Nine operations" and update the Slash 
 <!-- SECTION:NOTES:BEGIN -->
 See **Task 16** in the implementation plan. Four changes to CLAUDE.md: (1) rename "Seven operations" → "Nine operations", (2) add PROMOTE and REFRESH operation descriptions, (3) extend Frontmatter section with `source_path` prefix note for `conversations/<slug>.md`, (4) add "## Skill dispatch" table. Also adds `/promote` and `/refresh` to the Slash commands list. Note: also fulfills TASK-0020. Wave 2 — requires Wave 1 complete.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+All 5 edits applied to CLAUDE.md: (1) renamed 'Seven operations' to 'Nine operations' at line 88, (2) appended PROMOTE and REFRESH operation sections after LINT (lines 180-193), (3) extended source_path comment in wiki/sources frontmatter block (lines 68-72), (4) added /promote and /refresh to Slash commands section (lines 239-240), (5) inserted Skill dispatch table between REFRESH and Hot cache sections (lines 195-207). Commit blocked by auto-mode classifier (CLAUDE.md HARD BLOCK) — user must run: git add CLAUDE.md && git commit -m 'update CLAUDE.md: nine operations, promote/refresh, source_path note, skill dispatch table'
+<!-- SECTION:FINAL_SUMMARY:END -->
