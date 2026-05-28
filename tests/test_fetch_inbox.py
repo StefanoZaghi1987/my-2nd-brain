@@ -137,3 +137,50 @@ class TestFetchPdfStructure:
         assert "fetch_method: pdf" in index_text
         assert "tags: [llm]" in index_text
         assert "read section 3" in index_text
+
+
+class TestUpdateInboxSubBullets:
+    def test_successful_url_drops_sub_bullets(self):
+        inbox = (
+            "## To process\n"
+            "- [ ] https://example.com/article\n"
+            "  - tags: ai, llm\n"
+            "  - note: read carefully\n"
+        )
+        results = [FetchResult(
+            url="https://example.com/article", ok=True, kind="html",
+            out_path=Path("raw/web/article/"),
+        )]
+        new_text = update_inbox(Path("dummy"), inbox, results,
+                                processed_section="## Processed")
+        assert "tags: ai" not in new_text
+        assert "note: read" not in new_text
+        assert "- [x] https://example.com/article" in new_text
+
+    def test_failed_url_keeps_sub_bullets(self):
+        inbox = (
+            "## To process\n"
+            "- [ ] https://paywall.com/article\n"
+            "  - tags: ai\n"
+            "  - note: important section\n"
+        )
+        results = [FetchResult(
+            url="https://paywall.com/article", ok=False, kind="failed",
+            reason="extraction empty — try playwright",
+        )]
+        new_text = update_inbox(Path("dummy"), inbox, results,
+                                processed_section="## Processed")
+        assert "- [ ] https://paywall.com/article ⚠" in new_text
+        assert "tags: ai" in new_text
+        assert "note: important section" in new_text
+
+    def test_unprocessed_url_keeps_sub_bullets(self):
+        inbox = (
+            "## To process\n"
+            "- [ ] https://example.com/other\n"
+            "  - tags: other\n"
+        )
+        new_text = update_inbox(Path("dummy"), inbox, [],
+                                processed_section="## Processed")
+        assert "- [ ] https://example.com/other" in new_text
+        assert "tags: other" in new_text
