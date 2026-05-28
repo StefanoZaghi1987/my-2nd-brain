@@ -93,6 +93,32 @@ def create_dirs(vault: Path) -> None:
     ok("directories")
 
 
+def install_claude_md(vault: Path, script_dir: Path) -> None:
+    info("Installing CLAUDE.md")
+    src = script_dir / "CLAUDE.md"
+    dst = vault / "CLAUDE.md"
+
+    if dst.exists():
+        ans = input("  CLAUDE.md already exists. Overwrite? [y/N] ").strip().lower()
+        if ans not in ("y", "yes"):
+            skip("keeping existing CLAUDE.md")
+        else:
+            shutil.copy2(src, dst)
+            ok("CLAUDE.md")
+    else:
+        shutil.copy2(src, dst)
+        ok("CLAUDE.md")
+
+    agents = vault / "AGENTS.md"
+    if not agents.exists():
+        try:
+            os.symlink("CLAUDE.md", str(agents))
+            ok("AGENTS.md → CLAUDE.md (symlink)")
+        except (OSError, NotImplementedError, PermissionError):
+            shutil.copy2(dst, agents)
+            ok("AGENTS.md (copy)")
+
+
 # --- Arg parsing -------------------------------------------------------------
 
 def resolve_vault_dir() -> Path:
@@ -144,6 +170,7 @@ def main() -> None:
     print()
 
     create_dirs(vault)
+    install_claude_md(vault, script_dir)
 
 
 if __name__ == "__main__":
