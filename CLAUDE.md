@@ -261,6 +261,9 @@ interactively.
 - `/forget <source>` — cascade-remove a source (see FORGET above)
 - `/promote [slug] [page]` — promote conversation insights to a wiki page
 - `/refresh <source>` — re-fetch and re-ingest a changed source
+- `/fetch` — process the URL queue in inbox.md (see FETCH above)
+- `/hot` — flush session state to wiki/hot.md
+- `/playwright-fetch` — retrieve walled URLs via browser
 
 Other requests are natural language. No command exists for "find more
 URLs on topic X" — just ask.
