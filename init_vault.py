@@ -410,7 +410,25 @@ def resolve_vault_dir() -> Path:
     return vault_dir.resolve()
 
 
-# --- Entry point (expanded in later subtasks) --------------------------------
+def print_done(vault: Path) -> None:
+    py_cmd = "python3" if os.name != "nt" else "python"
+    print()
+    print(_c("1;32", "Vault ready!"))
+    print()
+    print(f"  Path: {vault}")
+    print()
+    print("Next steps:")
+    print(f"  1. cd {vault}")
+    print( "  2. Add URLs to inbox.md (or drop PDFs in raw/papers/)")
+    print( "  3. Open Claude Code (or another CLI) in this folder")
+    print( "  4. Ask: \"process the inbox\", then \"ingest the new content\"")
+    print( "  5. Use /view to build timelines/comparisons/slides")
+    print( "  6. Use /save for important conversations")
+    print( "  7. Periodically: /reflect → read wiki/compass.md")
+    print()
+
+
+# --- Entry point -------------------------------------------------------------
 
 def main() -> None:
     script_dir = Path(__file__).resolve().parent
@@ -429,6 +447,7 @@ def main() -> None:
     install_commands(vault, script_dir)
     init_git(vault)
     check_deps(vault)
+    print_done(vault)
 
 
 if __name__ == "__main__":
