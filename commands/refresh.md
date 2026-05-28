@@ -24,7 +24,8 @@ the pages and views built on top of it.
    from its frontmatter. Confirm with the user: show title and source_url.
 
 2. **Queue for re-fetch.** Add the URL back to `inbox.md` as an unchecked
-   entry under "To process":
+   entry under "To process"
+   (`inbox.md` is not under `raw/` — this write is permitted by invariant #1):
    ```
    - [ ] <source_url>
    ```
@@ -58,5 +59,7 @@ the pages and views built on top of it.
 - Confirm the resolved slug and URL with the user before queuing the re-fetch.
 - If more than 15 pages cite the source (invariant #5), report the fanout
   and let the user decide scope.
-- Available unattended for steps 3–5 only (re-ingest + flag). Step 2
-  (queue URL) requires interactive confirmation.
+- `/refresh` requires interactive mode. The re-fetch (step 2) requires the user
+  to run the fetcher script, which cannot be invoked in unattended mode. Steps 3–5
+  may proceed once the raw folder has been refreshed in a prior interactive session,
+  but the command as a whole is not safe to run unattended from step 1.
