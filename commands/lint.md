@@ -15,7 +15,7 @@ Run explicitly with `/lint` or when the auto-trigger condition is met.
 
 At session start, check `.lint/state.yaml` for two conditions:
 
-1. `ingests_since_last_lint` ≥ `lint.auto_trigger_after_ingests` (from vault.config.yml)
+1. `fetches_since_last_lint` ≥ `lint.auto_trigger_after_fetches` (from vault.config.yml)
 2. Days since `last_lint` ≥ `lint.auto_trigger_after_days` (from vault.config.yml)
 
 If either condition is met, run lint before proceeding with the session.
@@ -23,13 +23,13 @@ If either condition is met, run lint before proceeding with the session.
 ## How to run
 
 ```bash
-python .claude/skills/vault-linter/scripts/lint.py
+python3 .claude/skills/vault-linter/scripts/lint.py
 ```
 
 Or from outside the vault:
 
 ```bash
-python .claude/skills/vault-linter/scripts/lint.py --vault /path/to/vault
+python3 .claude/skills/vault-linter/scripts/lint.py --vault /path/to/vault
 ```
 
 ## Output
