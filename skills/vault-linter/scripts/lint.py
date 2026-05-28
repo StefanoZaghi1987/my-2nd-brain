@@ -388,7 +388,7 @@ def check_drop_zone(vault: Path) -> list[Finding]:
         severity="advisory",
         check="drop_zone_not_empty",
         file=str(drop_dir.relative_to(vault)),
-        detail=f"Drop zone has {len(pdfs)} unprocessed file(s) — run /ingest to adopt them.",
+        detail=f"Drop zone has {len(pdfs)} unprocessed file(s) - run /ingest to adopt them.",
     )]
 
 

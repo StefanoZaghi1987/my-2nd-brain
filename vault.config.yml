@@ -30,5 +30,5 @@ ingest:
   max_files_per_operation: 15        # invariant #5 enforcement ceiling
 
 drop_zone:
-  path: "raw/drop"      # relative to vault root
+  path: raw/drop
   enabled: true

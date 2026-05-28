@@ -160,16 +160,16 @@ python3 skills/inbox-fetcher/scripts/adopt_drop.py --dry-run  # preview only; no
 **Output contract (live run):**
 ```
 Found 2 PDF(s) in drop zone.
-  ✓ adopted  raw/local/attention-is-all-you-need/
-  ✓ adopted  raw/local/lecun-path-to-autonomy/
+  [ok] adopted  raw/local/attention-is-all-you-need/
+  [ok] adopted  raw/local/lecun-path-to-autonomy/
 Adopted 2, skipped 0.
 ```
 
 **Output contract (dry run):**
 ```
 Found 2 PDF(s) in drop zone.
-  would adopt: attention-is-all-you-need.pdf → raw/local/attention-is-all-you-need/
-  would adopt: lecun-path-to-autonomy.pdf → raw/local/lecun-path-to-autonomy/
+  would adopt: attention-is-all-you-need.pdf -> raw/local/attention-is-all-you-need/
+  would adopt: lecun-path-to-autonomy.pdf -> raw/local/lecun-path-to-autonomy/
 ```
 
 Exit codes: `0` = all adopted (or nothing to do); `1` = bad `--vault` path; `2` = partial (≥1 skipped due to slug collision).

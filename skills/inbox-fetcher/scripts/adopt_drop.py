@@ -66,7 +66,7 @@ def adopt_pdf(pdf_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptRe
     out_dir = local_dir / slug
     if out_dir.is_dir():
         return AdoptResult(filename=pdf_path.name, slug=slug, ok=False,
-                           reason=f"raw/local/{slug}/ already exists — skipped")
+                           reason=f"raw/local/{slug}/ already exists - skipped")
 
     if dry_run:
         return AdoptResult(filename=pdf_path.name, slug=slug, ok=True)
@@ -120,7 +120,7 @@ def process_drop_zone(vault: Path, dry_run: bool = False) -> int:
     pdf_files = [p for p in all_files if p.suffix.lower() == ".pdf"]
 
     for f in non_pdfs:
-        print(f"  ⚠ ignored (not a PDF): {f.name}")
+        print(f"  [!] ignored (not a PDF): {f.name}")
 
     if not pdf_files:
         print("Drop zone empty. Nothing to adopt.")
@@ -129,7 +129,7 @@ def process_drop_zone(vault: Path, dry_run: bool = False) -> int:
     print(f"Found {len(pdf_files)} PDF(s) in drop zone.")
     if dry_run:
         for p in pdf_files:
-            print(f"  would adopt: {p.name} → raw/local/{slug_from_filename(p.name)}/")
+            print(f"  would adopt: {p.name} -> raw/local/{slug_from_filename(p.name)}/")
         return 0
 
     results: list[AdoptResult] = []
@@ -137,9 +137,9 @@ def process_drop_zone(vault: Path, dry_run: bool = False) -> int:
         r = adopt_pdf(pdf, local_dir, dry_run=dry_run)
         results.append(r)
         if r.ok:
-            print(f"  ✓ adopted  raw/local/{r.slug}/")
+            print(f"  [ok] adopted  raw/local/{r.slug}/")
         else:
-            print(f"  ⚠ {r.reason}")
+            print(f"  [!] {r.reason}")
 
     n_ok = sum(1 for r in results if r.ok)
     n_skip = sum(1 for r in results if not r.ok)
