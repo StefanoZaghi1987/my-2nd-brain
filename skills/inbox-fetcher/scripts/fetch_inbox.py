@@ -318,6 +318,20 @@ def yaml_escape(s: str) -> str:
     return s
 
 
+def get_content_type(url: str, timeout: int = 10) -> str:
+    """Probe a URL with a HEAD request; return the Content-Type value or empty string."""
+    try:
+        r = requests.head(
+            url,
+            timeout=timeout,
+            headers={"User-Agent": USER_AGENT},
+            allow_redirects=True,
+        )
+        return r.headers.get("Content-Type", "")
+    except Exception:
+        return ""
+
+
 # --- Inbox rewriting --------------------------------------------------------
 
 def update_inbox(
@@ -439,6 +453,16 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
                 url=fetch_url, ok=False, kind="failed",
                 reason=f"walled domain ({host}) — {PLAYWRIGHT_HINT}",
             )
+        elif "application/pdf" in get_content_type(fetch_url):
+            if not pdf_enabled:
+                r = FetchResult(
+                    url=fetch_url, ok=False, kind="failed",
+                    reason="PDF fetch disabled (pdf_enabled: false in vault.config.yml)",
+                )
+            else:
+                r = fetch_pdf(fetch_url, papers_dir, slug_override=slug_override,
+                              pdf_timeout=pdf_timeout, max_pdf_mb=max_pdf_mb,
+                              tags=e.tags, note=e.note)
         else:
             r = fetch_html(fetch_url, web_dir, html_timeout=html_timeout,
                            tags=e.tags, note=e.note)

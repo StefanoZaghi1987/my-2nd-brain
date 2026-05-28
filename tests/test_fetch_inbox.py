@@ -186,6 +186,49 @@ class TestUpdateInboxSubBullets:
         assert "tags: other" in new_text
 
 
+class TestGetContentType:
+    def test_returns_content_type_on_success(self, requests_mock):
+        from fetch_inbox import get_content_type
+        requests_mock.head(
+            "https://example.com/doc",
+            headers={"Content-Type": "application/pdf"},
+        )
+        assert get_content_type("https://example.com/doc") == "application/pdf"
+
+    def test_returns_empty_string_on_connection_error(self, requests_mock):
+        from fetch_inbox import get_content_type
+        requests_mock.head(
+            "https://example.com/broken",
+            exc=ConnectionError("refused"),
+        )
+        assert get_content_type("https://example.com/broken") == ""
+
+
+class TestContentTypeRouting:
+    def test_pdf_without_suffix_routed_by_content_type(self, tmp_path, requests_mock):
+        from fetch_inbox import process_vault
+        (tmp_path / "inbox.md").write_text(
+            "- [ ] https://example.com/download?id=42\n"
+        )
+        (tmp_path / "raw" / "papers").mkdir(parents=True)
+        (tmp_path / "raw" / "web").mkdir(parents=True)
+        requests_mock.head(
+            "https://example.com/download?id=42",
+            headers={"Content-Type": "application/pdf; charset=binary"},
+        )
+        requests_mock.get(
+            "https://example.com/download?id=42",
+            content=b"%PDF-1.4 fake",
+        )
+        process_vault(tmp_path)
+        inbox_text = (tmp_path / "inbox.md").read_text(encoding="utf-8")
+        assert "[x]" in inbox_text
+        papers = list((tmp_path / "raw" / "papers").iterdir())
+        assert len(papers) == 1
+        assert (papers[0] / "paper.pdf").exists()
+        assert (papers[0] / "index.md").exists()
+
+
 class TestPdfEnabled:
     def test_pdf_url_skipped_when_disabled(self, tmp_path, requests_mock):
         from fetch_inbox import process_vault
