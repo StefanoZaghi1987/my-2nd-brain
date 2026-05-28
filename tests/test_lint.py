@@ -108,3 +108,30 @@ class TestCheckPdfIndex:
         from lint import check_pdf_index
         findings = check_pdf_index(tmp_path)
         assert any(f.check == "legacy_flat_pdf" for f in findings)
+
+
+class TestCheckConversations:
+    def test_no_findings_for_absent_conversations_dir(self, tmp_path):
+        from lint import check_conversations
+        assert check_conversations(tmp_path) == []
+
+    def test_no_findings_when_type_present(self, tmp_path):
+        conv = tmp_path / "conversations"
+        conv.mkdir()
+        (conv / "2026-05-01-session.md").write_text(
+            "---\ntype: conversation\ndate: 2026-05-01\n---\n## Question\nWhat?\n"
+        )
+        from lint import check_conversations
+        assert check_conversations(tmp_path) == []
+
+    def test_advisory_for_missing_type_field(self, tmp_path):
+        conv = tmp_path / "conversations"
+        conv.mkdir()
+        (conv / "2026-05-01-session.md").write_text(
+            "---\ndate: 2026-05-01\n---\n## Question\nWhat?\n"
+        )
+        from lint import check_conversations
+        findings = check_conversations(tmp_path)
+        assert len(findings) == 1
+        assert findings[0].check == "missing_conversation_type"
+        assert findings[0].severity == "advisory"
