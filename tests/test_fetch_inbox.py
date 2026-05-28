@@ -91,3 +91,26 @@ class TestUpdateInbox:
                                 processed_section="## Done")
         assert "## Done" in new_text
         assert "## Processed" not in new_text
+
+
+class TestFetchHtmlFrontmatter:
+    def test_tags_and_note_appear_in_raw_index_md(self, tmp_path):
+        import unittest.mock
+        fake_html = "<html><body><h1>Test Article</h1><p>content</p></body></html>"
+        canned_md = "# Test Article\n\ncontent\n"
+        with (
+            unittest.mock.patch("trafilatura.fetch_url", return_value=fake_html),
+            unittest.mock.patch("trafilatura.extract", return_value=canned_md),
+            unittest.mock.patch("trafilatura.extract_metadata", return_value=None),
+        ):
+            from fetch_inbox import fetch_html
+            result = fetch_html(
+                "https://example.com/article",
+                tmp_path / "raw" / "web",
+                tags=["ai", "llm"],
+                note='focus on "section 3"',
+            )
+        assert result.ok
+        index_text = (result.out_path / "index.md").read_text()
+        assert "tags: [ai, llm]" in index_text
+        assert "section 3" in index_text

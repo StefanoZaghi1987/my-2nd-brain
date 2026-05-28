@@ -196,7 +196,8 @@ def fetch_pdf(url: str, papers_dir: Path,
     return FetchResult(url=url, ok=True, kind="pdf", out_path=out_path)
 
 
-def fetch_html(url: str, web_dir: Path, html_timeout: int = 20) -> FetchResult:
+def fetch_html(url: str, web_dir: Path, html_timeout: int = 20,
+               tags: list | None = None, note: str | None = None) -> FetchResult:
     """Fetch an HTML article, extract clean markdown, download images."""
     downloaded = trafilatura.fetch_url(url)
     if not downloaded:
@@ -241,6 +242,10 @@ def fetch_html(url: str, web_dir: Path, html_timeout: int = 20) -> FetchResult:
         frontmatter_lines.append(f"published: {pub_date}")
     if language:
         frontmatter_lines.append(f"language: {language}")
+    if tags:
+        frontmatter_lines.append(f"tags: [{', '.join(tags)}]")
+    if note:
+        frontmatter_lines.append(f"note: {yaml_escape(note)}")
     frontmatter_lines.append(f"fetched: {date.today().isoformat()}")
     frontmatter_lines.append("---")
     frontmatter = "\n".join(frontmatter_lines) + "\n\n"
@@ -398,7 +403,8 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
                 reason=f"walled domain ({host}) — {PLAYWRIGHT_HINT}",
             )
         else:
-            r = fetch_html(fetch_url, web_dir, html_timeout=html_timeout)
+            r = fetch_html(fetch_url, web_dir, html_timeout=html_timeout,
+                           tags=e.tags, note=e.note)
 
         # Track by the original inbox URL, not the rewritten fetch URL,
         # so update_inbox can match the line back.
