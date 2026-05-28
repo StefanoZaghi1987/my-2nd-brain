@@ -224,6 +224,44 @@ def write_base_files(vault: Path, script_dir: Path) -> None:
         skip(".obsidian/app.json (exists — keeping user config)")
 
 
+def install_skills(vault: Path, script_dir: Path) -> None:
+    info("Installing skills")
+
+    for skill_name, py_scripts in [
+        ("inbox-fetcher", ["scripts/fetch_inbox.py"]),
+        ("vault-linter", ["scripts/lint.py"]),
+        ("view-builder", []),
+    ]:
+        src_dir = script_dir / "skills" / skill_name
+        dst_dir = vault / ".claude" / "skills" / skill_name
+        if not src_dir.is_dir():
+            warn(f"{skill_name} skill not found in bundle")
+            continue
+        shutil.copy2(src_dir / "SKILL.md", dst_dir / "SKILL.md")
+        for rel in py_scripts:
+            dst_py = dst_dir / rel
+            shutil.copy2(src_dir / rel, dst_py)
+            if os.name != "nt":
+                os.chmod(dst_py, 0o755)
+        if skill_name == "view-builder":
+            templates_src = src_dir / "templates"
+            if templates_src.is_dir():
+                for f in templates_src.iterdir():
+                    if f.is_file():
+                        shutil.copy2(f, dst_dir / "templates" / f.name)
+        ok(f"skill: {skill_name}")
+
+    shared_src = script_dir / "skills" / "shared" / "vault_state.py"
+    if shared_src.exists():
+        shutil.copy2(
+            shared_src,
+            vault / ".claude" / "skills" / "shared" / "vault_state.py",
+        )
+        ok("shared: vault_state.py")
+    else:
+        warn("skills/shared not found in bundle")
+
+
 def install_claude_md(vault: Path, script_dir: Path) -> None:
     info("Installing CLAUDE.md")
     src = script_dir / "CLAUDE.md"
@@ -303,6 +341,7 @@ def main() -> None:
     create_dirs(vault)
     install_claude_md(vault, script_dir)
     write_base_files(vault, script_dir)
+    install_skills(vault, script_dir)
 
 
 if __name__ == "__main__":
