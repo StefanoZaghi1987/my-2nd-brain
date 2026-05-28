@@ -1,10 +1,10 @@
 ---
 id: TASK-0031
 title: Create commands/ingest.md and register it in init-vault.sh
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 12:33'
-updated_date: '2026-05-28 12:41'
+updated_date: '2026-05-28 13:41'
 labels:
   - wave-2
   - commands
@@ -36,3 +36,9 @@ INGEST is the vault's primary write operation but has no slash command file. Eve
 <!-- SECTION:NOTES:BEGIN -->
 Two changes: (1) Create `commands/ingest.md` as a new file. It needs YAML frontmatter with a description field, then sections: When to use, Discover targets (scanning raw/ for subdirs without a wiki/sources/ counterpart), Protocol (web article branch and PDF branch), Guards (≤3 new pages before confirm; ≤15 files per operation), Completion steps (update wiki/index.md and append to wiki/log.md). Full content in plan Task 11 Step 1. (2) In `init-vault.sh` (~line 317), find: `for cmd in save view reflect forget lint promote refresh; do` and add `ingest` at the end of the list. Verify by running `bash init-vault.sh /tmp/test && ls /tmp/test/.claude/commands/ && rm -rf /tmp/test`
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created `commands/ingest.md` with the full /ingest protocol (discover targets, web/PDF protocol, ≤3 new pages guard, ≤15 files guard, completion steps). Added `ingest` to the `for cmd in ...` loop in `init-vault.sh` so the command installs during bootstrap. Verified via temp vault run. Commit: 89ef7ea.
+<!-- SECTION:FINAL_SUMMARY:END -->

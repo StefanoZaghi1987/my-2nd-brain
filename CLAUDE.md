@@ -46,7 +46,9 @@ them, plus `compass.md`, `hot.md`, `index.md`, `log.md`.
    auto-applying structural changes, no creating views without asking.
 5. **Touch ≤15 files per operation.** If more are needed, tell the user
    and let them choose what matters.
-6. **Update `index.md` and `log.md`** after any writing operation.
+6. **Update `wiki/index.md` and `wiki/log.md`** after any writing operation —
+   add new source/page/view entries to `wiki/index.md`; append an operation line
+   to `wiki/log.md`.
 
 ---
 
@@ -136,7 +138,7 @@ cascade-remove a source and everything that depended only on it.
 5. Delete `wiki/sources/<slug>.md` and the `raw/` file. This is the
    one case where writing to `raw/` (as deletion) is allowed —
    invariant #1 covers creation, not user-directed removal.
-6. Update `index.md` and `log.md` (invariant #6).
+6. Update `wiki/index.md` and `wiki/log.md` (invariant #6).
 7. Run `vault-linter` to confirm zero dead links remain.
 
 If the source is cited by >15 files, the cascade exceeds invariant #5
@@ -212,6 +214,20 @@ for the full protocol.
 At session end, if we touched meaningful content, update `wiki/hot.md`
 with 5-10 lines on what we covered, what's open, what to pick up next.
 Don't add — replace. At session start, read `wiki/hot.md` first.
+
+---
+
+## Session start
+
+At the start of every session:
+
+1. Read `wiki/hot.md` — cheap context on where we left off.
+2. Check `.lint/state.yaml` for auto-lint conditions:
+   - `ingests_since_last_lint` ≥ `lint.auto_trigger_after_ingests` (from `vault.config.yml`)
+   - Days since `last_lint` ≥ `lint.auto_trigger_after_days`
+   If either condition is met, run `/lint` before proceeding with the session.
+3. If `wiki/compass.md` hasn't been updated in more days than
+   `lint.reflect_reminder_days` (from `vault.config.yml`), suggest running `/reflect`.
 
 ---
 

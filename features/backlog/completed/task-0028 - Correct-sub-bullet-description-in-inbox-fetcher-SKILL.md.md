@@ -1,10 +1,10 @@
 ---
 id: TASK-0028
 title: Correct sub-bullet description in inbox-fetcher SKILL.md
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 12:33'
-updated_date: '2026-05-28 12:41'
+updated_date: '2026-05-28 13:41'
 labels:
   - wave-2
   - docs
@@ -34,3 +34,9 @@ The ## Inbox format section of skills/inbox-fetcher/SKILL.md says indented sub-b
 <!-- SECTION:NOTES:BEGIN -->
 In `skills/inbox-fetcher/SKILL.md`, find the `## Inbox format` section. Locate the bullet that says: "Indented sub-bullets (tags, notes) are preserved but not parsed — they're hints for the ingest step." Replace that single sentence with: "Indented sub-bullets (`- tags: tag1, tag2` and `- note: focus on X`) are parsed by the script and written into the raw source's `index.md` frontmatter. The ingest step reads them from there via tag/note propagation." No tests needed — prose-only change.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Updated the sub-bullet description in `skills/inbox-fetcher/SKILL.md` `## Inbox format` section. Old text claimed sub-bullets were "preserved but not parsed — hints for ingest." New text correctly states they are parsed by the script and written into raw `index.md` frontmatter. Commit: 124076a.
+<!-- SECTION:FINAL_SUMMARY:END -->

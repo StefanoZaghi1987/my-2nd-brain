@@ -66,8 +66,8 @@ python .claude/skills/vault-linter/scripts/lint.py --vault /path/to/vault
 Findings grouped by severity:
 
 - **Blocking** — dead links, missing required metadata.
-- **Important** — orphans, gaps.
-- **Advisory** — duplicates, stale, naming, view staleness.
+- **Important** — orphans.
+- **Advisory** — duplicates, stale, naming, view staleness, gaps, missing cross-references.
 
 ### `.lint/state.yaml`
 

@@ -97,6 +97,7 @@ DIRS=(
     ".claude/skills/view-builder/templates"
     ".claude/skills/shared"
     ".claude/commands"
+    ".obsidian"
 )
 for d in "${DIRS[@]}"; do
     mkdir -p "$VAULT_DIR/$d"
@@ -263,6 +264,22 @@ EOF
     ok ".gitignore"
 fi
 
+# --- Obsidian config -------------------------------------------------------
+info "Obsidian"
+if [ ! -f "$VAULT_DIR/.obsidian/app.json" ]; then
+    cat > "$VAULT_DIR/.obsidian/app.json" <<'EOF'
+{
+  "useMarkdownLinks": false,
+  "newLinkFormat": "relative",
+  "readableLineLength": true,
+  "attachmentFolderPath": "wiki/views/assets"
+}
+EOF
+    ok ".obsidian/app.json"
+else
+    skip ".obsidian/app.json (exists — keeping user config)"
+fi
+
 # --- Skills ----------------------------------------------------------------
 info "Installing skills"
 
@@ -314,7 +331,7 @@ fi
 
 # --- Slash commands --------------------------------------------------------
 info "Installing slash commands"
-for cmd in save view reflect forget lint promote refresh; do
+for cmd in save view reflect forget lint promote refresh ingest; do
     if [ -f "$SCRIPT_DIR/commands/$cmd.md" ]; then
         cp "$SCRIPT_DIR/commands/$cmd.md" \
            "$VAULT_DIR/.claude/commands/$cmd.md"

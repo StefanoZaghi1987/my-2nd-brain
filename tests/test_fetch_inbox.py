@@ -137,3 +137,122 @@ class TestFetchPdfStructure:
         assert "fetch_method: pdf" in index_text
         assert "tags: [llm]" in index_text
         assert "read section 3" in index_text
+
+
+class TestUpdateInboxSubBullets:
+    def test_successful_url_drops_sub_bullets(self):
+        inbox = (
+            "## To process\n"
+            "- [ ] https://example.com/article\n"
+            "  - tags: ai, llm\n"
+            "  - note: read carefully\n"
+        )
+        results = [FetchResult(
+            url="https://example.com/article", ok=True, kind="html",
+            out_path=Path("raw/web/article/"),
+        )]
+        new_text = update_inbox(Path("dummy"), inbox, results,
+                                processed_section="## Processed")
+        assert "tags: ai" not in new_text
+        assert "note: read" not in new_text
+        assert "- [x] https://example.com/article" in new_text
+
+    def test_failed_url_keeps_sub_bullets(self):
+        inbox = (
+            "## To process\n"
+            "- [ ] https://paywall.com/article\n"
+            "  - tags: ai\n"
+            "  - note: important section\n"
+        )
+        results = [FetchResult(
+            url="https://paywall.com/article", ok=False, kind="failed",
+            reason="extraction empty — try playwright",
+        )]
+        new_text = update_inbox(Path("dummy"), inbox, results,
+                                processed_section="## Processed")
+        assert "- [ ] https://paywall.com/article ⚠" in new_text
+        assert "tags: ai" in new_text
+        assert "note: important section" in new_text
+
+    def test_unprocessed_url_keeps_sub_bullets(self):
+        inbox = (
+            "## To process\n"
+            "- [ ] https://example.com/other\n"
+            "  - tags: other\n"
+        )
+        new_text = update_inbox(Path("dummy"), inbox, [],
+                                processed_section="## Processed")
+        assert "- [ ] https://example.com/other" in new_text
+        assert "tags: other" in new_text
+
+
+class TestGetContentType:
+    def test_returns_content_type_on_success(self, requests_mock):
+        from fetch_inbox import get_content_type
+        requests_mock.head(
+            "https://example.com/doc",
+            headers={"Content-Type": "application/pdf"},
+        )
+        assert get_content_type("https://example.com/doc") == "application/pdf"
+
+    def test_returns_empty_string_on_connection_error(self, requests_mock):
+        from fetch_inbox import get_content_type
+        requests_mock.head(
+            "https://example.com/broken",
+            exc=ConnectionError("refused"),
+        )
+        assert get_content_type("https://example.com/broken") == ""
+
+
+class TestContentTypeRouting:
+    def test_pdf_without_suffix_routed_by_content_type(self, tmp_path, requests_mock):
+        from fetch_inbox import process_vault
+        (tmp_path / "inbox.md").write_text(
+            "- [ ] https://example.com/download?id=42\n"
+        )
+        (tmp_path / "raw" / "papers").mkdir(parents=True)
+        (tmp_path / "raw" / "web").mkdir(parents=True)
+        requests_mock.head(
+            "https://example.com/download?id=42",
+            headers={"Content-Type": "application/pdf; charset=binary"},
+        )
+        requests_mock.get(
+            "https://example.com/download?id=42",
+            content=b"%PDF-1.4 fake",
+        )
+        process_vault(tmp_path)
+        inbox_text = (tmp_path / "inbox.md").read_text(encoding="utf-8")
+        assert "[x]" in inbox_text
+        papers = list((tmp_path / "raw" / "papers").iterdir())
+        assert len(papers) == 1
+        assert (papers[0] / "paper.pdf").exists()
+        assert (papers[0] / "index.md").exists()
+
+
+class TestPdfEnabled:
+    def test_pdf_url_skipped_when_disabled(self, tmp_path, requests_mock):
+        from fetch_inbox import process_vault
+        (tmp_path / "vault.config.yml").write_text(
+            "fetch:\n  pdf_enabled: false\n"
+        )
+        (tmp_path / "inbox.md").write_text(
+            "- [ ] https://arxiv.org/pdf/2405.12345.pdf\n"
+        )
+        (tmp_path / "raw" / "papers").mkdir(parents=True)
+        (tmp_path / "raw" / "web").mkdir(parents=True)
+        # Safety net: if fetch_pdf is incorrectly called, this 403 makes it fail loudly
+        requests_mock.get(
+            "https://arxiv.org/pdf/2405.12345.pdf",
+            status_code=403,
+        )
+        process_vault(tmp_path)
+        inbox_text = (tmp_path / "inbox.md").read_text(encoding="utf-8")
+        # Check that the URL was marked as failed with pdf_enabled message
+        assert "- [ ]" in inbox_text  # Still unchecked
+        assert "⚠" in inbox_text
+        assert "pdf_enabled" in inbox_text  # Contains our error message
+        # Verify no PDF file was actually downloaded
+        assert not any(
+            entry.is_file()
+            for entry in (tmp_path / "raw" / "papers").rglob("*")
+        )

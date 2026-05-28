@@ -318,6 +318,20 @@ def yaml_escape(s: str) -> str:
     return s
 
 
+def get_content_type(url: str, timeout: int = 10) -> str:
+    """Probe a URL with a HEAD request; return the Content-Type value or empty string."""
+    try:
+        r = requests.head(
+            url,
+            timeout=timeout,
+            headers={"User-Agent": USER_AGENT},
+            allow_redirects=True,
+        )
+        return r.headers.get("Content-Type", "")
+    except Exception:
+        return ""
+
+
 # --- Inbox rewriting --------------------------------------------------------
 
 def update_inbox(
@@ -326,43 +340,51 @@ def update_inbox(
     results: list[FetchResult],
     processed_section: str = "## Processed",
 ) -> str:
-    """
-    Rewrite inbox.md:
-    - successful URLs are moved under the processed_section header
-    - failed URLs stay unchecked with a ⚠ reason appended inline
-    """
     lines = inbox_text.splitlines()
     today = date.today().isoformat()
 
-    # Build result lookup by URL
     result_by_url = {r.url: r for r in results}
-
-    # Remove the processed unchecked lines; collect new "Processati" entries
     new_processed_lines: list[str] = []
     out_lines: list[str] = []
 
-    for line in lines:
+    i = 0
+    while i < len(lines):
+        line = lines[i]
         match = UNCHECKED_PATTERN.match(line)
         if not match:
             out_lines.append(line)
+            i += 1
             continue
 
         url = match.group(1).strip()
+
+        # Determine the span of indented sub-bullets that follow this URL line
+        j = i + 1
+        while j < len(lines) and (
+            lines[j].startswith(" ") or lines[j].startswith("\t")
+        ):
+            j += 1
+
         if url not in result_by_url:
-            out_lines.append(line)
+            # Not in this batch — preserve URL and sub-bullets unchanged
+            out_lines.extend(lines[i:j])
+            i = j
             continue
 
         result = result_by_url[url]
         if result.ok:
-            # vault-relative path for readability
             rel = result.out_path
             new_processed_lines.append(
                 f"- [x] {url} → `{rel}` ({today})"
             )
+            # Sub-bullets have been written to raw frontmatter; drop them here
         else:
             out_lines.append(f"- [ ] {url} ⚠ {result.reason}")
+            # Keep sub-bullets under the failure line for retry context
+            out_lines.extend(lines[i + 1:j])
 
-    # Ensure processed_section header exists; append new entries there
+        i = j
+
     final_lines = list(out_lines)
     if new_processed_lines:
         if not any(l.strip() == processed_section for l in final_lines):
@@ -370,9 +392,6 @@ def update_inbox(
                 final_lines.append("")
             final_lines.append(processed_section)
             final_lines.append("")
-
-        # Find the section and append at the end of it (end of file is fine)
-        # Simple approach: append to the very end
         final_lines.extend(new_processed_lines)
 
     return "\n".join(final_lines) + ("\n" if inbox_text.endswith("\n") else "")
@@ -386,6 +405,7 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
     html_timeout = cfg["fetch"]["html_timeout_seconds"]
     pdf_timeout = cfg["fetch"]["pdf_timeout_seconds"]
     max_pdf_mb = cfg["fetch"]["max_pdf_size_mb"]
+    pdf_enabled = cfg["fetch"]["pdf_enabled"]
     walled = frozenset(cfg["fetch"]["walled_domains"])
 
     inbox_path = vault / "inbox.md"
@@ -418,15 +438,31 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
             print(f"\n→ {e.url}")
 
         if is_pdf_url(fetch_url):
-            r = fetch_pdf(fetch_url, papers_dir, slug_override=slug_override,
-                          pdf_timeout=pdf_timeout, max_pdf_mb=max_pdf_mb,
-                          tags=e.tags, note=e.note)
+            if not pdf_enabled:
+                r = FetchResult(
+                    url=fetch_url, ok=False, kind="failed",
+                    reason="PDF fetch disabled (pdf_enabled: false in vault.config.yml)",
+                )
+            else:
+                r = fetch_pdf(fetch_url, papers_dir, slug_override=slug_override,
+                              pdf_timeout=pdf_timeout, max_pdf_mb=max_pdf_mb,
+                              tags=e.tags, note=e.note)
         elif is_walled(fetch_url, walled):
             host = urlparse(fetch_url).netloc.lower()
             r = FetchResult(
                 url=fetch_url, ok=False, kind="failed",
                 reason=f"walled domain ({host}) — {PLAYWRIGHT_HINT}",
             )
+        elif "application/pdf" in get_content_type(fetch_url):
+            if not pdf_enabled:
+                r = FetchResult(
+                    url=fetch_url, ok=False, kind="failed",
+                    reason="PDF fetch disabled (pdf_enabled: false in vault.config.yml)",
+                )
+            else:
+                r = fetch_pdf(fetch_url, papers_dir, slug_override=slug_override,
+                              pdf_timeout=pdf_timeout, max_pdf_mb=max_pdf_mb,
+                              tags=e.tags, note=e.note)
         else:
             r = fetch_html(fetch_url, web_dir, html_timeout=html_timeout,
                            tags=e.tags, note=e.note)

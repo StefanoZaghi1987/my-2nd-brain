@@ -39,6 +39,7 @@ _DEFAULTS: dict[str, Any] = {
         "view_stale_days": 30,
         "auto_trigger_after_ingests": 5,
         "auto_trigger_after_days": 7,
+        "reflect_reminder_days": 14,
     },
     "ingest": {
         "max_new_pages_before_confirm": 3,

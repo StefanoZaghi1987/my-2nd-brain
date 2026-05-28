@@ -29,6 +29,7 @@ Don't save boilerplate exchanges.
 
 ```markdown
 ---
+type: conversation
 date: YYYY-MM-DD
 tags: [tag1, tag2]
 pages_read:
@@ -37,6 +38,7 @@ pages_written:
   - [[wiki/pages/x]]
 views_used:
   - [[wiki/views/timeline-y]]
+promoted_to: []
 ---
 
 ## Question

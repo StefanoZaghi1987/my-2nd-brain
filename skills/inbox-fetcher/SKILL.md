@@ -65,7 +65,7 @@ The skill creates `raw/web/` and `raw/papers/` if they don't exist.
 Rules:
 
 - Only lines matching `- [ ] <URL>` at the start (unchecked) are processed.
-- Indented sub-bullets (tags, notes) are preserved but not parsed — they're hints for the ingest step.
+- Indented sub-bullets (`- tags: tag1, tag2` and `- note: focus on X`) are parsed by the script and written into the raw source's `index.md` frontmatter. The ingest step reads them from there via tag/note propagation.
 - After a successful fetch, the line moves to "Processed" and gets marked `- [x]` with the output path and date.
 - Failed fetches get an inline `⚠ <reason>` suffix and stay unchecked so the user can decide.
 

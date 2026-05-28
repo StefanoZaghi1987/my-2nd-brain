@@ -47,8 +47,6 @@ ORPHAN_EXCEPTIONS = {
     "wiki/compass.md",
     "wiki/index.md",
     "wiki/log.md",
-    "index.md",
-    "log.md",
 }
 
 # Required frontmatter fields per type
@@ -692,6 +690,48 @@ def write_report(findings: list[Finding], vault: Path, quiet: bool = False) -> N
         print(f"Report written to {report_path.relative_to(vault)}")
 
 
+def check_conversations(vault: Path) -> list[Finding]:
+    """Check that each file in conversations/ declares type: conversation."""
+    findings = []
+    conv_dir = vault / "conversations"
+    if not conv_dir.is_dir():
+        return findings
+
+    for md_file in sorted(conv_dir.glob("*.md")):
+        text = md_file.read_text(encoding="utf-8", errors="replace")
+        fm, _ = parse_frontmatter(text)
+        if fm.get("type") != "conversation":
+            findings.append(Finding(
+                severity="advisory",
+                check="missing_conversation_type",
+                file=str(md_file.relative_to(vault)),
+                detail="missing 'type: conversation' frontmatter field",
+            ))
+    return findings
+
+
+def check_index_sync(pages: dict[str, "WikiPage"], vault: Path) -> list[Finding]:
+    """Verify that every wiki/sources/ entry is mentioned in wiki/index.md."""
+    index_page = pages.get("wiki/index.md")
+    if not index_page:
+        return []
+
+    index_text = index_page.body_text
+    findings = []
+    for rel, page in pages.items():
+        if not rel.startswith("wiki/sources/"):
+            continue
+        slug = Path(rel).stem
+        if slug not in index_text:
+            findings.append(Finding(
+                severity="advisory",
+                check="index_sync",
+                file=rel,
+                detail="source not mentioned in wiki/index.md",
+            ))
+    return findings
+
+
 # --- Orchestration ----------------------------------------------------------
 
 def run_lint(vault: Path, quiet: bool = False) -> int:
@@ -720,15 +760,17 @@ def run_lint(vault: Path, quiet: bool = False) -> int:
         ("view_staleness", lambda p: check_view_staleness(p, view_stale_days)),
         ("missing_cross_references", check_missing_cross_references),
         ("pdf_index", check_pdf_index),
+        ("conversations", check_conversations),
+        ("index_sync", check_index_sync),
     ]
 
     findings: list[Finding] = []
     for name, fn in all_checks:
         try:
             # Not all checks accept vault; use signature-based dispatch
-            if name in ("dead_links", "orphans", "based_on_dead_links"):
+            if name in ("dead_links", "orphans", "based_on_dead_links", "index_sync"):
                 out = fn(pages, vault)
-            elif name in ("pdf_index",):
+            elif name in ("pdf_index", "conversations"):
                 out = fn(vault)
             else:
                 out = fn(pages)
