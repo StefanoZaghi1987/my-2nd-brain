@@ -23,6 +23,21 @@ Confirm with the user before ingesting more than one source at a time:
 
 ## Protocol
 
+### Pre-ingest check
+
+Before writing any new `wiki/pages/` entry, scan the existing pages directory
+for a file whose name closely matches the proposed concept name (case-insensitive,
+ignore articles and punctuation). If a close match exists:
+
+- **Update the existing page** rather than creating a new one.
+- Cite the new source alongside any existing citations already on that page.
+- Do not create a second page for the same concept under a different slug.
+
+If two sources being ingested in the same session both reference the same
+emerging concept, create the page once during the first source and update
+it during the second. Track which pages were created or updated this session
+to avoid proposing duplicates mid-session.
+
 ### Web articles
 
 Source: `raw/web/<slug>/index.md` (no `fetch_method` field, or `fetch_method: html`).
