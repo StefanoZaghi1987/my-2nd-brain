@@ -1,10 +1,10 @@
 ---
 id: TASK-0018
 title: Add provides/config_section/requires fields to all skill SKILL.md frontmatter
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 07:41'
-updated_date: '2026-05-28 08:26'
+updated_date: '2026-05-28 10:29'
 labels:
   - skill-manifest
   - foundation
@@ -54,12 +54,14 @@ Note: matplotlib is listed as optional for view-builder (charts only). The SKILL
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 All three SKILL.md files have provides, config_section, and requires fields in frontmatter
-- [ ] #2 inbox-fetcher requires lists trafilatura, requests, python-slugify
-- [ ] #3 vault-linter requires lists an empty packages array
-- [ ] #4 view-builder config_section is null (no config block)
-- [ ] #5 No body content of any SKILL.md file is modified
+- [x] #1 All three SKILL.md files have provides, config_section, and requires fields in frontmatter
+- [x] #2 inbox-fetcher requires lists trafilatura, requests, python-slugify
+- [x] #3 vault-linter requires lists an empty packages array
+- [x] #4 view-builder config_section is null (no config block)
+- [x] #5 No body content of any SKILL.md file is modified
 <!-- AC:END -->
+
+
 
 ## Implementation Notes
 

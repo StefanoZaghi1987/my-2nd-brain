@@ -1,10 +1,10 @@
 ---
 id: TASK-0009
 title: Update fetch_html to write tags and note into raw web article frontmatter
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 07:31'
-updated_date: '2026-05-28 08:25'
+updated_date: '2026-05-28 10:13'
 labels:
   - feature-b
   - fetch
@@ -14,6 +14,9 @@ dependencies:
 references:
   - features/specs/2026-05-28-vault-improvements-design.md
   - features/plans/2026-05-28-vault-improvements-plan.md
+modified_files:
+  - skills/inbox-fetcher/scripts/fetch_inbox.py
+  - tests/test_fetch_inbox.py
 priority: medium
 ordinal: 9000
 ---
@@ -42,3 +45,9 @@ Update the call site in `process_vault()` to pass `entry.tags` and `entry.note` 
 <!-- SECTION:NOTES:BEGIN -->
 See **Task 9** in the implementation plan. Changes to `fetch_html()`: add `tags` and `note` optional parameters; write them into the index.md frontmatter using `yaml_escape()` for note. Update the call site in `process_vault()` to pass `e.tags` and `e.note`. Tests provided in `TestFetchHtmlFrontmatter` class. Wave 2 — depends on Wave 1 and TASK-0004 (tags/note already parsed into InboxEntry).
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Extended fetch_html() with tags/note parameters and wired them to YAML frontmatter output. Added TestFetchHtmlFrontmatter integration test (TDD red-green). All 37 tests pass. Commit: e77368d.
+<!-- SECTION:FINAL_SUMMARY:END -->

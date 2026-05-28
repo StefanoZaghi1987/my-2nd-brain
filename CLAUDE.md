@@ -65,7 +65,11 @@ tags: [...]
 
 For `wiki/sources/`:
 ```yaml
-source_path: raw/papers/name.pdf   # or raw/web/<slug>/index.md
+# Valid source_path prefixes:
+#   raw/web/<slug>/index.md   — web article fetched by inbox-fetcher
+#   raw/papers/<slug>/        — PDF fetched by inbox-fetcher
+#   conversations/<slug>.md   — conversation promoted via /promote
+source_path: raw/papers/name.pdf
 ```
 
 For `wiki/views/`:
@@ -81,7 +85,7 @@ update it. When `shareable: false` (default), the view evolves.
 
 ---
 
-## Seven operations
+## Nine operations
 
 ### FETCH
 User says "process inbox" → run `inbox-fetcher` skill, which pulls
@@ -173,6 +177,34 @@ User says "lint" or auto-trigger after 5 ingests / 7 days → run
 frontmatter, naming consistency, view staleness). Output to
 `.lint/report.md`. Never auto-fix.
 
+### PROMOTE
+User says "promote this conversation", "promote insights", or runs
+`/promote [slug] [target-page]` → promote synthesis claims from a saved
+conversation into wiki pages. Creates `wiki/sources/conv-<slug>.md` to
+make the conversation a first-class citable source. See `commands/promote.md`
+for the full interactive protocol.
+
+Not available unattended.
+
+### REFRESH
+User says "refresh source X", "the article changed", or runs `/refresh <source>` →
+re-fetch a source and re-ingest it, preserving the citation graph. Flags pages
+that cite the source with `needs-review` frontmatter tag. See `commands/refresh.md`
+for the full protocol.
+
+## Skill dispatch
+
+| Operation | Skill          | Backed by                      |
+|-----------|----------------|--------------------------------|
+| FETCH     | inbox-fetcher  | scripts/fetch_inbox.py         |
+| LINT      | vault-linter   | scripts/lint.py                |
+| VIEW      | view-builder   | templates/ + LLM               |
+| INGEST    | (LLM only)     | —                              |
+| QUERY     | (LLM only)     | —                              |
+| REFLECT   | (LLM only)     | —                              |
+| PROMOTE   | (LLM only)     | —                              |
+| REFRESH   | (LLM only)     | —                              |
+
 ---
 
 ## Hot cache
@@ -204,6 +236,8 @@ interactively.
 - `/view [kind] [topic]` — build a view (see VIEW above)
 - `/reflect` — produce `compass.md` (see REFLECT above)
 - `/forget <source>` — cascade-remove a source (see FORGET above)
+- `/promote [slug] [page]` — promote conversation insights to a wiki page
+- `/refresh <source>` — re-fetch and re-ingest a changed source
 
 Other requests are natural language. No command exists for "find more
 URLs on topic X" — just ask.

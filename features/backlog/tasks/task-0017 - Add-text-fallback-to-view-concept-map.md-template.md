@@ -1,10 +1,10 @@
 ---
 id: TASK-0017
 title: Add text fallback to view-concept-map.md template
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-05-28 07:41'
-updated_date: '2026-05-28 09:54'
+updated_date: '2026-05-28 10:26'
 labels:
   - feature-f
   - view-builder
