@@ -20,6 +20,14 @@ import subprocess
 import sys
 from pathlib import Path
 
+# Ensure UTF-8 output on Windows (handles ✓, ⚠, ✗ symbols)
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+        sys.stderr.reconfigure(encoding="utf-8")  # type: ignore[union-attr]
+    except (AttributeError, OSError):
+        pass
+
 
 # --- Colors ------------------------------------------------------------------
 
@@ -48,6 +56,41 @@ def warn(msg: str) -> None:
 
 def err(msg: str) -> None:
     print(_c("31", f"  ✗ {msg}"), file=sys.stderr)
+
+
+# --- Constants ---------------------------------------------------------------
+
+DIRS = [
+    "raw/papers",
+    "raw/web",
+    "wiki/pages",
+    "wiki/sources",
+    "wiki/views/assets",
+    "conversations",
+    ".lint",
+    ".claude/skills/inbox-fetcher/scripts",
+    ".claude/skills/vault-linter/scripts",
+    ".claude/skills/view-builder/templates",
+    ".claude/skills/shared",
+    ".claude/commands",
+    ".obsidian",
+]
+
+GITKEEP_DIRS = [
+    "raw/papers", "raw/web", "wiki/pages", "wiki/sources",
+    "wiki/views", "wiki/views/assets", "conversations", ".lint",
+]
+
+
+def create_dirs(vault: Path) -> None:
+    info("Creating folder structure")
+    for d in DIRS:
+        (vault / d).mkdir(parents=True, exist_ok=True)
+    for d in GITKEEP_DIRS:
+        gk = vault / d / ".gitkeep"
+        if not gk.exists():
+            gk.touch()
+    ok("directories")
 
 
 # --- Arg parsing -------------------------------------------------------------
@@ -99,6 +142,8 @@ def main() -> None:
     vault = resolve_vault_dir()
     print(_c("2", f"target: {vault}"))
     print()
+
+    create_dirs(vault)
 
 
 if __name__ == "__main__":
