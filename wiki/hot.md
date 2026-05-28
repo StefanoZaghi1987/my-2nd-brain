@@ -1,39 +1,39 @@
 # Hot cache — where we left off
 
-**Session:** 2026-05-28 — vault improvements Wave 1 + Wave A
+**Session:** 2026-05-28 — vault hardening brainstorm + spec + plan
 
 ## What we covered
 
-Implementing the vault improvements plan (`features/plans/2026-05-28-vault-improvements-plan.md`).
+Deep analysis of the full implementation. Identified 5 bugs, 5 structural gaps, and 4 extensions. Ran brainstorming through design + spec + implementation plan.
 
-Wave 1 (foundation) was already complete from a prior session.
+**Spec:** `features/specs/2026-05-28-vault-hardening-design.md`
+**Plan:** `features/plans/2026-05-28-vault-hardening-plan.md`
+**Branch:** `feat-brainstorming`
 
-This session completed **Wave A** (pure file creation):
-- `commands/lint.md` — TASK-0006 ✅
-- `commands/promote.md` — TASK-0013 ✅ (step ordering fixed: source file created before citations written)
-- `commands/refresh.md` — TASK-0014 ✅ (unattended mode clarified: requires interactive; log destination fixed to log.md)
-- `skills/view-builder/templates/view-concept-map.md` — `<details>` fallback block added (TASK-0017 partial, commit 150eb03)
+## 14 backlog tasks created (TASK-0021–0034)
 
-All Wave A commits on branch `feat-foundation`. Tests: 36/36 pass.
+**Wave 1 — code + tests (do sequentially within each group):**
+- TASK-0021 — reflect_reminder_days config key (standalone)
+- TASK-0022 → TASK-0023 → TASK-0024 — fetch pipeline: update_inbox fix, pdf_enabled, content-type
+- TASK-0025 — ORPHAN_EXCEPTIONS cleanup (standalone)
+- TASK-0026 → TASK-0027 — linter: check_conversations, check_index_sync
+
+**Wave 2 — docs + config (all independent except noted):**
+- TASK-0028 — SKILL.md inbox-fetcher stale text
+- TASK-0029 — SKILL.md vault-linter gaps severity
+- TASK-0030 — README six invariants
+- TASK-0031 → TASK-0034 — /ingest command + Obsidian skeleton (both touch init-vault.sh)
+- TASK-0021 → TASK-0032 — CLAUDE.md session-start + invariant #6
+- TASK-0026 → TASK-0033 — /save template type:conversation
 
 ## What's open
 
-Remaining tasks in order of execution waves:
+All 14 tasks are To Do. Wave 1 tasks require pytest to pass after each. Wave 2 tasks are prose-only. Each task has implementation notes, exact file paths, and test commands — self-contained for a new conversation.
 
-- **Wave B** (sequential, `fetch_inbox.py`): TASK-0009 → TASK-0010
-- **Wave C** (single subagent, `CLAUDE.md`): TASK-0011 + TASK-0016 merged
-- **Wave D** (single subagent, SKILL.md files): TASK-0017 (sync rule) + TASK-0018
-- **Wave E** (sequential, `init-vault.sh`): TASK-0015 → TASK-0019
-- TASK-0020 auto-satisfied by Wave C
+## Key decisions made
 
-## What to pick up next
-
-Start with Wave B. Read `skills/inbox-fetcher/scripts/fetch_inbox.py` (current state is post-Task-4 migration — vault_state imported, tags/note on InboxEntry, but `fetch_html` and `fetch_pdf` don't yet accept tags/note params and fetch_pdf still writes a flat .pdf file).
-
-The detailed plan has exact code for each task. Tests go in `tests/test_fetch_inbox.py`.
-
-After Wave B passes pytest, run Waves C, D, E, then final smoke test:
-```bash
-bash init-vault.sh /tmp/test-vault-final && ls /tmp/test-vault-final/.claude/commands/
-```
-Expected: `forget.md lint.md promote.md reflect.md refresh.md save.md view.md`
+- pdf_enabled: false → walled-domain pattern (mark ⚠, leave unchecked)
+- conversations linter check: advisory only, no age-based check (that belongs to /reflect)
+- Obsidian: minimal skeleton only (useMarkdownLinks: false is the critical field)
+- reflect_reminder_days: 14 days default, in lint: config section
+- /ingest command: compact protocol sheet, not as elaborate as /forget
