@@ -331,7 +331,7 @@ fi
 
 # --- Slash commands --------------------------------------------------------
 info "Installing slash commands"
-for cmd in save view reflect forget lint promote refresh ingest; do
+for cmd in save view reflect forget lint promote refresh ingest fetch hot playwright-fetch; do
     if [ -f "$SCRIPT_DIR/commands/$cmd.md" ]; then
         cp "$SCRIPT_DIR/commands/$cmd.md" \
            "$VAULT_DIR/.claude/commands/$cmd.md"
