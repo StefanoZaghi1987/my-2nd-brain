@@ -84,7 +84,7 @@ language or with a slash command.
 | 4 | **QUERY** | any question | Agent reads the wiki, answers with citations |
 | 5 | **VIEW** | `/view timeline agent-skills` or *"make a timeline of X"* | Build a view in `wiki/views/` |
 | 6 | **REFLECT** | `/reflect` or *"reflect on my vault"* | Writes `wiki/compass.md` with trajectory + blind spots |
-| 7 | **LINT** | `/lint` or automatic after 5 ingests / 7 days | Deterministic checks, report in `.lint/` |
+| 7 | **LINT** | `/lint` or automatic after 5 fetches / 7 days | Deterministic checks, report in `.lint/` |
 | 8 | **PROMOTE** | `/promote [slug] [page]` or *"promote this conversation"* | Synthesis claims from a saved conversation → wiki pages |
 | 9 | **REFRESH** | `/refresh <source>` or *"the article changed"* | Re-fetch a changed source, re-ingest, flag affected pages |
 
@@ -108,7 +108,7 @@ language or with a slash command.
 - **`/forget <source>`** — cascade-remove a source. Interactive:
   per-claim decisions, never deletes prose without asking.
 - **`/lint`** — run deterministic vault health checks. Also triggers
-  automatically after 5 ingests or 7 days.
+  automatically after 5 fetches or 7 days.
 - **`/promote [slug] [page]`** — lift synthesis claims from a saved
   conversation into a wiki page, with full citation. Interactive only.
 - **`/refresh <source>`** — re-fetch a source whose content has
@@ -222,7 +222,7 @@ should work.
 
 **"Do I need Obsidian?"** No, but it helps. The vault is markdown
 files with `[[wiki-links]]` — Obsidian renders them natively.
-`init-vault.sh` creates `.obsidian/app.json` with `useMarkdownLinks:
-false`, which keeps Obsidian writing `[[wikilinks]]` rather than
-`[text](path)` links (the linter needs wikilink syntax to track links).
-Other markdown editors work too.
+Both `init-vault.sh` and `init_vault.py` create `.obsidian/app.json`
+with `useMarkdownLinks: false`, which keeps Obsidian writing
+`[[wikilinks]]` rather than `[text](path)` links (the linter needs
+wikilink syntax to track links). Other markdown editors work too.
