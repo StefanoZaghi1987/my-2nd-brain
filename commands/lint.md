@@ -47,7 +47,7 @@ python .claude/skills/vault-linter/scripts/lint.py --vault /path/to/vault
 
 **Interactive:** summarise findings ("X blocking, Y important, Z advisory"), offer to fix blocking issues.
 
-**Unattended:** run and note summary in compass.md footer. Abort /reflect if blocking count > 50.
+**Unattended:** run and append a one-line summary to `wiki/log.md`. Abort /reflect if blocking count > 50.
 
 ## Rules
 
