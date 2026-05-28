@@ -114,3 +114,26 @@ class TestFetchHtmlFrontmatter:
         index_text = (result.out_path / "index.md").read_text()
         assert "tags: [ai, llm]" in index_text
         assert "section 3" in index_text
+
+
+class TestFetchPdfStructure:
+    def test_creates_folder_with_pdf_and_index(self, tmp_path, requests_mock):
+        from fetch_inbox import fetch_pdf
+        papers_dir = tmp_path / "raw" / "papers"
+        papers_dir.mkdir(parents=True)
+        requests_mock.get("https://arxiv.org/pdf/2405.12345.pdf",
+                          content=b"%PDF-1.4 fake")
+        result = fetch_pdf(
+            "https://arxiv.org/pdf/2405.12345.pdf",
+            papers_dir,
+            slug_override="arxiv-2405-12345",
+            tags=["llm"],
+            note="read section 3",
+        )
+        assert result.ok
+        assert (result.out_path / "paper.pdf").exists()
+        assert (result.out_path / "index.md").exists()
+        index_text = (result.out_path / "index.md").read_text()
+        assert "fetch_method: pdf" in index_text
+        assert "tags: [llm]" in index_text
+        assert "read section 3" in index_text

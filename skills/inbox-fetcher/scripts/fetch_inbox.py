@@ -167,8 +167,10 @@ def slug_from(url: str, title: str | None) -> str:
 def fetch_pdf(url: str, papers_dir: Path,
               slug_override: str | None = None,
               pdf_timeout: int = 60,
-              max_pdf_mb: int = 50) -> FetchResult:
-    """Download a PDF directly to raw/papers/."""
+              max_pdf_mb: int = 50,
+              tags: list | None = None,
+              note: str | None = None) -> FetchResult:
+    """Download a PDF into a raw/papers/<slug>/ folder with a companion index.md."""
     try:
         r = requests.get(
             url,
@@ -186,14 +188,36 @@ def fetch_pdf(url: str, papers_dir: Path,
         print(f"  ⚠ large PDF ({size // 1024 // 1024} MB): {url}")
 
     slug = slug_override or slug_from(url, None)
-    out_path = papers_dir / f"{slug}.pdf"
-    papers_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = papers_dir / slug
+    out_dir.mkdir(parents=True, exist_ok=True)
 
-    with open(out_path, "wb") as f:
+    with open(out_dir / "paper.pdf", "wb") as f:
         for chunk in r.iter_content(chunk_size=8192):
             f.write(chunk)
 
-    return FetchResult(url=url, ok=True, kind="pdf", out_path=out_path)
+    # Infer a human-readable title from the slug override
+    if slug_override and slug_override.startswith("arxiv-"):
+        arxiv_id = slug_override[len("arxiv-"):].replace("-", ".", 1)
+        title = f"arxiv:{arxiv_id}"
+    else:
+        title = "Untitled"
+
+    fm_lines = [
+        "---",
+        f"source_url: {url}",
+        f"title: {yaml_escape(title)}",
+        f"fetched: {date.today().isoformat()}",
+        "fetch_method: pdf",
+    ]
+    if tags:
+        fm_lines.append(f"tags: [{', '.join(tags)}]")
+    if note:
+        fm_lines.append(f"note: {yaml_escape(note)}")
+    fm_lines += ["---", "", "PDF: [[paper.pdf]]", ""]
+
+    (out_dir / "index.md").write_text("\n".join(fm_lines), encoding="utf-8")
+
+    return FetchResult(url=url, ok=True, kind="pdf", out_path=out_dir)
 
 
 def fetch_html(url: str, web_dir: Path, html_timeout: int = 20,
@@ -395,7 +419,8 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
 
         if is_pdf_url(fetch_url):
             r = fetch_pdf(fetch_url, papers_dir, slug_override=slug_override,
-                          pdf_timeout=pdf_timeout, max_pdf_mb=max_pdf_mb)
+                          pdf_timeout=pdf_timeout, max_pdf_mb=max_pdf_mb,
+                          tags=e.tags, note=e.note)
         elif is_walled(fetch_url, walled):
             host = urlparse(fetch_url).netloc.lower()
             r = FetchResult(
