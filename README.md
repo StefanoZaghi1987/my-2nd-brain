@@ -17,18 +17,22 @@ agent that reads `CLAUDE.md` or `AGENTS.md`.
 ```
 vault-bundle/
 ├── init-vault.sh         bootstrap script (run first)
-├── CLAUDE.md             the contract between you and the agent (~175 lines)
+├── vault.config.yml      per-vault tunable settings (timeouts, walled domains, lint thresholds)
+├── CLAUDE.md             the contract between you and the agent
 ├── GETTING-STARTED.md    10-minute walkthrough for newcomers
 ├── README.md             this file
 ├── skills/
-│   ├── inbox-fetcher/    URL → markdown in raw/
-│   ├── vault-linter/     9 deterministic health checks
+│   ├── inbox-fetcher/    URL → markdown in raw/ (web articles + PDFs)
+│   ├── vault-linter/     deterministic health checks
 │   └── view-builder/     timelines, comparisons, charts, slides, reports, posts
 ├── commands/
 │   ├── save.md           /save
 │   ├── view.md           /view
 │   ├── reflect.md        /reflect
-│   └── forget.md         /forget
+│   ├── forget.md         /forget
+│   ├── lint.md           /lint
+│   ├── promote.md        /promote
+│   └── refresh.md        /refresh
 └── docs/examples/
     ├── research-example.md
     └── mealplan-example.md
@@ -66,14 +70,16 @@ your vault:
 
 What happens on re-run:
 
-- **Always refreshed** — `skills/` and `commands/`. This is the
-  whole point of the update: new operations, fixes, and slash
-  commands land in the vault.
+- **Always refreshed** — `skills/`, `commands/`, and
+  `skills/shared/vault_state.py`. This is the whole point of the
+  update: new operations, fixes, and slash commands land in the vault.
 - **Prompts you** — `CLAUDE.md`. Default is *keep* (answer `y` to
   overwrite with the latest template). Say yes unless you've
   customized the contract locally.
-- **Created only if missing** — `inbox.md`, `wiki/index.md`,
-  `wiki/log.md`, `wiki/hot.md`, `.lint/state.yaml`, `.gitignore`.
+- **Created only if missing** — `vault.config.yml`, `inbox.md`,
+  `wiki/index.md`, `wiki/log.md`, `wiki/hot.md`, `.lint/state.yaml`,
+  `.gitignore`. Edit `vault.config.yml` to customise timeouts,
+  walled domains, and lint thresholds.
 - **Never touched** — `raw/`, `wiki/pages/`, `wiki/sources/`,
   `wiki/views/`, `conversations/`, `wiki/compass.md`. Your
   knowledge and ongoing work are safe.

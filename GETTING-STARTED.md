@@ -71,33 +71,41 @@ Views come in two flavors:
 
 ---
 
-## Seven operations
+## Nine operations
 
-The agent knows how to do seven things. You trigger them in plain
+The agent knows how to do nine things. You trigger them in plain
 language or with a slash command.
 
 | # | Operation | How to trigger | What happens |
 |---|---|---|---|
-| 1 | **FETCH** | *"process the inbox"* | URLs in `inbox.md` → `raw/web/` |
+| 1 | **FETCH** | *"process the inbox"* | URLs in `inbox.md` → `raw/web/` or `raw/papers/<slug>/` |
 | 2 | **INGEST** | *"ingest the new content"* | `raw/` → summaries in `wiki/sources/`, links in `wiki/pages/` |
 | 3 | **FORGET** | `/forget <source>` or *"forget source X"* | Cascade-remove a source, clean citations in pages and views |
 | 4 | **QUERY** | any question | Agent reads the wiki, answers with citations |
 | 5 | **VIEW** | `/view timeline agent-skills` or *"make a timeline of X"* | Build a view in `wiki/views/` |
 | 6 | **REFLECT** | `/reflect` or *"reflect on my vault"* | Writes `wiki/compass.md` with trajectory + blind spots |
 | 7 | **LINT** | `/lint` or automatic after 5 ingests / 7 days | Deterministic checks, report in `.lint/` |
+| 8 | **PROMOTE** | `/promote [slug] [page]` or *"promote this conversation"* | Synthesis claims from a saved conversation → wiki pages |
+| 9 | **REFRESH** | `/refresh <source>` or *"the article changed"* | Re-fetch a changed source, re-ingest, flag affected pages |
 
 ---
 
-## Four slash commands
+## Seven slash commands
 
 - **`/save [name]`** — save the current conversation to
-  `conversations/`. These feed `/reflect` later.
+  `conversations/`. These feed `/reflect` and `/promote` later.
 - **`/view [kind] [topic]`** — build a view. Kinds: `timeline`,
   `comparison`, `concept-map`, `chart`, `slides`, `report`, `post`.
 - **`/reflect`** — write `compass.md`: where my thinking is going,
   what I'm not looking at, one question worth sitting with.
 - **`/forget <source>`** — cascade-remove a source. Interactive:
   per-claim decisions, never deletes prose without asking.
+- **`/lint`** — run deterministic vault health checks. Also triggers
+  automatically after 5 ingests or 7 days.
+- **`/promote [slug] [page]`** — lift synthesis claims from a saved
+  conversation into a wiki page, with full citation. Interactive only.
+- **`/refresh <source>`** — re-fetch a source whose content has
+  changed, re-ingest it, and flag pages that may need review.
 
 For everything else, just ask in plain language.
 
@@ -108,6 +116,15 @@ For everything else, just ask in plain language.
 **Day 1: bootstrap.** Run `./init-vault.sh`. Add 5-10 URLs to
 `inbox.md`. Tell the agent: *"process the inbox, then ingest the new
 content"*. You'll have your first few pages and sources.
+
+Tip: annotate URLs with optional sub-bullets before fetching — the
+agent carries them through into the wiki summary:
+
+```markdown
+- [ ] https://arxiv.org/abs/2405.12345
+  - tags: llm, agents
+  - note: focus on the evaluation section
+```
 
 **Day 2-3: ask questions.** The wiki is small but already useful.
 Ask things that require synthesis across sources. Notice when the
@@ -161,8 +178,8 @@ exist:
 
 ## What to read next
 
-- **`CLAUDE.md`** — the full contract the agent follows. ~175 lines,
-  worth reading once.
+- **`CLAUDE.md`** — the full contract the agent follows. Worth reading
+  once to understand how the agent makes decisions.
 - **`docs/examples/research-example.md`** — a canonical research
   use case with annotated walkthrough.
 - **`docs/examples/mealplan-example.md`** — same pattern applied to
