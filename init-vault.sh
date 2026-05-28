@@ -97,6 +97,7 @@ DIRS=(
     ".claude/skills/view-builder/templates"
     ".claude/skills/shared"
     ".claude/commands"
+    ".obsidian"
 )
 for d in "${DIRS[@]}"; do
     mkdir -p "$VAULT_DIR/$d"
@@ -261,6 +262,22 @@ venv/
 .obsidian/cache
 EOF
     ok ".gitignore"
+fi
+
+# --- Obsidian config -------------------------------------------------------
+info "Obsidian"
+if [ ! -f "$VAULT_DIR/.obsidian/app.json" ]; then
+    cat > "$VAULT_DIR/.obsidian/app.json" <<'EOF'
+{
+  "useMarkdownLinks": false,
+  "newLinkFormat": "relative",
+  "readableLineLength": true,
+  "attachmentFolderPath": "wiki/views/assets"
+}
+EOF
+    ok ".obsidian/app.json"
+else
+    skip ".obsidian/app.json (exists — keeping user config)"
 fi
 
 # --- Skills ----------------------------------------------------------------
