@@ -229,6 +229,73 @@ def write_base_files(vault: Path, script_dir: Path) -> None:
         skip(".obsidian/app.json (exists — keeping user config)")
 
 
+def init_git(vault: Path) -> None:
+    info("Git")
+    if (vault / ".git").is_dir():
+        skip("git repo already exists")
+        return
+    ans = input("  Initialize a git repo? [Y/n] ").strip().lower()
+    if ans in ("n", "no"):
+        skip("no git")
+        return
+    subprocess.run(["git", "init", "-q"], cwd=vault, check=False)
+    name = subprocess.run(
+        ["git", "config", "--get", "user.name"],
+        cwd=vault, capture_output=True, text=True,
+    ).stdout.strip()
+    email = subprocess.run(
+        ["git", "config", "--get", "user.email"],
+        cwd=vault, capture_output=True, text=True,
+    ).stdout.strip()
+    if not name or not email:
+        warn("git user identity not configured — skipping initial commit")
+        warn("Set with: git config --global user.name 'Your Name'")
+        warn("          git config --global user.email 'you@example.com'")
+        return
+    subprocess.run(["git", "add", "-A"], cwd=vault, check=False)
+    subprocess.run(
+        ["git", "commit", "-q", "-m", "initial vault bootstrap (v4)"],
+        cwd=vault, check=False,
+    )
+    ok("git initialized")
+
+
+def check_deps(vault: Path) -> None:
+    info("Checking Python dependencies")
+    version = subprocess.run(
+        [sys.executable, "--version"], capture_output=True, text=True
+    )
+    ok(f"Python found: {(version.stdout or version.stderr).strip()}")
+
+    all_packages: set[str] = set()
+    for skill_md in (vault / ".claude" / "skills").rglob("SKILL.md"):
+        for line in skill_md.read_text(encoding="utf-8").splitlines():
+            line = line.strip()
+            if line.startswith("packages:"):
+                inner = line.split("[", 1)[-1].rstrip("]")
+                for pkg in inner.split(","):
+                    pkg = pkg.strip().strip("\"'")
+                    if pkg:
+                        all_packages.add(pkg)
+
+    _IMPORT_MAP = {"python-slugify": "slugify"}
+    missing = []
+    for pkg in sorted(all_packages):
+        import_name = _IMPORT_MAP.get(pkg, pkg)
+        r = subprocess.run(
+            [sys.executable, "-c", f"import {import_name}"],
+            capture_output=True,
+        )
+        if r.returncode != 0:
+            missing.append(pkg)
+
+    if missing:
+        warn(f"missing Python packages: {' '.join(missing)}")
+        print(f"      install with: pip install {' '.join(missing)}")
+    else:
+        ok("all Python dependencies installed")
+
+
 def install_commands(vault: Path, script_dir: Path) -> None:
     info("Installing slash commands")
     for cmd in COMMANDS:
@@ -360,6 +427,8 @@ def main() -> None:
     write_base_files(vault, script_dir)
     install_skills(vault, script_dir)
     install_commands(vault, script_dir)
+    init_git(vault)
+    check_deps(vault)
 
 
 if __name__ == "__main__":
