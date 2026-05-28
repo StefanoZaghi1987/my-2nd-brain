@@ -47,8 +47,6 @@ ORPHAN_EXCEPTIONS = {
     "wiki/compass.md",
     "wiki/index.md",
     "wiki/log.md",
-    "index.md",
-    "log.md",
 }
 
 # Required frontmatter fields per type
