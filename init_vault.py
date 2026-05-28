@@ -418,13 +418,14 @@ def print_done(vault: Path) -> None:
     print(f"  Path: {vault}")
     print()
     print("Next steps:")
-    print(f"  1. cd {vault}")
+    print(f'  1. cd "{vault}"')
     print( "  2. Add URLs to inbox.md (or drop PDFs in raw/papers/)")
     print( "  3. Open Claude Code (or another CLI) in this folder")
     print( "  4. Ask: \"process the inbox\", then \"ingest the new content\"")
     print( "  5. Use /view to build timelines/comparisons/slides")
     print( "  6. Use /save for important conversations")
     print( "  7. Periodically: /reflect → read wiki/compass.md")
+    print(f"  (Manual scripts: {py_cmd} .claude/skills/<skill>/scripts/<script>.py)")
     print()
 
 
