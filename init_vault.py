@@ -93,6 +93,137 @@ def create_dirs(vault: Path) -> None:
     ok("directories")
 
 
+# --- File content constants --------------------------------------------------
+
+_INBOX_MD = """\
+# Inbox
+
+URLs to process. The `inbox-fetcher` skill reads this file and pulls
+the URLs into `raw/web/`. Check items after fetching.
+
+## To process
+
+<!-- Add URLs here as a task list:
+- [ ] https://example.com/article
+- [ ] https://arxiv.org/abs/2024.12345
+-->
+
+## Processed
+
+<!-- Automatically moved here after fetch. -->
+"""
+
+_INDEX_MD = """\
+# Index
+
+Catalog of the vault. Updated on every write operation.
+
+## Pages
+
+<!-- Will be populated as you ingest content. -->
+
+## Sources
+
+<!-- One entry per source. -->
+
+## Views
+
+<!-- Timelines, comparisons, slides, etc. -->
+"""
+
+_LOG_MD = """\
+# Log
+
+Append-only log of vault operations.
+
+Format: `## [YYYY-MM-DD] op | title`
+"""
+
+_HOT_MD = """\
+## [INIT]
+
+Vault just bootstrapped. No sessions yet.
+"""
+
+_LINT_STATE = """\
+last_lint: null
+fetches_since_last_lint: 0
+last_exit_code: null
+last_findings_count: 0
+"""
+
+_LINT_REPORT = """\
+# Lint Report
+
+No lint run yet. Run `python3 .claude/skills/vault-linter/scripts/lint.py`
+from the vault root.
+"""
+
+_GITIGNORE = """\
+# System
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Obsidian workspace (keep vault files, skip user-specific state)
+.obsidian/workspace*
+.obsidian/cache
+"""
+
+_OBSIDIAN_APP_JSON = """\
+{
+  "useMarkdownLinks": false,
+  "newLinkFormat": "relative",
+  "readableLineLength": true,
+  "attachmentFolderPath": "wiki/views/assets"
+}
+"""
+
+
+def _write_if_absent(path: Path, content: str, label: str) -> None:
+    if not path.exists():
+        path.write_text(content, encoding="utf-8")
+        ok(label)
+    else:
+        skip(f"{label} (exists)")
+
+
+def write_base_files(vault: Path, script_dir: Path) -> None:
+    info("Writing base files")
+
+    cfg = vault / "vault.config.yml"
+    if not cfg.exists():
+        shutil.copy2(script_dir / "vault.config.yml", cfg)
+        ok("vault.config.yml")
+    else:
+        skip("vault.config.yml (exists — keeping user copy)")
+
+    _write_if_absent(vault / "inbox.md", _INBOX_MD, "inbox.md")
+    _write_if_absent(vault / "wiki" / "index.md", _INDEX_MD, "wiki/index.md")
+    _write_if_absent(vault / "wiki" / "log.md", _LOG_MD, "wiki/log.md")
+    _write_if_absent(vault / "wiki" / "hot.md", _HOT_MD, "wiki/hot.md")
+    _write_if_absent(vault / ".lint" / "state.yaml", _LINT_STATE, ".lint/state.yaml")
+    _write_if_absent(vault / ".lint" / "report.md", _LINT_REPORT, ".lint/report.md")
+    _write_if_absent(vault / ".gitignore", _GITIGNORE, ".gitignore")
+
+    obs_cfg = vault / ".obsidian" / "app.json"
+    if not obs_cfg.exists():
+        obs_cfg.write_text(_OBSIDIAN_APP_JSON, encoding="utf-8")
+        ok(".obsidian/app.json")
+    else:
+        skip(".obsidian/app.json (exists — keeping user config)")
+
+
 def install_claude_md(vault: Path, script_dir: Path) -> None:
     info("Installing CLAUDE.md")
     src = script_dir / "CLAUDE.md"
@@ -171,6 +302,7 @@ def main() -> None:
 
     create_dirs(vault)
     install_claude_md(vault, script_dir)
+    write_base_files(vault, script_dir)
 
 
 if __name__ == "__main__":
