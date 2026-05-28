@@ -135,8 +135,11 @@ cascade-remove a source and everything that depended only on it.
    - `shareable: false` → rebuild or trim the view.
    - `shareable: true` → do NOT touch; warn the user the view is now
      partially unsourced.
-5. Delete `wiki/sources/<slug>.md` and the `raw/` file. This is the
-   one case where writing to `raw/` (as deletion) is allowed —
+5. Delete `wiki/sources/<slug>.md`. Delete the entire raw folder:
+   - Web sources: `raw/web/<slug>/` (includes `index.md` and `assets/`).
+   - PDF sources: `raw/papers/<slug>/` (includes `paper.pdf` and `index.md`).
+
+   This is the one case where writing to `raw/` (as deletion) is allowed —
    invariant #1 covers creation, not user-directed removal.
 6. Update `wiki/index.md` and `wiki/log.md` (invariant #6).
 7. Run `vault-linter` to confirm zero dead links remain.
@@ -211,9 +214,12 @@ for the full protocol.
 
 ## Hot cache
 
-At session end, if we touched meaningful content, update `wiki/hot.md`
-with 5-10 lines on what we covered, what's open, what to pick up next.
-Don't add — replace. At session start, read `wiki/hot.md` first.
+After any session in which `wiki/` was written to, run `/hot` before the
+final response. "Written to" means any ingest, promote, view, reflect,
+forget, or refresh that produced file changes — not queries.
+
+`/hot` replaces the entire file. `wiki/log.md` is the append-only record;
+`wiki/hot.md` is the current snapshot.
 
 ---
 
@@ -226,8 +232,9 @@ At the start of every session:
    - `ingests_since_last_lint` ≥ `lint.auto_trigger_after_ingests` (from `vault.config.yml`)
    - Days since `last_lint` ≥ `lint.auto_trigger_after_days`
    If either condition is met, run `/lint` before proceeding with the session.
-3. If `wiki/compass.md` hasn't been updated in more days than
-   `lint.reflect_reminder_days` (from `vault.config.yml`), suggest running `/reflect`.
+3. Read the `updated` field from `wiki/compass.md` frontmatter. If the file is
+   absent or its `updated` date is more than `lint.reflect_reminder_days` days
+   ago, suggest running `/reflect`.
 
 ---
 
