@@ -344,15 +344,32 @@ fi
 info "Checking Python dependencies"
 if command -v python3 >/dev/null 2>&1; then
     ok "python3 found: $(python3 --version 2>&1)"
+
+    # Collect packages from all installed skill manifests
+    all_packages=""
+    for skill_md in "$VAULT_DIR"/.claude/skills/*/SKILL.md; do
+        [ -f "$skill_md" ] || continue
+        pkgs=$(grep -A1 "^  packages:" "$skill_md" 2>/dev/null | \
+               grep -o '\[.*\]' | tr -d '[]' | tr ',' '\n' | \
+               sed 's/[[:space:]]//g' | grep -v '^$')
+        all_packages="$all_packages $pkgs"
+    done
+
     missing=()
-    for pkg in trafilatura requests slugify; do
-        if ! python3 -c "import $pkg" 2>/dev/null; then
+    for pkg in $(echo "$all_packages" | tr ' ' '\n' | sort -u); do
+        [ -z "$pkg" ] && continue
+        imp_name="$pkg"
+        case "$pkg" in
+            python-slugify) imp_name=slugify ;;
+        esac
+        if ! python3 -c "import $imp_name" 2>/dev/null; then
             missing+=("$pkg")
         fi
     done
+
     if [ ${#missing[@]} -gt 0 ]; then
-        warn "missing Python packages (needed by inbox-fetcher): ${missing[*]}"
-        echo "      install with: pip install trafilatura requests python-slugify"
+        warn "missing Python packages: ${missing[*]}"
+        echo "      install with: pip install ${missing[*]}"
     else
         ok "all Python dependencies installed"
     fi
