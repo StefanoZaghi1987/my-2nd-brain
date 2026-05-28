@@ -493,8 +493,8 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
 
     if n_html + n_pdf > 0:
         state = read_state(vault)
-        prev = int(state.get("ingests_since_last_lint", 0))
-        write_state(vault, {"ingests_since_last_lint": prev + 1})
+        prev = int(state.get("fetches_since_last_lint", 0))
+        write_state(vault, {"fetches_since_last_lint": prev + 1})
 
     return 0 if n_fail == 0 else 2  # 2 = partial success
 
