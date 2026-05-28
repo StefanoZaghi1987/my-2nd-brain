@@ -4,11 +4,14 @@ title: Align gaps severity in vault-linter SKILL.md with code
 status: To Do
 assignee: []
 created_date: '2026-05-28 12:33'
+updated_date: '2026-05-28 12:41'
 labels:
   - wave-2
   - docs
 milestone: vault-hardening
 dependencies: []
+documentation:
+  - features/plans/2026-05-28-vault-hardening-plan.md#task-9
 modified_files:
   - skills/vault-linter/SKILL.md
 ordinal: 9000
@@ -25,3 +28,9 @@ The ## Output section of skills/vault-linter/SKILL.md lists "gaps" under Importa
 - [ ] #1 Important section lists only orphans
 - [ ] #2 Advisory section lists duplicates, stale, naming, view staleness, gaps, and missing cross-references
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+In `skills/vault-linter/SKILL.md`, find the `## Output` section, then the `.lint/report.md` subsection. Find the two bullet lines: `- **Important** — orphans, gaps.` and `- **Advisory** — duplicates, stale, naming, view staleness.` Replace them with: `- **Important** — orphans.` and `- **Advisory** — duplicates, stale, naming, view staleness, gaps, missing cross-references.` No tests needed.
+<!-- SECTION:NOTES:END -->

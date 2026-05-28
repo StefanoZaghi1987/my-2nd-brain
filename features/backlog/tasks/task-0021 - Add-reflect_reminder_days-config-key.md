@@ -4,11 +4,14 @@ title: Add reflect_reminder_days config key
 status: To Do
 assignee: []
 created_date: '2026-05-28 12:32'
+updated_date: '2026-05-28 12:40'
 labels:
   - wave-1
   - config
 milestone: vault-hardening
 dependencies: []
+documentation:
+  - features/plans/2026-05-28-vault-hardening-plan.md#task-1
 modified_files:
   - vault.config.yml
   - skills/shared/vault_state.py
@@ -29,3 +32,9 @@ The vault config has auto-lint triggers (`auto_trigger_after_ingests`, `auto_tri
 - [ ] #3 TestLoadConfig.test_returns_all_default_sections_when_absent asserts config["lint"]["reflect_reminder_days"] == 14
 - [ ] #4 pytest tests/test_vault_state.py passes with no regressions
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Two files, one new key each. (1) In `skills/shared/vault_state.py`, find `_DEFAULTS` dict, inside `"lint": { ... }`, add `"reflect_reminder_days": 14` after `"auto_trigger_after_days": 7`. (2) In `vault.config.yml`, find the `lint:` section, add `reflect_reminder_days: 14` with an inline comment. (3) In `tests/test_vault_state.py`, find `TestLoadConfig.test_returns_all_default_sections_when_absent` and add one assertion at the end: `assert config["lint"]["reflect_reminder_days"] == 14`. Run failing test first, then add the key, then verify it passes. Test: `pytest tests/test_vault_state.py -v`
+<!-- SECTION:NOTES:END -->

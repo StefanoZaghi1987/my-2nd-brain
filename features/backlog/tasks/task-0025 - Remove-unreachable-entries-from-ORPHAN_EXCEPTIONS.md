@@ -4,11 +4,14 @@ title: Remove unreachable entries from ORPHAN_EXCEPTIONS
 status: To Do
 assignee: []
 created_date: '2026-05-28 12:33'
+updated_date: '2026-05-28 12:41'
 labels:
   - wave-1
   - linter
 milestone: vault-hardening
 dependencies: []
+documentation:
+  - features/plans/2026-05-28-vault-hardening-plan.md#task-5
 modified_files:
   - skills/vault-linter/scripts/lint.py
 ordinal: 5000
@@ -25,3 +28,9 @@ lint.py ORPHAN_EXCEPTIONS contains "index.md" and "log.md" without the wiki/ pre
 - [ ] #1 ORPHAN_EXCEPTIONS contains exactly four entries: wiki/hot.md, wiki/compass.md, wiki/index.md, wiki/log.md
 - [ ] #2 pytest tests/test_lint.py passes with no regressions
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+In `skills/vault-linter/scripts/lint.py`, find `ORPHAN_EXCEPTIONS` near the top of the file (~line 44). Remove the two entries without the `wiki/` prefix. The set should contain exactly: `"wiki/hot.md"`, `"wiki/compass.md"`, `"wiki/index.md"`, `"wiki/log.md"`. No test changes needed. Verify: `pytest tests/test_lint.py -v`
+<!-- SECTION:NOTES:END -->

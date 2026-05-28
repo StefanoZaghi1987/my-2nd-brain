@@ -4,11 +4,15 @@ title: Add Obsidian minimal skeleton to init-vault.sh
 status: To Do
 assignee: []
 created_date: '2026-05-28 12:34'
+updated_date: '2026-05-28 12:40'
 labels:
   - wave-2
   - obsidian
 milestone: vault-hardening
-dependencies: []
+dependencies:
+  - TASK-0031
+documentation:
+  - features/plans/2026-05-28-vault-hardening-plan.md#task-14
 modified_files:
   - init-vault.sh
 ordinal: 14000
@@ -27,3 +31,9 @@ The vault is Obsidian-compatible but ships no Obsidian config. Without useMarkdo
 - [ ] #3 Creation is skipped if .obsidian/app.json already exists
 - [ ] #4 Running init-vault.sh against a fresh directory produces a valid .obsidian/app.json
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+In `init-vault.sh`: (1) Find the DIRS=( block (~line 87) and add `".obsidian"` as the last entry before the closing ). (2) After the `.gitignore` creation block (the line `ok ".gitignore"`), insert the new `# --- Obsidian config` section that creates `.obsidian/app.json` using a heredoc (skip if file already exists). The JSON must include `useMarkdownLinks: false` — this is the critical field that keeps Obsidian writing [[wikilinks]] instead of [text](path) links. Full bash code in plan Task 14 Steps 1-2. Verify with: `bash init-vault.sh /tmp/test-vault && cat /tmp/test-vault/.obsidian/app.json && rm -rf /tmp/test-vault`
+<!-- SECTION:NOTES:END -->
