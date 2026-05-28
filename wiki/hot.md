@@ -1,39 +1,51 @@
 # Hot cache — where we left off
 
-**Session:** 2026-05-28 — vault hardening brainstorm + spec + plan
+**Session:** 2026-05-28 — vault hardening implementation complete
 
 ## What we covered
 
-Deep analysis of the full implementation. Identified 5 bugs, 5 structural gaps, and 4 extensions. Ran brainstorming through design + spec + implementation plan.
+Full implementation of the vault-hardening cycle (TASK-0021–0034). All 14 tasks
+implemented, reviewed (spec + quality), and committed on `feat-hardening`. Branch
+is clean and ready to squash-merge into main.
 
 **Spec:** `features/specs/2026-05-28-vault-hardening-design.md`
 **Plan:** `features/plans/2026-05-28-vault-hardening-plan.md`
-**Branch:** `feat-brainstorming`
+**Branch:** `feat-hardening` (16 commits, 51/51 tests passing)
 
-## 14 backlog tasks created (TASK-0021–0034)
+## What was delivered
 
-**Wave 1 — code + tests (do sequentially within each group):**
-- TASK-0021 — reflect_reminder_days config key (standalone)
-- TASK-0022 → TASK-0023 → TASK-0024 — fetch pipeline: update_inbox fix, pdf_enabled, content-type
-- TASK-0025 — ORPHAN_EXCEPTIONS cleanup (standalone)
-- TASK-0026 → TASK-0027 — linter: check_conversations, check_index_sync
+**Wave 1 — code + tests:**
+- TASK-0021 — `reflect_reminder_days: 14` config key in vault_state.py + vault.config.yml
+- TASK-0022 — `update_inbox` sub-bullet orphan fix (while-loop with look-ahead)
+- TASK-0023 — `pdf_enabled: false` now enforced in fetch pipeline
+- TASK-0024 — `get_content_type()` helper + Content-Type PDF routing for suffix-less URLs
+- TASK-0025 — Dead `ORPHAN_EXCEPTIONS` entries removed (`"index.md"`, `"log.md"`)
+- TASK-0026 — `check_conversations`: advisory finding for missing `type: conversation`
+- TASK-0027 — `check_index_sync`: advisory finding when source absent from index.md
 
-**Wave 2 — docs + config (all independent except noted):**
-- TASK-0028 — SKILL.md inbox-fetcher stale text
-- TASK-0029 — SKILL.md vault-linter gaps severity
-- TASK-0030 — README six invariants
-- TASK-0031 → TASK-0034 — /ingest command + Obsidian skeleton (both touch init-vault.sh)
-- TASK-0021 → TASK-0032 — CLAUDE.md session-start + invariant #6
-- TASK-0026 → TASK-0033 — /save template type:conversation
+**Wave 2 — docs + config:**
+- TASK-0028 — inbox-fetcher SKILL.md: sub-bullet description corrected
+- TASK-0029 — vault-linter SKILL.md: gaps moved from Important → Advisory
+- TASK-0030 — README.md: Six invariants (was Five), 6th added
+- TASK-0031 — `commands/ingest.md` created, registered in init-vault.sh loop
+- TASK-0032 — CLAUDE.md: `## Session start` section + invariant #6 sharpened
+- TASK-0033 — `commands/save.md`: `type: conversation` + `promoted_to: []` in template
+- TASK-0034 — init-vault.sh: `.obsidian/` dir + `app.json` with `useMarkdownLinks: false`
+
+**Post-cycle doc sync:**
+- CLAUDE.md FORGET step 6: bare `index.md`/`log.md` → full `wiki/` paths
+- README.md: `ingest.md` added to commands listing
+- GETTING-STARTED.md: 8 slash commands, 6 rules, /ingest in operations table,
+  Obsidian note updated
 
 ## What's open
 
-All 14 tasks are To Do. Wave 1 tasks require pytest to pass after each. Wave 2 tasks are prose-only. Each task has implementation notes, exact file paths, and test commands — self-contained for a new conversation.
+Nothing from this cycle. All TASK-0021–0034 marked Done in backlog.
 
-## Key decisions made
-
-- pdf_enabled: false → walled-domain pattern (mark ⚠, leave unchecked)
-- conversations linter check: advisory only, no age-based check (that belongs to /reflect)
-- Obsidian: minimal skeleton only (useMarkdownLinks: false is the critical field)
-- reflect_reminder_days: 14 days default, in lint: config section
-- /ingest command: compact protocol sheet, not as elaborate as /forget
+Next natural steps (not tasked):
+- First real use of `/ingest` command after a fetch run — verify the new
+  protocol sheet is followed correctly by the agent
+- Run `/lint` to exercise `check_conversations` and `check_index_sync` on the
+  live vault for the first time
+- Consider running `init-vault.sh --here` to install the new `/ingest` command
+  and Obsidian skeleton into the live vault
