@@ -104,7 +104,7 @@ question can draw on.
 
 ## Design principles
 
-Five invariants:
+Six invariants:
 
 1. **Raw is immutable.** If the wiki is corrupted, it's recompilable
    from `raw/` alone.
@@ -113,6 +113,7 @@ Five invariants:
 4. **You curate, the agent maintains.** No auto-fetching, no
    auto-structural changes, no views without your request.
 5. **`shareable: true` views are frozen.** Anything else evolves.
+6. **Touch ≤15 files per operation.** If more are needed, stop and ask — split the work across sessions.
 
 ---
 
