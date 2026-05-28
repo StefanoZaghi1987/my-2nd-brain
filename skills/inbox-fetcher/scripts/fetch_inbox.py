@@ -20,10 +20,14 @@ import argparse
 import hashlib
 import re
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from urllib.parse import urlparse, urljoin
+
+import sys as _sys
+_sys.path.insert(0, str(Path(__file__).parent.parent.parent / "shared"))
+from vault_state import load_config, read_state, write_state
 
 # --- Dependency check with friendly error -----------------------------------
 
@@ -54,6 +58,8 @@ class InboxEntry:
     url: str
     line_index: int
     raw_line: str
+    tags: list = field(default_factory=list)
+    note: str | None = None
 
 
 @dataclass
@@ -67,10 +73,6 @@ class FetchResult:
 
 # --- Constants --------------------------------------------------------------
 
-HTML_TIMEOUT = 20
-PDF_TIMEOUT = 60
-MAX_PDF_SIZE_MB = 50
-
 USER_AGENT = (
     "Mozilla/5.0 (compatible; InboxFetcher/1.0; "
     "+https://github.com/anthropic/skills)"
@@ -79,45 +81,43 @@ USER_AGENT = (
 UNCHECKED_PATTERN = re.compile(r"^- \[ \] (https?://\S+)\s*$")
 IMG_PATTERN = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
 
-# Domains known to block plain HTTP fetchers (auth walls, aggressive
-# anti-bot, or JS-only rendering). Skip trafilatura entirely and mark
-# the URL for agent-driven Playwright MCP fallback.
-WALLED_DOMAINS = frozenset({
-    "x.com",
-    "twitter.com",
-    "mobile.twitter.com",
-    "threads.net",
-    "linkedin.com",
-    "www.linkedin.com",
-    "facebook.com",
-    "www.facebook.com",
-    "m.facebook.com",
-    "instagram.com",
-    "www.instagram.com",
-})
-
 PLAYWRIGHT_HINT = "try playwright"
 
 
 # --- Core operations --------------------------------------------------------
 
 def find_unchecked_entries(inbox_text: str) -> list[InboxEntry]:
-    """Parse inbox.md and return list of unchecked URL entries.
-    
-    HTML comments (<!-- ... -->) are stripped before parsing so example
-    URLs inside comments are not picked up.
-    """
-    # Strip HTML comments (including multi-line) before parsing
+    """Parse inbox.md and return unchecked URL entries with any tag/note hints."""
     stripped = re.sub(r"<!--.*?-->", "", inbox_text, flags=re.DOTALL)
+    lines = stripped.splitlines()
     entries = []
-    for i, line in enumerate(stripped.splitlines()):
+    i = 0
+    while i < len(lines):
+        line = lines[i]
         match = UNCHECKED_PATTERN.match(line)
         if match:
-            entries.append(InboxEntry(
+            entry = InboxEntry(
                 url=match.group(1).strip(),
                 line_index=i,
                 raw_line=line,
-            ))
+            )
+            # Collect indented sub-bullets immediately following the URL line
+            j = i + 1
+            while j < len(lines):
+                sub = lines[j]
+                if not sub.startswith(" ") and not sub.startswith("\t"):
+                    break
+                sub_stripped = sub.strip()
+                if sub_stripped.startswith("- tags:"):
+                    raw_tags = sub_stripped[len("- tags:"):].strip()
+                    entry.tags = [t.strip() for t in raw_tags.split(",") if t.strip()]
+                elif sub_stripped.startswith("- note:"):
+                    entry.note = sub_stripped[len("- note:"):].strip()
+                j += 1
+            entries.append(entry)
+            i = j
+        else:
+            i += 1
     return entries
 
 
@@ -126,10 +126,10 @@ def is_pdf_url(url: str) -> bool:
     return Path(urlparse(url).path).suffix.lower() == ".pdf"
 
 
-def is_walled(url: str) -> bool:
+def is_walled(url: str, walled: frozenset) -> bool:
     """Preflight check: URL host is in the walled-domain list."""
     host = urlparse(url).netloc.lower()
-    return host in WALLED_DOMAINS
+    return host in walled
 
 
 def rewrite_url_for_fetch(url: str) -> tuple[str, str | None]:
@@ -165,12 +165,14 @@ def slug_from(url: str, title: str | None) -> str:
 
 
 def fetch_pdf(url: str, papers_dir: Path,
-              slug_override: str | None = None) -> FetchResult:
+              slug_override: str | None = None,
+              pdf_timeout: int = 60,
+              max_pdf_mb: int = 50) -> FetchResult:
     """Download a PDF directly to raw/papers/."""
     try:
         r = requests.get(
             url,
-            timeout=PDF_TIMEOUT,
+            timeout=pdf_timeout,
             headers={"User-Agent": USER_AGENT},
             stream=True,
         )
@@ -180,7 +182,7 @@ def fetch_pdf(url: str, papers_dir: Path,
                            reason=f"pdf download failed: {e}")
 
     size = int(r.headers.get("Content-Length", 0))
-    if size > MAX_PDF_SIZE_MB * 1024 * 1024:
+    if size > max_pdf_mb * 1024 * 1024:
         print(f"  ⚠ large PDF ({size // 1024 // 1024} MB): {url}")
 
     slug = slug_override or slug_from(url, None)
@@ -194,7 +196,7 @@ def fetch_pdf(url: str, papers_dir: Path,
     return FetchResult(url=url, ok=True, kind="pdf", out_path=out_path)
 
 
-def fetch_html(url: str, web_dir: Path) -> FetchResult:
+def fetch_html(url: str, web_dir: Path, html_timeout: int = 20) -> FetchResult:
     """Fetch an HTML article, extract clean markdown, download images."""
     downloaded = trafilatura.fetch_url(url)
     if not downloaded:
@@ -225,7 +227,8 @@ def fetch_html(url: str, web_dir: Path) -> FetchResult:
     out_dir.mkdir(parents=True, exist_ok=True)
     assets_dir.mkdir(exist_ok=True)
 
-    md_with_local_images = download_images(result, assets_dir, base_url=url)
+    md_with_local_images = download_images(result, assets_dir, base_url=url,
+                                           html_timeout=html_timeout)
 
     frontmatter_lines = [
         "---",
@@ -248,7 +251,8 @@ def fetch_html(url: str, web_dir: Path) -> FetchResult:
     return FetchResult(url=url, ok=True, kind="html", out_path=out_dir)
 
 
-def download_images(md: str, assets_dir: Path, base_url: str) -> str:
+def download_images(md: str, assets_dir: Path, base_url: str,
+                    html_timeout: int = 20) -> str:
     """Download all images referenced in md, rewrite paths to local assets/."""
 
     def replace(match: re.Match) -> str:
@@ -261,7 +265,7 @@ def download_images(md: str, assets_dir: Path, base_url: str) -> str:
         try:
             r = requests.get(
                 src_abs,
-                timeout=HTML_TIMEOUT,
+                timeout=html_timeout,
                 headers={"User-Agent": USER_AGENT},
             )
             r.raise_for_status()
@@ -291,10 +295,11 @@ def update_inbox(
     inbox_path: Path,
     inbox_text: str,
     results: list[FetchResult],
+    processed_section: str = "## Processed",
 ) -> str:
     """
     Rewrite inbox.md:
-    - successful URLs are moved under '## Processati'
+    - successful URLs are moved under the processed_section header
     - failed URLs stay unchecked with a ⚠ reason appended inline
     """
     lines = inbox_text.splitlines()
@@ -328,13 +333,13 @@ def update_inbox(
         else:
             out_lines.append(f"- [ ] {url} ⚠ {result.reason}")
 
-    # Ensure "## Processati" section exists; append new entries there
+    # Ensure processed_section header exists; append new entries there
     final_lines = list(out_lines)
     if new_processed_lines:
-        if not any(l.strip() == "## Processati" for l in final_lines):
+        if not any(l.strip() == processed_section for l in final_lines):
             if final_lines and final_lines[-1].strip():
                 final_lines.append("")
-            final_lines.append("## Processati")
+            final_lines.append(processed_section)
             final_lines.append("")
 
         # Find the section and append at the end of it (end of file is fine)
@@ -347,6 +352,13 @@ def update_inbox(
 # --- Orchestration ----------------------------------------------------------
 
 def process_vault(vault: Path, dry_run: bool = False) -> int:
+    cfg = load_config(vault)
+    processed_section = cfg["inbox"]["processed_section"]
+    html_timeout = cfg["fetch"]["html_timeout_seconds"]
+    pdf_timeout = cfg["fetch"]["pdf_timeout_seconds"]
+    max_pdf_mb = cfg["fetch"]["max_pdf_size_mb"]
+    walled = frozenset(cfg["fetch"]["walled_domains"])
+
     inbox_path = vault / "inbox.md"
     if not inbox_path.exists():
         print(f"ERROR: inbox.md not found at {inbox_path}", file=sys.stderr)
@@ -377,15 +389,16 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
             print(f"\n→ {e.url}")
 
         if is_pdf_url(fetch_url):
-            r = fetch_pdf(fetch_url, papers_dir, slug_override=slug_override)
-        elif is_walled(fetch_url):
+            r = fetch_pdf(fetch_url, papers_dir, slug_override=slug_override,
+                          pdf_timeout=pdf_timeout, max_pdf_mb=max_pdf_mb)
+        elif is_walled(fetch_url, walled):
             host = urlparse(fetch_url).netloc.lower()
             r = FetchResult(
                 url=fetch_url, ok=False, kind="failed",
                 reason=f"walled domain ({host}) — {PLAYWRIGHT_HINT}",
             )
         else:
-            r = fetch_html(fetch_url, web_dir)
+            r = fetch_html(fetch_url, web_dir, html_timeout=html_timeout)
 
         # Track by the original inbox URL, not the rewritten fetch URL,
         # so update_inbox can match the line back.
@@ -396,7 +409,8 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
         else:
             print(f"  ⚠ {r.reason}")
 
-    new_text = update_inbox(inbox_path, inbox_text, results)
+    new_text = update_inbox(inbox_path, inbox_text, results,
+                            processed_section=processed_section)
     inbox_path.write_text(new_text, encoding="utf-8")
 
     # Summary
@@ -409,6 +423,11 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
     print(f"  ✓ {n_pdf} PDF(s) → raw/papers/")
     if n_fail:
         print(f"  ⚠ {n_fail} failed (see inbox.md for reasons)")
+
+    if n_html + n_pdf > 0:
+        state = read_state(vault)
+        prev = int(state.get("ingests_since_last_lint", 0))
+        write_state(vault, {"ingests_since_last_lint": prev + 1})
 
     return 0 if n_fail == 0 else 2  # 2 = partial success
 
