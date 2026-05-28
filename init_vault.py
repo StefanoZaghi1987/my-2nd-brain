@@ -63,6 +63,8 @@ def err(msg: str) -> None:
 DIRS = [
     "raw/papers",
     "raw/web",
+    "raw/local",
+    "raw/drop",
     "wiki/pages",
     "wiki/sources",
     "wiki/views/assets",
@@ -77,7 +79,7 @@ DIRS = [
 ]
 
 GITKEEP_DIRS = [
-    "raw/papers", "raw/web", "wiki/pages", "wiki/sources",
+    "raw/papers", "raw/web", "raw/local", "raw/drop", "wiki/pages", "wiki/sources",
     "wiki/views", "wiki/views/assets", "conversations", ".lint",
 ]
 
@@ -312,7 +314,7 @@ def install_skills(vault: Path, script_dir: Path) -> None:
     info("Installing skills")
 
     for skill_name, py_scripts in [
-        ("inbox-fetcher", ["scripts/fetch_inbox.py"]),
+        ("inbox-fetcher", ["scripts/fetch_inbox.py", "scripts/adopt_drop.py"]),
         ("vault-linter", ["scripts/lint.py"]),
         ("view-builder", []),
     ]:
@@ -419,7 +421,7 @@ def print_done(vault: Path) -> None:
     print()
     print("Next steps:")
     print(f'  1. cd "{vault}"')
-    print( "  2. Add URLs to inbox.md (or drop PDFs in raw/papers/)")
+    print( "  2. Add URLs to inbox.md, or drop PDFs in raw/drop/")
     print( "  3. Open Claude Code (or another CLI) in this folder")
     print( "  4. Ask: \"process the inbox\", then \"ingest the new content\"")
     print( "  5. Use /view to build timelines/comparisons/slides")
