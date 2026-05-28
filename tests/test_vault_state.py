@@ -67,6 +67,7 @@ class TestLoadConfig:
         assert config["fetch"]["html_timeout_seconds"] == 20
         assert isinstance(config["fetch"]["walled_domains"], list)
         assert "x.com" in config["fetch"]["walled_domains"]
+        assert config["lint"]["reflect_reminder_days"] == 14
 
     def test_overrides_specific_value_while_preserving_defaults(self, tmp_path):
         (tmp_path / "vault.config.yml").write_text(

@@ -23,6 +23,7 @@ lint:
   view_stale_days: 30                # days a view can lag its based_on pages
   auto_trigger_after_ingests: 5      # run lint automatically after N ingests
   auto_trigger_after_days: 7        # run lint automatically after N days
+  reflect_reminder_days: 14          # suggest /reflect after N days without one
 
 ingest:
   max_new_pages_before_confirm: 3    # ask before creating more than N new pages
