@@ -8,3 +8,6 @@ __pycache__/
 *.pyo
 *.pyd
 .pytest_cache/
+
+# Runtime lint output — belongs in deployed vaults, not the bundle template
+.lint/
