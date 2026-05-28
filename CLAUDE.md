@@ -94,6 +94,25 @@ User says "ingest X" → read the new `raw/` content, write or update:
 - optionally propose new pages for concepts that don't exist yet
 Always ask before creating >3 new pages in one ingest.
 
+### INGEST — source type branches
+
+**Web articles** (`raw/web/<slug>/index.md`, no `fetch_method` field or `fetch_method: html`):
+Read `index.md`. Write `wiki/sources/<slug>.md` with the full summary.
+
+**PDFs** (`raw/papers/<slug>/index.md` with `fetch_method: pdf`):
+1. Read `index.md` to get `source_url`, `title`, `tags`, `note`.
+2. Read `paper.pdf` using the Read tool — pages 1–5 (abstract and introduction).
+   If the paper has more than 10 pages, also read the last 2 pages (conclusion).
+3. Infer the title from the first visible heading; fall back to the slug.
+4. Write `wiki/sources/<slug>.md` with the same schema as web sources,
+   plus `fetch_method: pdf` in the frontmatter.
+
+**Tags and note propagation** (applies to all source types):
+After reading any raw source `index.md`:
+- If `tags` is present in frontmatter, carry it into `wiki/sources/<slug>.md` frontmatter.
+- If `note` is present, treat it as a focus directive: the source summary must
+  explicitly address the note topic — not merely acknowledge it.
+
 ### FORGET
 User says "forget X", "remove source X", or runs `/forget <source>` →
 cascade-remove a source and everything that depended only on it.
