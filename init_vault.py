@@ -81,6 +81,11 @@ GITKEEP_DIRS = [
     "wiki/views", "wiki/views/assets", "conversations", ".lint",
 ]
 
+COMMANDS = [
+    "save", "view", "reflect", "forget", "lint",
+    "promote", "refresh", "ingest", "fetch", "hot", "playwright-fetch",
+]
+
 
 def create_dirs(vault: Path) -> None:
     info("Creating folder structure")
@@ -224,6 +229,18 @@ def write_base_files(vault: Path, script_dir: Path) -> None:
         skip(".obsidian/app.json (exists — keeping user config)")
 
 
+def install_commands(vault: Path, script_dir: Path) -> None:
+    info("Installing slash commands")
+    for cmd in COMMANDS:
+        src = script_dir / "commands" / f"{cmd}.md"
+        dst = vault / ".claude" / "commands" / f"{cmd}.md"
+        if src.exists():
+            shutil.copy2(src, dst)
+            ok(f"command: /{cmd}")
+        else:
+            warn(f"command {cmd} not found in bundle")
+
+
 def install_skills(vault: Path, script_dir: Path) -> None:
     info("Installing skills")
 
@@ -342,6 +359,7 @@ def main() -> None:
     install_claude_md(vault, script_dir)
     write_base_files(vault, script_dir)
     install_skills(vault, script_dir)
+    install_commands(vault, script_dir)
 
 
 if __name__ == "__main__":
