@@ -13,11 +13,11 @@ class TestReadState:
     def test_parses_existing_state_file(self, tmp_path):
         (tmp_path / ".lint").mkdir()
         (tmp_path / ".lint" / "state.yaml").write_text(
-            "last_lint: 2026-01-01\ningests_since_last_lint: 3\n"
+            "last_lint: 2026-01-01\nfetches_since_last_lint: 3\n"
         )
         state = read_state(tmp_path)
         assert state["last_lint"] == "2026-01-01"
-        assert state["ingests_since_last_lint"] == "3"
+        assert state["fetches_since_last_lint"] == "3"
 
     def test_ignores_comment_lines(self, tmp_path):
         (tmp_path / ".lint").mkdir()
@@ -31,31 +31,31 @@ class TestReadState:
 
 class TestWriteState:
     def test_creates_file_and_lint_dir_when_absent(self, tmp_path):
-        write_state(tmp_path, {"ingests_since_last_lint": 1})
+        write_state(tmp_path, {"fetches_since_last_lint": 1})
         assert (tmp_path / ".lint" / "state.yaml").exists()
 
     def test_patches_existing_key(self, tmp_path):
         (tmp_path / ".lint").mkdir()
         (tmp_path / ".lint" / "state.yaml").write_text(
-            "last_lint: 2026-01-01\ningests_since_last_lint: 3\n"
+            "last_lint: 2026-01-01\nfetches_since_last_lint: 3\n"
         )
-        write_state(tmp_path, {"ingests_since_last_lint": 5})
-        assert read_state(tmp_path)["ingests_since_last_lint"] == "5"
+        write_state(tmp_path, {"fetches_since_last_lint": 5})
+        assert read_state(tmp_path)["fetches_since_last_lint"] == "5"
 
     def test_preserves_keys_not_in_updates(self, tmp_path):
         (tmp_path / ".lint").mkdir()
         (tmp_path / ".lint" / "state.yaml").write_text(
-            "last_lint: 2026-01-01\ningests_since_last_lint: 3\n"
+            "last_lint: 2026-01-01\nfetches_since_last_lint: 3\n"
         )
-        write_state(tmp_path, {"ingests_since_last_lint": 5})
+        write_state(tmp_path, {"fetches_since_last_lint": 5})
         assert read_state(tmp_path)["last_lint"] == "2026-01-01"
 
     def test_adds_new_key_to_existing_file(self, tmp_path):
         (tmp_path / ".lint").mkdir()
         (tmp_path / ".lint" / "state.yaml").write_text("last_lint: 2026-01-01\n")
-        write_state(tmp_path, {"ingests_since_last_lint": 1})
+        write_state(tmp_path, {"fetches_since_last_lint": 1})
         state = read_state(tmp_path)
-        assert state["ingests_since_last_lint"] == "1"
+        assert state["fetches_since_last_lint"] == "1"
         assert state["last_lint"] == "2026-01-01"
 
 
