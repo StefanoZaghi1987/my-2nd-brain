@@ -28,3 +28,7 @@ lint:
 ingest:
   max_new_pages_before_confirm: 3    # ask before creating more than N new pages
   max_files_per_operation: 15        # invariant #5 enforcement ceiling
+
+drop_zone:
+  path: raw/drop
+  enabled: true

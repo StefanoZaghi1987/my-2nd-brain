@@ -1,0 +1,5 @@
+/brainstorming
+You are an expert about knowledge base organization and maintenance.
+Deep dive, analyze and understand this LLM Wiki implementation, based on Andrej Karpathy's LLM Wiki (https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) idea.
+I want to be able to manage, as raw PDF file sources, not only downloaded source files (such as papers), but also copy-pasted PDF documents.
+I want to be able to copy-paste PDF files into a raw folder, then those files must be ingested and become part of the wiki.

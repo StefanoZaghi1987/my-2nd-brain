@@ -1,6 +1,6 @@
 ---
 name: inbox-fetcher
-description: Processes a queue of URLs listed in inbox.md for a second brain vault, downloading each page as clean markdown in raw/web/<slug>/index.md with images in an assets/ subdirectory. Use this skill whenever the user mentions "inbox", "fetch", "process links", "scrape URLs", "download articles", or adds URLs to inbox.md. Run this BEFORE any ingest operation so the agent has clean raw files to work from. Handles HTML articles via trafilatura, direct PDF downloads, and per-URL failures (paywalls, JS-rendered pages, timeouts) gracefully without blocking the rest of the queue. Walled domains (X/Twitter, LinkedIn, Threads, Facebook, Instagram) are flagged for an agent-driven Playwright MCP fallback instead of being attempted with trafilatura. Arxiv abstract/html URLs are rewritten to the PDF endpoint so the paper itself is archived, not the landing page.
+description: Processes a queue of URLs listed in inbox.md for a second brain vault, downloading each page as clean markdown in raw/web/<slug>/index.md with images in an assets/ subdirectory. Use this skill whenever the user mentions "inbox", "fetch", "process links", "scrape URLs", "download articles", or adds URLs to inbox.md. Run this BEFORE any ingest operation so the agent has clean raw files to work from. Handles HTML articles via trafilatura, direct PDF downloads, and per-URL failures (paywalls, JS-rendered pages, timeouts) gracefully without blocking the rest of the queue. Walled domains (X/Twitter, LinkedIn, Threads, Facebook, Instagram) are flagged for an agent-driven Playwright MCP fallback instead of being attempted with trafilatura. Arxiv abstract/html URLs are rewritten to the PDF endpoint so the paper itself is archived, not the landing page. Also provides adopt_drop.py, which adopts copy-pasted PDFs from raw/drop/ into raw/local/<slug>/ as a pre-flight step for /ingest.
 provides: fetch
 config_section: fetch
 requires:
@@ -134,6 +134,45 @@ Processed 5 URLs:
 ```
 
 The agent reports this summary verbatim and asks the user whether to proceed with ingest on the new files.
+
+## Drop zone adoption (`adopt_drop.py`)
+
+Companion script for copy-pasted PDFs that arrive outside a URL.
+
+**When to use:** called automatically by `/ingest` as a pre-flight step
+when `raw/drop/` (or the configured `drop_zone.path`) contains `.pdf` files.
+Skips silently when `drop_zone.enabled: false`. Can also be run manually.
+
+**What it does per file:**
+1. Derives a slug from the filename stem via `slugify()`.
+2. Checks for collision: if `raw/local/<slug>/` already exists, skips with a warning.
+3. Creates `raw/local/<slug>/`, moves the PDF to `paper.pdf`.
+4. Writes a stub `index.md` with `fetch_method: local-pdf`, stub title, and today's date.
+5. Prints `[ok] adopted  raw/local/<slug>/`.
+
+**Run manually:**
+```bash
+python3 skills/inbox-fetcher/scripts/adopt_drop.py            # adopt (default: cwd)
+python3 skills/inbox-fetcher/scripts/adopt_drop.py --vault /path/to/vault
+python3 skills/inbox-fetcher/scripts/adopt_drop.py --dry-run  # preview only; no files moved
+```
+
+**Output contract (live run):**
+```
+Found 2 PDF(s) in drop zone.
+  [ok] adopted  raw/local/attention-is-all-you-need/
+  [ok] adopted  raw/local/lecun-path-to-autonomy/
+Adopted 2, skipped 0.
+```
+
+**Output contract (dry run):**
+```
+Found 2 PDF(s) in drop zone.
+  would adopt: attention-is-all-you-need.pdf -> raw/local/attention-is-all-you-need/
+  would adopt: lecun-path-to-autonomy.pdf -> raw/local/lecun-path-to-autonomy/
+```
+
+Exit codes: `0` = all adopted (or nothing to do); `1` = bad `--vault` path; `2` = partial (≥1 skipped due to slug collision).
 
 ## Not in scope
 

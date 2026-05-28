@@ -23,8 +23,8 @@ vault-bundle/
 ├── GETTING-STARTED.md    10-minute walkthrough for newcomers
 ├── README.md             this file
 ├── skills/
-│   ├── inbox-fetcher/    URL → markdown in raw/ (web articles + PDFs)
-│   ├── vault-linter/     deterministic health checks
+│   ├── inbox-fetcher/    URL → markdown in raw/ (web + PDFs); also raw/drop/ adoption
+│   ├── vault-linter/     deterministic health checks (15 checks)
 │   └── view-builder/     timelines, comparisons, charts, slides, reports, posts
 ├── commands/
 │   ├── save.md               /save
@@ -63,6 +63,9 @@ Script is idempotent — safe to re-run.
 
 Then open Claude Code (or another CLI) in the vault and follow
 [GETTING-STARTED.md](GETTING-STARTED.md).
+
+**To add a local PDF (no URL needed):** copy it into `raw/drop/` in your vault,
+then run `/ingest`. The agent adopts it into `raw/local/` and summarises it.
 
 ### Updating an existing vault
 
@@ -113,7 +116,8 @@ question can draw on.
 Six invariants:
 
 1. **Raw is immutable.** If the wiki is corrupted, it's recompilable
-   from `raw/` alone.
+   from `raw/` alone. Scripts (`fetch_inbox.py`, `adopt_drop.py`) write
+   to `raw/` — the agent doesn't.
 2. **Every claim cites a source.** No orphan claims in the wiki.
 3. **Paraphrase, don't copy.** Summaries are in the agent's words.
 4. **You curate, the agent maintains.** No auto-fetching, no

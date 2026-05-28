@@ -109,3 +109,18 @@ class TestLoadConfig:
         )
         config = load_config(tmp_path)
         assert config["lint"]["stale_source_days"] == 90
+
+
+class TestDropZoneDefaults:
+    def test_load_config_returns_drop_zone_defaults_when_config_absent(self, tmp_path):
+        cfg = load_config(tmp_path)
+        assert cfg["drop_zone"]["path"] == "raw/drop"
+        assert cfg["drop_zone"]["enabled"] is True
+
+    def test_load_config_respects_drop_zone_overrides(self, tmp_path):
+        (tmp_path / "vault.config.yml").write_text(
+            "drop_zone:\n  path: raw/inbox-pdfs\n  enabled: false\n"
+        )
+        cfg = load_config(tmp_path)
+        assert cfg["drop_zone"]["path"] == "raw/inbox-pdfs"
+        assert cfg["drop_zone"]["enabled"] is False

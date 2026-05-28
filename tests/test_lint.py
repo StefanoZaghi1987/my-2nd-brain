@@ -176,3 +176,93 @@ class TestCheckIndexSync:
         assert findings[0].check == "index_sync"
         assert findings[0].severity == "advisory"
         assert "agent-skills" in findings[0].file
+
+
+class TestCheckLocalIndex:
+    def test_no_findings_when_local_dir_absent(self, tmp_path):
+        from lint import check_pdf_index
+        assert check_pdf_index(tmp_path) == []
+
+    def test_advisory_for_local_subdir_without_index(self, tmp_path):
+        slug = tmp_path / "raw" / "local" / "my-paper"
+        slug.mkdir(parents=True)
+        (slug / "paper.pdf").write_bytes(b"%PDF")
+        from lint import check_pdf_index
+        findings = check_pdf_index(tmp_path)
+        assert any(f.check == "missing_pdf_index" for f in findings)
+        assert all(f.severity == "advisory" for f in findings)
+        finding = next(f for f in findings if f.check == "missing_pdf_index")
+        assert "raw/local/" in finding.detail
+
+    def test_no_findings_for_correct_local_structure(self, tmp_path):
+        slug = tmp_path / "raw" / "local" / "my-paper"
+        slug.mkdir(parents=True)
+        (slug / "paper.pdf").write_bytes(b"%PDF")
+        (slug / "index.md").write_text("---\nfetch_method: local-pdf\n---\n")
+        from lint import check_pdf_index
+        assert check_pdf_index(tmp_path) == []
+
+    def test_advisory_for_flat_pdf_in_local(self, tmp_path):
+        local = tmp_path / "raw" / "local"
+        local.mkdir(parents=True)
+        (local / "orphan.pdf").write_bytes(b"%PDF")
+        from lint import check_pdf_index
+        findings = check_pdf_index(tmp_path)
+        assert any(f.check == "legacy_flat_pdf" for f in findings)
+
+    def test_checks_both_papers_and_local(self, tmp_path):
+        (tmp_path / "raw" / "papers" / "p1").mkdir(parents=True)
+        (tmp_path / "raw" / "papers" / "p1" / "paper.pdf").write_bytes(b"%PDF")
+        (tmp_path / "raw" / "local" / "p2").mkdir(parents=True)
+        (tmp_path / "raw" / "local" / "p2" / "paper.pdf").write_bytes(b"%PDF")
+        from lint import check_pdf_index
+        findings = check_pdf_index(tmp_path)
+        files = [f.file for f in findings]
+        assert any("papers" in fp for fp in files)
+
+
+class TestCheckDropZone:
+    def test_no_findings_when_drop_zone_absent(self, tmp_path):
+        from lint import check_drop_zone
+        assert check_drop_zone(tmp_path) == []
+
+    def test_no_findings_when_drop_zone_empty(self, tmp_path):
+        (tmp_path / "raw" / "drop").mkdir(parents=True)
+        from lint import check_drop_zone
+        assert check_drop_zone(tmp_path) == []
+
+    def test_advisory_when_pdf_present(self, tmp_path):
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "unprocessed.pdf").write_bytes(b"%PDF")
+        from lint import check_drop_zone
+        findings = check_drop_zone(tmp_path)
+        assert len(findings) == 1
+        assert findings[0].check == "drop_zone_not_empty"
+        assert findings[0].severity == "advisory"
+
+    def test_detail_mentions_count(self, tmp_path):
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "a.pdf").write_bytes(b"%PDF")
+        (drop / "b.pdf").write_bytes(b"%PDF")
+        from lint import check_drop_zone
+        findings = check_drop_zone(tmp_path)
+        assert "2" in findings[0].detail
+
+    def test_ignores_non_pdf_files(self, tmp_path):
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "notes.txt").write_text("just a note")
+        from lint import check_drop_zone
+        assert check_drop_zone(tmp_path) == []
+
+    def test_no_findings_when_drop_zone_disabled(self, tmp_path):
+        (tmp_path / "vault.config.yml").write_text(
+            "drop_zone:\n  enabled: false\n  path: raw/drop\n"
+        )
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "paper.pdf").write_bytes(b"%PDF")
+        from lint import check_drop_zone
+        assert check_drop_zone(tmp_path) == []

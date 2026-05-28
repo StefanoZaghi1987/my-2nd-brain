@@ -342,31 +342,54 @@ def check_based_on_links(pages: dict[str, "WikiPage"], vault: Path) -> list[Find
 
 def check_pdf_index(vault: Path) -> list[Finding]:
     """
-    Verify that raw/papers/ follows the folder convention: each paper
-    lives in its own subdirectory with a companion index.md.
+    Verify that raw/papers/ and raw/local/ follow the folder convention:
+    each paper lives in its own subdirectory with a companion index.md.
     """
     findings = []
-    papers_dir = vault / "raw" / "papers"
-    if not papers_dir.is_dir():
-        return findings
-
-    for entry in papers_dir.iterdir():
-        if entry.is_dir():
-            if not (entry / "index.md").exists():
+    for folder_name in ("papers", "local"):
+        folder = vault / "raw" / folder_name
+        if not folder.is_dir():
+            continue
+        for entry in folder.iterdir():
+            if entry.is_dir():
+                if not (entry / "index.md").exists():
+                    findings.append(Finding(
+                        severity="advisory",
+                        check="missing_pdf_index",
+                        file=str(entry.relative_to(vault)),
+                        detail=f"raw/{folder_name}/ subdirectory has no index.md",
+                    ))
+            elif entry.suffix.lower() == ".pdf":
                 findings.append(Finding(
                     severity="advisory",
-                    check="missing_pdf_index",
+                    check="legacy_flat_pdf",
                     file=str(entry.relative_to(vault)),
-                    detail="raw/papers/ subdirectory has no index.md",
+                    detail=f"flat .pdf in raw/{folder_name}/ — move into a <slug>/ subdirectory",
                 ))
-        elif entry.suffix.lower() == ".pdf":
-            findings.append(Finding(
-                severity="advisory",
-                check="legacy_flat_pdf",
-                file=str(entry.relative_to(vault)),
-                detail="flat .pdf in raw/papers/ — move into a <slug>/ subdirectory",
-            ))
     return findings
+
+
+def check_drop_zone(vault: Path) -> list[Finding]:
+    """Advisory check: PDFs in the drop zone have not been adopted yet."""
+    cfg = load_config(vault)
+    if not cfg["drop_zone"]["enabled"]:
+        return []
+    drop_path = cfg["drop_zone"]["path"]
+    drop_dir = vault / drop_path
+    if not drop_dir.is_dir():
+        return []
+    pdfs = [
+        p for p in drop_dir.iterdir()
+        if p.is_file() and p.suffix.lower() == ".pdf"
+    ]
+    if not pdfs:
+        return []
+    return [Finding(
+        severity="advisory",
+        check="drop_zone_not_empty",
+        file=str(drop_dir.relative_to(vault)),
+        detail=f"Drop zone has {len(pdfs)} unprocessed file(s) - run /ingest to adopt them.",
+    )]
 
 
 def check_orphans(pages: dict[str, WikiPage], vault: Path) -> list[Finding]:
@@ -761,6 +784,7 @@ def run_lint(vault: Path, quiet: bool = False) -> int:
         ("missing_cross_references", check_missing_cross_references),
         ("pdf_index", check_pdf_index),
         ("conversations", check_conversations),
+        ("drop_zone", check_drop_zone),
         ("index_sync", check_index_sync),
     ]
 
@@ -770,7 +794,7 @@ def run_lint(vault: Path, quiet: bool = False) -> int:
             # Not all checks accept vault; use signature-based dispatch
             if name in ("dead_links", "orphans", "based_on_dead_links", "index_sync"):
                 out = fn(pages, vault)
-            elif name in ("pdf_index", "conversations"):
+            elif name in ("pdf_index", "conversations", "drop_zone"):
                 out = fn(vault)
             else:
                 out = fn(pages)
