@@ -16,8 +16,10 @@ need to edit the wiki directly — that's your job.
 ```
 inbox.md              URL queue — user adds URLs, you fetch them
 raw/                  Immutable sources. Never write here.
-  papers/             PDFs
+  papers/             PDFs fetched via URL
   web/<slug>/         Web articles converted to markdown
+  local/<slug>/       PDFs copy-pasted by the user
+  drop/               Drop zone — paste PDFs here; emptied by /ingest
 wiki/                 Your domain
   pages/              All concepts, people, orgs, projects — one file each
   sources/            One file per source in raw/, with summary
@@ -38,7 +40,9 @@ them, plus `compass.md`, `hot.md`, `index.md`, `log.md`.
 
 ## Six invariants — never break these
 
-1. **Never write to `raw/`.** Only the fetcher skill adds files there.
+1. **Never write to `raw/`.** Only scripts add files there: `fetch_inbox.py`
+   writes to `raw/papers/` and `raw/web/`; `adopt_drop.py` writes to
+   `raw/local/`. The LLM never writes to `raw/`.
 2. **Every claim cites a source.** Either a wiki page link `[[wiki/...]]`
    or a `raw/` path. No orphan claims.
 3. **Paraphrase, don't copy.** Summaries must be in your own words.
@@ -70,6 +74,7 @@ For `wiki/sources/`:
 # Valid source_path prefixes:
 #   raw/web/<slug>/index.md   — web article fetched by inbox-fetcher
 #   raw/papers/<slug>/        — PDF fetched by inbox-fetcher
+#   raw/local/<slug>/         — PDF copy-pasted via drop zone
 #   conversations/<slug>.md   — conversation promoted via /promote
 source_path: raw/papers/name.pdf
 ```
@@ -113,6 +118,13 @@ Read `index.md`. Write `wiki/sources/<slug>.md` with the full summary.
 4. Write `wiki/sources/<slug>.md` with the same schema as web sources,
    plus `fetch_method: pdf` in the frontmatter.
 
+**Local PDFs** (`raw/local/<slug>/index.md` with `fetch_method: local-pdf`):
+1. Read `index.md` — get `title`, `tags`, `note`. There is no `source_url`.
+2. Read `paper.pdf` pages 1–5 (same as URL-fetched PDFs).
+3. Write `wiki/sources/<slug>.md` — omit the `source_url` field entirely.
+   Use `source_path: raw/local/<slug>/` and `fetch_method: local-pdf` in frontmatter.
+4. Carry `tags` and `note` as with other source types.
+
 **Tags and note propagation** (applies to all source types):
 After reading any raw source `index.md`:
 - If `tags` is present in frontmatter, carry it into `wiki/sources/<slug>.md` frontmatter.
@@ -137,7 +149,8 @@ cascade-remove a source and everything that depended only on it.
      partially unsourced.
 5. Delete `wiki/sources/<slug>.md`. Delete the entire raw folder:
    - Web sources: `raw/web/<slug>/` (includes `index.md` and `assets/`).
-   - PDF sources: `raw/papers/<slug>/` (includes `paper.pdf` and `index.md`).
+   - PDF sources (URL-fetched): `raw/papers/<slug>/` (includes `paper.pdf` and `index.md`).
+   - Local PDF sources: `raw/local/<slug>/` (includes `paper.pdf` and `index.md`).
 
    This is the one case where writing to `raw/` (as deletion) is allowed —
    invariant #1 covers creation, not user-directed removal.
@@ -204,7 +217,7 @@ for the full protocol.
 | FETCH     | inbox-fetcher  | scripts/fetch_inbox.py         |
 | LINT      | vault-linter   | scripts/lint.py                |
 | VIEW      | view-builder   | templates/ + LLM               |
-| INGEST    | (LLM only)     | —                              |
+| INGEST    | (LLM only)     | adopt_drop.py (pre-flight)     |
 | QUERY     | (LLM only)     | —                              |
 | REFLECT   | (LLM only)     | —                              |
 | PROMOTE   | (LLM only)     | —                              |
