@@ -129,3 +129,76 @@ class TestAdoptPdf:
         assert not result.ok
         assert result.slug == ""
         assert (drop / "----.pdf").exists()  # not moved
+
+
+class TestProcessDropZone:
+    def test_ignores_non_pdf_files(self, tmp_path):
+        from adopt_drop import process_drop_zone
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "notes.docx").write_bytes(b"fake docx")
+        (tmp_path / "raw" / "local").mkdir(parents=True)
+
+        exit_code = process_drop_zone(tmp_path)
+
+        assert exit_code == 0
+        assert (drop / "notes.docx").exists()
+        assert not list((tmp_path / "raw" / "local").iterdir())
+
+    def test_adopts_multiple_pdfs(self, tmp_path):
+        from adopt_drop import process_drop_zone
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "paper-one.pdf").write_bytes(b"%PDF")
+        (drop / "paper-two.pdf").write_bytes(b"%PDF")
+        (tmp_path / "raw" / "local").mkdir(parents=True)
+
+        exit_code = process_drop_zone(tmp_path)
+
+        assert exit_code == 0
+        assert (tmp_path / "raw" / "local" / "paper-one" / "paper.pdf").exists()
+        assert (tmp_path / "raw" / "local" / "paper-two" / "paper.pdf").exists()
+
+    def test_returns_exit_code_2_when_some_skipped(self, tmp_path):
+        from adopt_drop import process_drop_zone
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "collision.pdf").write_bytes(b"%PDF new")
+        local = tmp_path / "raw" / "local"
+        (local / "collision").mkdir(parents=True)
+        (local / "collision" / "paper.pdf").write_bytes(b"%PDF existing")
+
+        exit_code = process_drop_zone(tmp_path)
+
+        assert exit_code == 2
+
+    def test_skips_when_drop_zone_disabled(self, tmp_path):
+        from adopt_drop import process_drop_zone
+        (tmp_path / "vault.config.yml").write_text(
+            "drop_zone:\n  enabled: false\n  path: raw/drop\n"
+        )
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "paper.pdf").write_bytes(b"%PDF")
+        (tmp_path / "raw" / "local").mkdir(parents=True)
+
+        exit_code = process_drop_zone(tmp_path)
+
+        assert exit_code == 0
+        assert (drop / "paper.pdf").exists()  # not moved
+
+    def test_returns_0_when_drop_zone_absent(self, tmp_path):
+        from adopt_drop import process_drop_zone
+        exit_code = process_drop_zone(tmp_path)
+        assert exit_code == 0
+
+    def test_dry_run_does_not_move_any_file(self, tmp_path):
+        from adopt_drop import process_drop_zone
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "paper.pdf").write_bytes(b"%PDF")
+        (tmp_path / "raw" / "local").mkdir(parents=True)
+
+        process_drop_zone(tmp_path, dry_run=True)
+
+        assert (drop / "paper.pdf").exists()

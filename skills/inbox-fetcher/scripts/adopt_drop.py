@@ -95,3 +95,80 @@ def adopt_pdf(pdf_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptRe
         raise
 
     return AdoptResult(filename=pdf_path.name, slug=slug, ok=True)
+
+
+def process_drop_zone(vault: Path, dry_run: bool = False) -> int:
+    cfg = load_config(vault)
+    dz = cfg["drop_zone"]
+    drop_path = dz["path"]
+    enabled = dz["enabled"]
+
+    if not enabled:
+        print("Drop zone disabled (drop_zone.enabled: false in vault.config.yml).")
+        return 0
+
+    drop_dir = vault / drop_path
+    if not drop_dir.is_dir():
+        print(f"Drop zone not found: {drop_dir}")
+        return 0
+
+    local_dir = vault / "raw" / "local"
+    local_dir.mkdir(parents=True, exist_ok=True)
+
+    all_files = [p for p in drop_dir.iterdir() if p.is_file()]
+    non_pdfs = [p for p in all_files if p.suffix.lower() != ".pdf"]
+    pdf_files = [p for p in all_files if p.suffix.lower() == ".pdf"]
+
+    for f in non_pdfs:
+        print(f"  ⚠ ignored (not a PDF): {f.name}")
+
+    if not pdf_files:
+        print("Drop zone empty. Nothing to adopt.")
+        return 0
+
+    print(f"Found {len(pdf_files)} PDF(s) in drop zone.")
+    if dry_run:
+        for p in pdf_files:
+            print(f"  would adopt: {p.name} → raw/local/{slug_from_filename(p.name)}/")
+        return 0
+
+    results: list[AdoptResult] = []
+    for pdf in pdf_files:
+        r = adopt_pdf(pdf, local_dir, dry_run=dry_run)
+        results.append(r)
+        if r.ok:
+            print(f"  ✓ adopted  raw/local/{r.slug}/")
+        else:
+            print(f"  ⚠ {r.reason}")
+
+    n_ok = sum(1 for r in results if r.ok)
+    n_skip = sum(1 for r in results if not r.ok)
+    print()
+    print(f"Adopted {n_ok}, skipped {n_skip}.")
+
+    return 0 if n_skip == 0 else 2
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Adopt PDFs from the drop zone into raw/local/."
+    )
+    parser.add_argument(
+        "--vault", type=Path, default=Path.cwd(),
+        help="Path to vault root (default: current directory).",
+    )
+    parser.add_argument(
+        "--dry-run", action="store_true",
+        help="List files that would be adopted without moving them.",
+    )
+    args = parser.parse_args()
+
+    if not args.vault.is_dir():
+        print(f"ERROR: vault path is not a directory: {args.vault}", file=sys.stderr)
+        return 1
+
+    return process_drop_zone(args.vault, dry_run=args.dry_run)
+
+
+if __name__ == "__main__":
+    sys.exit(main())
