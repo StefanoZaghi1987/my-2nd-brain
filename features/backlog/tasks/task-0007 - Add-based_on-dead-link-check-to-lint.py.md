@@ -1,10 +1,10 @@
 ---
 id: TASK-0007
 title: Add based_on dead link check to lint.py
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 07:25'
-updated_date: '2026-05-28 08:25'
+updated_date: '2026-05-28 09:25'
 labels:
   - bug-fix
   - lint
@@ -44,3 +44,9 @@ Register the new check in the `all_checks` list in `run_lint()`, after `dead_lin
 <!-- SECTION:NOTES:BEGIN -->
 **ALREADY FULFILLED by TASK-0005.** `strip_wikilink()` and `check_based_on_links()` are implemented in Task 5 of the plan (lint.py migration). See **Task 7** in the plan — it contains only a verification step. Run `pytest tests/test_lint.py::TestCheckBasedOnLinks tests/test_lint.py::TestStripWikilink -v` to confirm. No new code to write.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Verification only — check_based_on_links and strip_wikilink implemented in TASK-0005. TestCheckBasedOnLinks (3 tests) and TestStripWikilink (3 tests) all pass.
+<!-- SECTION:FINAL_SUMMARY:END -->

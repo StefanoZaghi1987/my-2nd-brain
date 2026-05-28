@@ -1,10 +1,10 @@
 ---
 id: TASK-0001
 title: Create vault.config.yml default template
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 07:23'
-updated_date: '2026-05-28 08:25'
+updated_date: '2026-05-28 09:25'
 labels:
   - foundation
   - config
@@ -38,3 +38,9 @@ The file must cover these sections: `vault.version`, `inbox.processed_section`, 
 <!-- SECTION:NOTES:BEGIN -->
 See **Task 1** in the implementation plan. Full YAML content with inline comments is provided — copy it exactly. Key constraint: walled_domains must use inline list syntax `[a, b]`, not block list, because the stdlib parser in vault_state.py only handles inline. Wave 1, step 1 — must be done before TASK-0002.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created vault.config.yml at bundle root with all tunable defaults. Inline YAML comments parse correctly. Committed on feat-foundation.
+<!-- SECTION:FINAL_SUMMARY:END -->

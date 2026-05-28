@@ -1,10 +1,10 @@
 ---
 id: TASK-0004
 title: Migrate fetch_inbox.py to load config and track ingest counter
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 07:23'
-updated_date: '2026-05-28 08:25'
+updated_date: '2026-05-28 09:25'
 labels:
   - foundation
   - fetch
@@ -43,3 +43,9 @@ The import of `vault_state` must use a path relative to the script's own locatio
 <!-- SECTION:NOTES:BEGIN -->
 See **Task 4** in the implementation plan. Full test file `tests/test_fetch_inbox.py` and all code changes provided. Key changes: (a) vault_state import via `_sys.path.insert` relative to script location, (b) add `tags: list` and `note: str | None` to InboxEntry dataclass, (c) update `find_unchecked_entries()` to parse indented sub-bullets, (d) add `processed_section` param to `update_inbox()`, (e) load config in `process_vault()`, (f) call `write_state()` after successful fetches. Wave 1, parallel with TASK-0005 — both depend on TASK-0003.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Migrated fetch_inbox.py: imports vault_state, InboxEntry gains tags/note fields, find_unchecked_entries parses sub-bullets, update_inbox accepts processed_section param (replacing hardcoded Processati), process_vault loads config, ingest counter increments on success. Created tests/test_fetch_inbox.py (11 tests, all passing). Committed on feat-foundation.
+<!-- SECTION:FINAL_SUMMARY:END -->
