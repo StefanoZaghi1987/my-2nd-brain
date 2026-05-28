@@ -21,7 +21,7 @@ fetch:
 lint:
   stale_source_days: 180             # advisory after this many days without update
   view_stale_days: 30                # days a view can lag its based_on pages
-  auto_trigger_after_ingests: 5      # run lint automatically after N ingests
+  auto_trigger_after_fetches: 5      # run lint automatically after N fetches
   auto_trigger_after_days: 7        # run lint automatically after N days
   reflect_reminder_days: 14          # suggest /reflect after N days without one
 
