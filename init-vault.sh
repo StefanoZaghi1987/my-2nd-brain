@@ -95,6 +95,7 @@ DIRS=(
     ".claude/skills/inbox-fetcher/scripts"
     ".claude/skills/vault-linter/scripts"
     ".claude/skills/view-builder/templates"
+    ".claude/skills/shared"
     ".claude/commands"
 )
 for d in "${DIRS[@]}"; do
@@ -122,6 +123,14 @@ fi
 # --- Base files ------------------------------------------------------------
 info "Writing base files"
 
+# vault.config.yml — skip if user has already customised it
+if [ ! -f "$VAULT_DIR/vault.config.yml" ]; then
+    cp "$SCRIPT_DIR/vault.config.yml" "$VAULT_DIR/vault.config.yml"
+    ok "vault.config.yml"
+else
+    skip "vault.config.yml (exists — keeping user copy)"
+fi
+
 if [ ! -f "$VAULT_DIR/inbox.md" ]; then
     cat > "$VAULT_DIR/inbox.md" <<'EOF'
 # Inbox
@@ -136,7 +145,7 @@ the URLs into `raw/web/`. Check items after fetching.
 - [ ] https://arxiv.org/abs/2024.12345
 -->
 
-## Done
+## Processed
 
 <!-- Automatically moved here after fetch. -->
 EOF
@@ -294,9 +303,18 @@ else
     warn "view-builder skill not found in bundle"
 fi
 
+# shared utilities — always refreshed so vault_state API stays in sync
+if [ -d "$SCRIPT_DIR/skills/shared" ]; then
+    cp "$SCRIPT_DIR/skills/shared/vault_state.py" \
+       "$VAULT_DIR/.claude/skills/shared/vault_state.py"
+    ok "shared: vault_state.py"
+else
+    warn "skills/shared not found in bundle"
+fi
+
 # --- Slash commands --------------------------------------------------------
 info "Installing slash commands"
-for cmd in save view reflect forget; do
+for cmd in save view reflect forget lint; do
     if [ -f "$SCRIPT_DIR/commands/$cmd.md" ]; then
         cp "$SCRIPT_DIR/commands/$cmd.md" \
            "$VAULT_DIR/.claude/commands/$cmd.md"
