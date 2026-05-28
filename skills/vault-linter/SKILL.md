@@ -1,6 +1,6 @@
 ---
 name: vault-linter
-description: Runs deterministic health checks on a second brain wiki vault (dead links, orphan pages, duplicates, missing metadata, inconsistent naming, stale sources, gaps, view staleness, missing cross-references) and writes a report to .lint/report.md. Use this skill when the user says "lint", "check the vault", "vault health", "find broken links". Also run periodically — triggered when 5+ ingests have occurred since last lint OR 7+ days have passed. Supports unattended mode via --unattended flag. Fast, no LLM tokens consumed.
+description: Runs deterministic health checks on a second brain wiki vault (dead links, orphan pages, duplicates, missing metadata, inconsistent naming, stale sources, gaps, view staleness, missing cross-references, view based_on dead links, PDF index integrity, conversation schema, source index sync) and writes a report to .lint/report.md. Use this skill when the user says "lint", "check the vault", "vault health", "find broken links". Also run periodically — triggered when 5+ ingests have occurred since last lint OR 7+ days have passed. Supports unattended mode via --unattended flag. Fast, no LLM tokens consumed.
 provides: lint
 config_section: lint
 requires:
@@ -23,7 +23,7 @@ zero LLM tokens.
 
 ## What it checks
 
-Nine deterministic checks. Each produces findings with concrete paths.
+Thirteen deterministic checks. Each produces findings with concrete paths.
 
 | # | Check | What it catches |
 |---|---|---|
@@ -36,6 +36,10 @@ Nine deterministic checks. Each produces findings with concrete paths.
 | 7 | **Gaps** | Concept names in prose without a corresponding page |
 | 8 | **View staleness** | Evolving views (`shareable: false`) whose `based_on` pages changed more than 30 days after |
 | 9 | **Missing cross-references** | Source pages citing a page in prose without a link |
+| 10 | **Based-on dead links** | `based_on` entries in view frontmatter pointing to non-existent pages |
+| 11 | **PDF index integrity** | `raw/papers/` subdir missing `index.md`, or legacy flat `.pdf` in `raw/papers/` |
+| 12 | **Conversation schema** | `conversations/` files missing `type: conversation` frontmatter field |
+| 13 | **Source index sync** | `wiki/sources/` entry not mentioned in `wiki/index.md` |
 
 Checks 3, 5, 7, 9 are heuristic — they can produce false positives and
 are marked as advisory.
@@ -65,9 +69,9 @@ python .claude/skills/vault-linter/scripts/lint.py --vault /path/to/vault
 
 Findings grouped by severity:
 
-- **Blocking** — dead links, missing required metadata.
+- **Blocking** — dead links, missing required metadata, based-on dead links.
 - **Important** — orphans.
-- **Advisory** — duplicates, stale, naming, view staleness, gaps, missing cross-references.
+- **Advisory** — duplicates, stale, naming, view staleness, gaps, missing cross-references, PDF index integrity, conversation schema, source index sync.
 
 ### `.lint/state.yaml`
 
