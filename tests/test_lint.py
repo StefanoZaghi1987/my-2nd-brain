@@ -135,3 +135,44 @@ class TestCheckConversations:
         assert len(findings) == 1
         assert findings[0].check == "missing_conversation_type"
         assert findings[0].severity == "advisory"
+
+
+class TestCheckIndexSync:
+    def test_no_findings_when_index_absent(self, tmp_path):
+        make_vault(tmp_path, {
+            "wiki/sources/agent-skills.md": (
+                "---\ntype: source\nsource_path: raw/web/agent-skills/index.md\n"
+                "created: 2026-01-01\nupdated: 2026-01-01\n---\n# Agent Skills\n"
+            ),
+        })
+        from lint import load_wiki, check_index_sync
+        pages = load_wiki(tmp_path)
+        assert check_index_sync(pages, tmp_path) == []
+
+    def test_no_findings_when_source_listed_in_index(self, tmp_path):
+        make_vault(tmp_path, {
+            "wiki/sources/agent-skills.md": (
+                "---\ntype: source\nsource_path: raw/web/agent-skills/index.md\n"
+                "created: 2026-01-01\nupdated: 2026-01-01\n---\n# Agent Skills\n"
+            ),
+            "wiki/index.md": "# Index\n\n- [[wiki/sources/agent-skills]]\n",
+        })
+        from lint import load_wiki, check_index_sync
+        pages = load_wiki(tmp_path)
+        assert check_index_sync(pages, tmp_path) == []
+
+    def test_advisory_when_source_absent_from_index(self, tmp_path):
+        make_vault(tmp_path, {
+            "wiki/sources/agent-skills.md": (
+                "---\ntype: source\nsource_path: raw/web/agent-skills/index.md\n"
+                "created: 2026-01-01\nupdated: 2026-01-01\n---\n# Agent Skills\n"
+            ),
+            "wiki/index.md": "# Index\n\n## Sources\n\n<!-- empty -->\n",
+        })
+        from lint import load_wiki, check_index_sync
+        pages = load_wiki(tmp_path)
+        findings = check_index_sync(pages, tmp_path)
+        assert len(findings) == 1
+        assert findings[0].check == "index_sync"
+        assert findings[0].severity == "advisory"
+        assert "agent-skills" in findings[0].file
