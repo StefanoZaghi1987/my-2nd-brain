@@ -77,7 +77,7 @@ Findings grouped by severity:
 
 ```yaml
 last_lint: 2026-04-18
-ingests_since_last_lint: 0
+fetches_since_last_lint: 0
 last_exit_code: 1
 last_findings_count: 12
 ```
