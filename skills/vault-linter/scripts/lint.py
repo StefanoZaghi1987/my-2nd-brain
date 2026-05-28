@@ -342,30 +342,30 @@ def check_based_on_links(pages: dict[str, "WikiPage"], vault: Path) -> list[Find
 
 def check_pdf_index(vault: Path) -> list[Finding]:
     """
-    Verify that raw/papers/ follows the folder convention: each paper
-    lives in its own subdirectory with a companion index.md.
+    Verify that raw/papers/ and raw/local/ follow the folder convention:
+    each paper lives in its own subdirectory with a companion index.md.
     """
     findings = []
-    papers_dir = vault / "raw" / "papers"
-    if not papers_dir.is_dir():
-        return findings
-
-    for entry in papers_dir.iterdir():
-        if entry.is_dir():
-            if not (entry / "index.md").exists():
+    for folder_name in ("papers", "local"):
+        folder = vault / "raw" / folder_name
+        if not folder.is_dir():
+            continue
+        for entry in folder.iterdir():
+            if entry.is_dir():
+                if not (entry / "index.md").exists():
+                    findings.append(Finding(
+                        severity="advisory",
+                        check="missing_pdf_index",
+                        file=str(entry.relative_to(vault)),
+                        detail=f"raw/{folder_name}/ subdirectory has no index.md",
+                    ))
+            elif entry.suffix.lower() == ".pdf":
                 findings.append(Finding(
                     severity="advisory",
-                    check="missing_pdf_index",
+                    check="legacy_flat_pdf",
                     file=str(entry.relative_to(vault)),
-                    detail="raw/papers/ subdirectory has no index.md",
+                    detail=f"flat .pdf in raw/{folder_name}/ — move into a <slug>/ subdirectory",
                 ))
-        elif entry.suffix.lower() == ".pdf":
-            findings.append(Finding(
-                severity="advisory",
-                check="legacy_flat_pdf",
-                file=str(entry.relative_to(vault)),
-                detail="flat .pdf in raw/papers/ — move into a <slug>/ subdirectory",
-            ))
     return findings
 
 

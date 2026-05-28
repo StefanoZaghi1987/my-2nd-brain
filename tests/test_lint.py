@@ -176,3 +176,47 @@ class TestCheckIndexSync:
         assert findings[0].check == "index_sync"
         assert findings[0].severity == "advisory"
         assert "agent-skills" in findings[0].file
+
+
+class TestCheckLocalIndex:
+    def test_no_findings_when_local_dir_absent(self, tmp_path):
+        from lint import check_pdf_index
+        assert check_pdf_index(tmp_path) == []
+
+    def test_advisory_for_local_subdir_without_index(self, tmp_path):
+        slug = tmp_path / "raw" / "local" / "my-paper"
+        slug.mkdir(parents=True)
+        (slug / "paper.pdf").write_bytes(b"%PDF")
+        from lint import check_pdf_index
+        findings = check_pdf_index(tmp_path)
+        assert any(f.check == "missing_pdf_index" for f in findings)
+        assert all(f.severity == "advisory" for f in findings)
+        finding = next(f for f in findings if f.check == "missing_pdf_index")
+        assert "raw/local/" in finding.detail
+
+    def test_no_findings_for_correct_local_structure(self, tmp_path):
+        slug = tmp_path / "raw" / "local" / "my-paper"
+        slug.mkdir(parents=True)
+        (slug / "paper.pdf").write_bytes(b"%PDF")
+        (slug / "index.md").write_text("---\nfetch_method: local-pdf\n---\n")
+        from lint import check_pdf_index
+        assert check_pdf_index(tmp_path) == []
+
+    def test_advisory_for_flat_pdf_in_local(self, tmp_path):
+        local = tmp_path / "raw" / "local"
+        local.mkdir(parents=True)
+        (local / "orphan.pdf").write_bytes(b"%PDF")
+        from lint import check_pdf_index
+        findings = check_pdf_index(tmp_path)
+        assert any(f.check == "legacy_flat_pdf" for f in findings)
+
+    def test_checks_both_papers_and_local(self, tmp_path):
+        (tmp_path / "raw" / "papers" / "p1").mkdir(parents=True)
+        (tmp_path / "raw" / "papers" / "p1" / "paper.pdf").write_bytes(b"%PDF")
+        (tmp_path / "raw" / "local" / "p2").mkdir(parents=True)
+        (tmp_path / "raw" / "local" / "p2" / "paper.pdf").write_bytes(b"%PDF")
+        from lint import check_pdf_index
+        findings = check_pdf_index(tmp_path)
+        files = [f.file for f in findings]
+        assert any("papers" in fp for fp in files)
+        assert any("local" in fp for fp in files)
