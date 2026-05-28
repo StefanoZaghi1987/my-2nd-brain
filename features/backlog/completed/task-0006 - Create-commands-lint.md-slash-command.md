@@ -1,10 +1,10 @@
 ---
 id: TASK-0006
 title: Create commands/lint.md slash command
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 07:25'
-updated_date: '2026-05-28 08:25'
+updated_date: '2026-05-28 09:47'
 labels:
   - bug-fix
   - lint

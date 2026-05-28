@@ -1,10 +1,10 @@
 ---
 id: TASK-0017
 title: Add text fallback to view-concept-map.md template
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-05-28 07:41'
-updated_date: '2026-05-28 08:26'
+updated_date: '2026-05-28 09:54'
 labels:
   - feature-f
   - view-builder
@@ -39,4 +39,6 @@ The template placeholder comments must make clear that both blocks must be fille
 
 <!-- SECTION:NOTES:BEGIN -->
 See **Task 17** in the implementation plan. Two changes: (1) in `skills/view-builder/templates/view-concept-map.md`, insert a `<details><summary>Text fallback</summary>` block immediately after the closing triple-backtick of the Mermaid block — exact content provided; (2) in `skills/view-builder/SKILL.md` Rules section, add a concept-map sync rule stating both blocks must be populated from the same data. Wave 3 — independent, no dependencies.
+
+Partial progress (2026-05-28): Template part done — `<details>` fallback block added after Mermaid fence in `skills/view-builder/templates/view-concept-map.md` (commit 150eb03). Remaining: add concept-map sync rule to `skills/view-builder/SKILL.md` (part of Wave D alongside TASK-0018).
 <!-- SECTION:NOTES:END -->
