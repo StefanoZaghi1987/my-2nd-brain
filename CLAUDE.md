@@ -42,7 +42,9 @@ them, plus `compass.md`, `hot.md`, `index.md`, `log.md`.
 
 1. **Never write to `raw/`.** Only scripts add files there: `fetch_inbox.py`
    writes to `raw/papers/` and `raw/web/`; `adopt_drop.py` writes to
-   `raw/local/`. The LLM never writes to `raw/`.
+   `raw/local/`. The LLM never writes to `raw/` except for one case:
+   during `/ingest` pre-flight the LLM may update `raw/local/<slug>/index.md`
+   to apply user-supplied tags and notes before reading the PDF.
 2. **Every claim cites a source.** Either a wiki page link `[[wiki/...]]`
    or a `raw/` path. No orphan claims.
 3. **Paraphrase, don't copy.** Summaries must be in your own words.

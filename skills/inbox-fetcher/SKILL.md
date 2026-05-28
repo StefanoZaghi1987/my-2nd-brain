@@ -148,7 +148,7 @@ Skips silently when `drop_zone.enabled: false`. Can also be run manually.
 2. Checks for collision: if `raw/local/<slug>/` already exists, skips with a warning.
 3. Creates `raw/local/<slug>/`, moves the PDF to `paper.pdf`.
 4. Writes a stub `index.md` with `fetch_method: local-pdf`, stub title, and today's date.
-5. Prints `✓ adopted  raw/local/<slug>/`.
+5. Prints `[ok] adopted  raw/local/<slug>/`.
 
 **Run manually:**
 ```bash

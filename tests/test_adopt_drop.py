@@ -130,6 +130,34 @@ class TestAdoptPdf:
         assert result.slug == ""
         assert (drop / "----.pdf").exists()  # not moved
 
+    def test_rollback_on_index_write_failure(self, tmp_path, monkeypatch):
+        from adopt_drop import adopt_pdf
+        from pathlib import Path
+
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "my-paper.pdf").write_bytes(b"%PDF")
+        local = tmp_path / "raw" / "local"
+        local.mkdir(parents=True)
+
+        # Simulate write_text raising an OSError after PDF has been moved
+        original_write_text = Path.write_text
+
+        def failing_write_text(self, *args, **kwargs):
+            if self.name == "index.md":
+                raise OSError("simulated disk full")
+            return original_write_text(self, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "write_text", failing_write_text)
+
+        with pytest.raises(OSError, match="simulated disk full"):
+            adopt_pdf(drop / "my-paper.pdf", local)
+
+        # PDF must be restored to drop zone
+        assert (drop / "my-paper.pdf").exists()
+        # Partial directory must be fully cleaned up
+        assert not (local / "my-paper").exists()
+
 
 class TestProcessDropZone:
     def test_ignores_non_pdf_files(self, tmp_path):

@@ -89,8 +89,10 @@ def adopt_pdf(pdf_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptRe
     try:
         (out_dir / "index.md").write_text("\n".join(index_lines), encoding="utf-8")
     except Exception:
-        # Roll back: restore PDF to original location, remove empty directory.
+        # Roll back: restore PDF, remove partial index.md (if any), then remove
+        # the now-empty directory. Unlink first so rmdir finds an empty dir.
         (out_dir / "paper.pdf").rename(pdf_path)
+        (out_dir / "index.md").unlink(missing_ok=True)
         out_dir.rmdir()
         raise
 
