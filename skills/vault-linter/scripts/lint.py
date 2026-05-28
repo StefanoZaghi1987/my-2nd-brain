@@ -788,7 +788,7 @@ def run_lint(vault: Path, quiet: bool = False) -> int:
     write_report(findings, vault, quiet=quiet)
     _write_state(vault, {
         "last_lint": date.today().isoformat(),
-        "ingests_since_last_lint": 0,
+        "fetches_since_last_lint": 0,
         "last_exit_code": exit_code,
         "last_findings_count": len(findings),
         "blocking": sum(1 for f in findings if f.severity == "blocking"),

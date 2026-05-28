@@ -34,7 +34,7 @@ the pages and views built on top of it.
    ```
    Instruct the user to run the fetcher to overwrite the raw folder:
    ```bash
-   python .claude/skills/inbox-fetcher/scripts/fetch_inbox.py
+   python3 .claude/skills/inbox-fetcher/scripts/fetch_inbox.py
    ```
    Wait for the fetcher to complete before proceeding to step 3.
 

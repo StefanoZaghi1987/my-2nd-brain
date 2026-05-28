@@ -74,13 +74,13 @@ Rules:
 From the vault root:
 
 ```bash
-python .claude/skills/inbox-fetcher/scripts/fetch_inbox.py
+python3 .claude/skills/inbox-fetcher/scripts/fetch_inbox.py
 ```
 
 Or from anywhere:
 
 ```bash
-python .claude/skills/inbox-fetcher/scripts/fetch_inbox.py --vault /path/to/vault
+python3 .claude/skills/inbox-fetcher/scripts/fetch_inbox.py --vault /path/to/vault
 ```
 
 Use `--dry-run` to see what would be processed without actually fetching.

@@ -16,7 +16,8 @@ agent that reads `CLAUDE.md` or `AGENTS.md`.
 
 ```
 vault-bundle/
-├── init-vault.sh         bootstrap script (run first)
+├── init-vault.sh         bootstrap script — Unix/macOS/WSL
+├── init_vault.py         bootstrap script — cross-platform (Linux, WSL, Windows)
 ├── vault.config.yml      per-vault tunable settings (timeouts, walled domains, lint thresholds)
 ├── CLAUDE.md             the contract between you and the agent
 ├── GETTING-STARTED.md    10-minute walkthrough for newcomers
@@ -50,11 +51,12 @@ vault-bundle/
 ```bash
 git clone https://github.com/maeste/my-2nd-brain.git
 cd my-2nd-brain
-./init-vault.sh                    # → ./second-brain-vault
+./init-vault.sh                    # → ./second-brain-vault  (Unix/macOS/WSL)
+# or — cross-platform (Linux, WSL, Windows):
+python3 init_vault.py              # → ./second-brain-vault
 # or
-./init-vault.sh ~/knowledge/X      # explicit path
-# or
-./init-vault.sh --here             # current directory
+python3 init_vault.py ~/knowledge/X      # explicit path
+python3 init_vault.py --here             # current directory
 ```
 
 Script is idempotent — safe to re-run.
@@ -64,12 +66,12 @@ Then open Claude Code (or another CLI) in the vault and follow
 
 ### Updating an existing vault
 
-Re-running `init-vault.sh` against an existing vault is the update
-path. After `git pull` in this repo, re-run the script pointing at
-your vault:
+Re-running the bootstrap script against an existing vault is the
+update path. After `git pull` in this repo, re-run pointing at your vault:
 
 ```bash
-./init-vault.sh ~/knowledge/X   # or --here, or default path
+./init-vault.sh ~/knowledge/X          # Unix/macOS/WSL
+python3 init_vault.py ~/knowledge/X    # Windows / cross-platform
 ```
 
 What happens on re-run:
@@ -88,8 +90,8 @@ What happens on re-run:
   `wiki/views/`, `conversations/`, `wiki/compass.md`. Your
   knowledge and ongoing work are safe.
 
-No separate `update-vault.sh` exists because `init-vault.sh` already
-does the right thing.
+No separate update script exists — both bootstrap scripts already do
+the right thing on re-run.
 
 ---
 
@@ -128,6 +130,8 @@ Six invariants:
 ```bash
 pip install trafilatura requests python-slugify
 ```
+
+> **Windows:** use `python` if `python3` is not recognised.
 
 **For `vault-linter`** and **`view-builder`**:
 Python standard library only. For charts (optional):

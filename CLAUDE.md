@@ -177,7 +177,7 @@ stale views). If conversations hold insights not yet in the wiki, or
 views that could expand pages, mention them there too.
 
 ### LINT
-User says "lint" or auto-trigger after 5 ingests / 7 days → run
+User says "lint" or auto-trigger after 5 fetches / 7 days → run
 `vault-linter` skill. Deterministic checks only (dead links, missing
 frontmatter, naming consistency, view staleness). Output to
 `.lint/report.md`. Never auto-fix.
@@ -229,7 +229,7 @@ At the start of every session:
 
 1. Read `wiki/hot.md` — cheap context on where we left off.
 2. Check `.lint/state.yaml` for auto-lint conditions:
-   - `ingests_since_last_lint` ≥ `lint.auto_trigger_after_ingests` (from `vault.config.yml`)
+   - `fetches_since_last_lint` ≥ `lint.auto_trigger_after_fetches` (from `vault.config.yml`)
    - Days since `last_lint` ≥ `lint.auto_trigger_after_days`
    If either condition is met, run `/lint` before proceeding with the session.
 3. Read the `updated` field from `wiki/compass.md` frontmatter. If the file is

@@ -193,25 +193,9 @@ fi
 
 if [ ! -f "$VAULT_DIR/wiki/hot.md" ]; then
     cat > "$VAULT_DIR/wiki/hot.md" <<'EOF'
----
-type: page
-created: INIT
-updated: INIT
-tags: [hot-cache]
----
+## [INIT]
 
-# Hot Cache
-
-Short rolling memory of recent sessions. Rewritten at session end.
-Read by the agent at session start.
-
-## Recent sessions
-
-<!-- Populated by /save and at session end. -->
-
-## Open threads
-
-<!-- Things left hanging. -->
+Vault just bootstrapped. No sessions yet.
 EOF
     ok "wiki/hot.md"
 else
@@ -222,7 +206,7 @@ fi
 if [ ! -f "$VAULT_DIR/.lint/state.yaml" ]; then
     cat > "$VAULT_DIR/.lint/state.yaml" <<EOF
 last_lint: null
-ingests_since_last_lint: 0
+fetches_since_last_lint: 0
 last_exit_code: null
 last_findings_count: 0
 EOF
@@ -233,7 +217,7 @@ if [ ! -f "$VAULT_DIR/.lint/report.md" ]; then
     cat > "$VAULT_DIR/.lint/report.md" <<'EOF'
 # Lint Report
 
-No lint run yet. Run `python .claude/skills/vault-linter/scripts/lint.py`
+No lint run yet. Run `python3 .claude/skills/vault-linter/scripts/lint.py`
 from the vault root.
 EOF
     ok ".lint/report.md"

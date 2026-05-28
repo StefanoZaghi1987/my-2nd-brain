@@ -16,12 +16,12 @@ Always run /fetch before /ingest — ingest needs raw/ files to summarise.
 ## How to run
 
 ```bash
-python .claude/skills/inbox-fetcher/scripts/fetch_inbox.py
+python3 .claude/skills/inbox-fetcher/scripts/fetch_inbox.py
 ```
 
 Or dry-run to preview without writing:
 ```bash
-python .claude/skills/inbox-fetcher/scripts/fetch_inbox.py --dry-run
+python3 .claude/skills/inbox-fetcher/scripts/fetch_inbox.py --dry-run
 ```
 
 ## After running

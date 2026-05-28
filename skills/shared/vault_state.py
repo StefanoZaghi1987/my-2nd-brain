@@ -37,7 +37,7 @@ _DEFAULTS: dict[str, Any] = {
     "lint": {
         "stale_source_days": 180,
         "view_stale_days": 30,
-        "auto_trigger_after_ingests": 5,
+        "auto_trigger_after_fetches": 5,
         "auto_trigger_after_days": 7,
         "reflect_reminder_days": 14,
     },
