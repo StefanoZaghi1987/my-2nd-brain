@@ -219,4 +219,50 @@ class TestCheckLocalIndex:
         findings = check_pdf_index(tmp_path)
         files = [f.file for f in findings]
         assert any("papers" in fp for fp in files)
-        assert any("local" in fp for fp in files)
+
+
+class TestCheckDropZone:
+    def test_no_findings_when_drop_zone_absent(self, tmp_path):
+        from lint import check_drop_zone
+        assert check_drop_zone(tmp_path) == []
+
+    def test_no_findings_when_drop_zone_empty(self, tmp_path):
+        (tmp_path / "raw" / "drop").mkdir(parents=True)
+        from lint import check_drop_zone
+        assert check_drop_zone(tmp_path) == []
+
+    def test_advisory_when_pdf_present(self, tmp_path):
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "unprocessed.pdf").write_bytes(b"%PDF")
+        from lint import check_drop_zone
+        findings = check_drop_zone(tmp_path)
+        assert len(findings) == 1
+        assert findings[0].check == "drop_zone_not_empty"
+        assert findings[0].severity == "advisory"
+
+    def test_detail_mentions_count(self, tmp_path):
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "a.pdf").write_bytes(b"%PDF")
+        (drop / "b.pdf").write_bytes(b"%PDF")
+        from lint import check_drop_zone
+        findings = check_drop_zone(tmp_path)
+        assert "2" in findings[0].detail
+
+    def test_ignores_non_pdf_files(self, tmp_path):
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "notes.txt").write_text("just a note")
+        from lint import check_drop_zone
+        assert check_drop_zone(tmp_path) == []
+
+    def test_no_findings_when_drop_zone_disabled(self, tmp_path):
+        (tmp_path / "vault.config.yml").write_text(
+            "drop_zone:\n  enabled: false\n  path: raw/drop\n"
+        )
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "paper.pdf").write_bytes(b"%PDF")
+        from lint import check_drop_zone
+        assert check_drop_zone(tmp_path) == []

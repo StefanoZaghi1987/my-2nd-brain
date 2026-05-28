@@ -369,6 +369,29 @@ def check_pdf_index(vault: Path) -> list[Finding]:
     return findings
 
 
+def check_drop_zone(vault: Path) -> list[Finding]:
+    """Advisory check: PDFs in the drop zone have not been adopted yet."""
+    cfg = load_config(vault)
+    if not cfg["drop_zone"]["enabled"]:
+        return []
+    drop_path = cfg["drop_zone"]["path"]
+    drop_dir = vault / drop_path
+    if not drop_dir.is_dir():
+        return []
+    pdfs = [
+        p for p in drop_dir.iterdir()
+        if p.is_file() and p.suffix.lower() == ".pdf"
+    ]
+    if not pdfs:
+        return []
+    return [Finding(
+        severity="advisory",
+        check="drop_zone_not_empty",
+        file=str(drop_dir.relative_to(vault)),
+        detail=f"Drop zone has {len(pdfs)} unprocessed file(s) — run /ingest to adopt them.",
+    )]
+
+
 def check_orphans(pages: dict[str, WikiPage], vault: Path) -> list[Finding]:
     # Build incoming-link map
     incoming: dict[str, int] = defaultdict(int)
@@ -761,6 +784,7 @@ def run_lint(vault: Path, quiet: bool = False) -> int:
         ("missing_cross_references", check_missing_cross_references),
         ("pdf_index", check_pdf_index),
         ("conversations", check_conversations),
+        ("drop_zone", check_drop_zone),
         ("index_sync", check_index_sync),
     ]
 
@@ -770,7 +794,7 @@ def run_lint(vault: Path, quiet: bool = False) -> int:
             # Not all checks accept vault; use signature-based dispatch
             if name in ("dead_links", "orphans", "based_on_dead_links", "index_sync"):
                 out = fn(pages, vault)
-            elif name in ("pdf_index", "conversations"):
+            elif name in ("pdf_index", "conversations", "drop_zone"):
                 out = fn(vault)
             else:
                 out = fn(pages)
