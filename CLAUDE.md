@@ -138,7 +138,7 @@ cascade-remove a source and everything that depended only on it.
 5. Delete `wiki/sources/<slug>.md` and the `raw/` file. This is the
    one case where writing to `raw/` (as deletion) is allowed —
    invariant #1 covers creation, not user-directed removal.
-6. Update `index.md` and `log.md` (invariant #6).
+6. Update `wiki/index.md` and `wiki/log.md` (invariant #6).
 7. Run `vault-linter` to confirm zero dead links remain.
 
 If the source is cited by >15 files, the cascade exceeds invariant #5

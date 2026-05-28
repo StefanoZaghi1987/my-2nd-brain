@@ -32,7 +32,8 @@ vault-bundle/
 │   ├── forget.md         /forget
 │   ├── lint.md           /lint
 │   ├── promote.md        /promote
-│   └── refresh.md        /refresh
+│   ├── refresh.md        /refresh
+│   └── ingest.md         /ingest
 └── docs/examples/
     ├── research-example.md
     └── mealplan-example.md

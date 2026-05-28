@@ -79,7 +79,7 @@ language or with a slash command.
 | # | Operation | How to trigger | What happens |
 |---|---|---|---|
 | 1 | **FETCH** | *"process the inbox"* | URLs in `inbox.md` → `raw/web/` or `raw/papers/<slug>/` |
-| 2 | **INGEST** | *"ingest the new content"* | `raw/` → summaries in `wiki/sources/`, links in `wiki/pages/` |
+| 2 | **INGEST** | `/ingest` or *"ingest the new content"* | `raw/` → summaries in `wiki/sources/`, links in `wiki/pages/` |
 | 3 | **FORGET** | `/forget <source>` or *"forget source X"* | Cascade-remove a source, clean citations in pages and views |
 | 4 | **QUERY** | any question | Agent reads the wiki, answers with citations |
 | 5 | **VIEW** | `/view timeline agent-skills` or *"make a timeline of X"* | Build a view in `wiki/views/` |
@@ -90,10 +90,12 @@ language or with a slash command.
 
 ---
 
-## Seven slash commands
+## Eight slash commands
 
 - **`/save [name]`** — save the current conversation to
   `conversations/`. These feed `/reflect` and `/promote` later.
+- **`/ingest [slug]`** — compile raw sources into the wiki. Without a
+  slug, discovers all uningested sources and confirms before starting.
 - **`/view [kind] [topic]`** — build a view. Kinds: `timeline`,
   `comparison`, `concept-map`, `chart`, `slides`, `report`, `post`.
 - **`/reflect`** — write `compass.md`: where my thinking is going,
@@ -161,7 +163,7 @@ see it.
 
 ---
 
-## Five rules the agent follows
+## Six rules the agent follows
 
 These are invariants. The agent won't break them. Good to know they
 exist:
@@ -173,6 +175,8 @@ exist:
    structural changes, no views without your request.
 5. **`shareable: true` views are frozen.** New version = new dated
    file. Everything else can evolve in place.
+6. **Touch ≤15 files per operation.** If more are needed, the agent
+   stops and asks — split across sessions.
 
 ---
 
@@ -207,5 +211,8 @@ uses plain markdown. The contract is in `CLAUDE.md` / `AGENTS.md`
 should work.
 
 **"Do I need Obsidian?"** No, but it helps. The vault is markdown
-files with `[[wiki-links]]` — Obsidian renders them natively. Other
-markdown editors work too.
+files with `[[wiki-links]]` — Obsidian renders them natively.
+`init-vault.sh` creates `.obsidian/app.json` with `useMarkdownLinks:
+false`, which keeps Obsidian writing `[[wikilinks]]` rather than
+`[text](path)` links (the linter needs wikilink syntax to track links).
+Other markdown editors work too.
