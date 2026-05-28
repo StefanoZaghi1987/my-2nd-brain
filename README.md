@@ -26,14 +26,17 @@ vault-bundle/
 │   ├── vault-linter/     deterministic health checks
 │   └── view-builder/     timelines, comparisons, charts, slides, reports, posts
 ├── commands/
-│   ├── save.md           /save
-│   ├── view.md           /view
-│   ├── reflect.md        /reflect
-│   ├── forget.md         /forget
-│   ├── lint.md           /lint
-│   ├── promote.md        /promote
-│   ├── refresh.md        /refresh
-│   └── ingest.md         /ingest
+│   ├── save.md               /save
+│   ├── view.md               /view
+│   ├── reflect.md            /reflect
+│   ├── forget.md             /forget
+│   ├── lint.md               /lint
+│   ├── promote.md            /promote
+│   ├── refresh.md            /refresh
+│   ├── ingest.md             /ingest
+│   ├── fetch.md              /fetch
+│   ├── hot.md                /hot
+│   └── playwright-fetch.md   /playwright-fetch
 └── docs/examples/
     ├── research-example.md
     └── mealplan-example.md
@@ -145,11 +148,10 @@ pip install matplotlib
 **Inbox fetcher fails on some URLs** → likely paywall, JS-rendered, or
 a walled domain (X/Twitter, LinkedIn, Threads, Facebook, Instagram).
 The fetcher marks these `⚠ ... — try playwright` and leaves them
-unchecked. The agent can then fetch them interactively via the
-Playwright MCP (one URL at a time, with your confirmation). See the
-*Playwright fallback* section in `skills/inbox-fetcher/SKILL.md`.
-Obsidian Web Clipper remains a manual fallback if Playwright MCP is
-unavailable.
+unchecked. Run `/playwright-fetch` — the agent will retrieve them
+interactively via the Playwright MCP, one URL at a time, with your
+confirmation per URL. Obsidian Web Clipper remains a manual fallback
+if Playwright MCP is unavailable.
 
 **Linter flags many orphan pages early on** → expected. Orphan check
 becomes meaningful when the wiki has >50 pages. Views are
