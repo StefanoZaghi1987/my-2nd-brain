@@ -80,6 +80,10 @@ def _parse_config_yaml(text: str) -> dict:
         key, _, val_raw = stripped.partition(":")
         key = key.strip()
         val = val_raw.strip()
+        # Strip trailing inline comment, but only outside a quoted string
+        if not (val.startswith('"') or val.startswith("'")):
+            val = val.partition(" #")[0].strip()
+            val = val.partition("\t#")[0].strip()
         is_indented = raw_line[:1] in (" ", "\t")
 
         if not is_indented:

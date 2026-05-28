@@ -101,3 +101,10 @@ class TestLoadConfig:
         )
         config = load_config(tmp_path)
         assert config["fetch"]["html_timeout_seconds"] == 45
+
+    def test_ignores_inline_comments(self, tmp_path):
+        (tmp_path / "vault.config.yml").write_text(
+            "lint:\n  stale_source_days: 90  # some comment here\n"
+        )
+        config = load_config(tmp_path)
+        assert config["lint"]["stale_source_days"] == 90
