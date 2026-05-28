@@ -102,6 +102,9 @@ purpose: "One-sentence description of what this view helps see."
   slides, reports with >5 sections).
 - **Update in place** for `shareable: false`. Bump `updated`.
 - **Don't modify** `shareable: true` views without explicit ok.
+- **Concept-map sync.** When filling `view-concept-map.md`, populate both
+  the Mermaid block and the `<details>` adjacency list from the same source
+  data. Every node and directed edge must appear in both representations.
 
 ## What this skill doesn't do
 
