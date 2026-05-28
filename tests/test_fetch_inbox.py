@@ -203,9 +203,10 @@ class TestPdfEnabled:
             status_code=403,
         )
         process_vault(tmp_path)
-        inbox_text = (tmp_path / "inbox.md").read_text()
+        inbox_text = (tmp_path / "inbox.md").read_text(encoding="utf-8")
         # Check that the URL was marked as failed with pdf_enabled message
         assert "- [ ]" in inbox_text  # Still unchecked
+        assert "⚠" in inbox_text
         assert "pdf_enabled" in inbox_text  # Contains our error message
         # Verify no PDF file was actually downloaded
         assert not any(
