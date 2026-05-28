@@ -47,7 +47,7 @@ Save screenshots to `raw/web/<slug>/assets/` only if the user asks.
 ## Inbox update
 
 For each success, update inbox.md: move the line to `## Processed`
-with `- [x] <url> → `raw/web/<slug>/` (<today>)`. Remove the ⚠ marker.
+with `- [x] <url> → \`raw/web/<slug>/\` (<today>)`. Remove the ⚠ marker.
 
 For each failure, keep the line unchecked. Append the failure reason
 after ⚠ and ask the user how to proceed.
