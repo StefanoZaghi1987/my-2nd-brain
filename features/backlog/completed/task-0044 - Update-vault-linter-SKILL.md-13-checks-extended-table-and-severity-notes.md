@@ -1,9 +1,10 @@
 ---
 id: TASK-0044
 title: 'Update vault-linter SKILL.md: 13 checks, extended table and severity notes'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 14:33'
+updated_date: '2026-05-28 15:14'
 labels: []
 milestone: vault-completeness
 dependencies: []

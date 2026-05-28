@@ -1,9 +1,10 @@
 ---
 id: TASK-0042
 title: 'Update commands/ingest.md: add pre-ingest deduplication check'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 14:33'
+updated_date: '2026-05-28 15:10'
 labels: []
 milestone: vault-completeness
 dependencies: []

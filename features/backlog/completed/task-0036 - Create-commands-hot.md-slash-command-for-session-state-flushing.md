@@ -1,9 +1,10 @@
 ---
 id: TASK-0036
 title: Create commands/hot.md slash command for session state flushing
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 14:33'
+updated_date: '2026-05-28 14:52'
 labels: []
 milestone: vault-completeness
 dependencies: []

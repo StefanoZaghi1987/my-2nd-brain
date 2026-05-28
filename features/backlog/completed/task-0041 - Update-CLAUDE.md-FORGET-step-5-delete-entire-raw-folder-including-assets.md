@@ -1,9 +1,10 @@
 ---
 id: TASK-0041
 title: 'Update CLAUDE.md FORGET step 5: delete entire raw folder including assets'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 14:33'
+updated_date: '2026-05-28 15:05'
 labels: []
 milestone: vault-completeness
 dependencies: []

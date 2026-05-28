@@ -3,9 +3,10 @@ id: TASK-0037
 title: >-
   Create commands/playwright-fetch.md slash command for browser-based URL
   retrieval
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 14:33'
+updated_date: '2026-05-28 14:56'
 labels: []
 milestone: vault-completeness
 dependencies: []

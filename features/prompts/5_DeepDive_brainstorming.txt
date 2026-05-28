@@ -1,0 +1,5 @@
+/brainstorming
+You are an expert about knowledge base organization and maintenance.
+Deep dive, analyze and understand this LLM Wiki implementation, based on Andrej Karpathy's LLM Wiki (https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) idea.
+Identify, group and explain me any single feature and implemented workflow. Identify (if existing) broken or missing implementations and missing features.
+After that, let's talk about this to define specifications needed to improve the actual implementation.

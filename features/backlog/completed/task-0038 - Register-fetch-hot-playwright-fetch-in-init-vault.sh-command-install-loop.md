@@ -1,9 +1,10 @@
 ---
 id: TASK-0038
 title: 'Register fetch, hot, playwright-fetch in init-vault.sh command install loop'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 14:33'
+updated_date: '2026-05-28 15:02'
 labels: []
 milestone: vault-completeness
 dependencies: []

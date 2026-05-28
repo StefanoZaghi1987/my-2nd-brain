@@ -1,9 +1,10 @@
 ---
 id: TASK-0039
 title: 'Update CLAUDE.md session-start rule 3: read compass.md updated frontmatter'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 14:33'
+updated_date: '2026-05-28 15:05'
 labels: []
 milestone: vault-completeness
 dependencies: []

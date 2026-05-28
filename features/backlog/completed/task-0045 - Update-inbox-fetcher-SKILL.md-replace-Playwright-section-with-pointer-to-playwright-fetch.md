@@ -3,9 +3,10 @@ id: TASK-0045
 title: >-
   Update inbox-fetcher SKILL.md: replace Playwright section with pointer to
   /playwright-fetch
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 14:33'
+updated_date: '2026-05-28 15:16'
 labels: []
 milestone: vault-completeness
 dependencies: []

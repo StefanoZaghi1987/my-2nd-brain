@@ -1,9 +1,10 @@
 ---
 id: TASK-0035
 title: Create commands/fetch.md slash command for inbox processing
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-28 14:33'
+updated_date: '2026-05-28 14:46'
 labels: []
 milestone: vault-completeness
 dependencies: []
