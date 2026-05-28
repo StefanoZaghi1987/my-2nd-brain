@@ -118,31 +118,9 @@ If a dependency is missing, the script prints a clear install command and exits 
 
 ## Playwright fallback
 
-Any URL marked `⚠ ... — try playwright` in inbox.md is a hand-off from the script to the agent. The script never calls a browser; the agent uses the Playwright MCP (`mcp__plugin_playwright_playwright__browser_*`) interactively, one URL at a time.
-
-**Protocol per URL:**
-
-1. **Confirm with the user** before fetching. Never batch-process walled URLs unattended.
-2. Navigate with `browser_navigate` to the URL.
-3. If auth is required and the user is logged in (persistent profile), proceed. Otherwise stop and report — don't attempt to bypass auth.
-4. Use `browser_snapshot` to get the accessibility tree, or `browser_evaluate` to extract the article/tweet text from the DOM. For X/Twitter threads, collect the full thread, not just the root post.
-5. Generate a slug (title for articles; `<handle>-<tweet-id>` for X/Twitter).
-6. Write `raw/web/<slug>/index.md` with frontmatter:
-   ```yaml
-   ---
-   source_url: <url>
-   title: <inferred or first-line-of-post>
-   author: <handle or author>
-   published: <YYYY-MM-DD if visible>
-   fetched: <today>
-   fetched_via: playwright
-   ---
-   ```
-7. Save screenshots to `raw/web/<slug>/assets/` only if the user asks — they're large and rarely needed.
-8. In `inbox.md`, move the line to `## Processati` with `- [x] <url> → \`raw/web/<slug>/\` (<today>)`. Remove the `⚠` marker.
-9. Report to the user what was captured and ask whether to proceed to INGEST.
-
-**Out of scope for the fallback:** bypassing login walls, solving CAPTCHAs, scraping at volume. If any of these come up, stop and tell the user.
+Any URL marked `⚠ ... — try playwright` in inbox.md is a hand-off from
+the script to the agent. Use the `/playwright-fetch` command — it contains
+the full per-URL protocol.
 
 ## Output contract
 

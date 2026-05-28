@@ -78,7 +78,7 @@ language or with a slash command.
 
 | # | Operation | How to trigger | What happens |
 |---|---|---|---|
-| 1 | **FETCH** | *"process the inbox"* | URLs in `inbox.md` → `raw/web/` or `raw/papers/<slug>/` |
+| 1 | **FETCH** | `/fetch` or *"process the inbox"* | URLs in `inbox.md` → `raw/web/` or `raw/papers/<slug>/` |
 | 2 | **INGEST** | `/ingest` or *"ingest the new content"* | `raw/` → summaries in `wiki/sources/`, links in `wiki/pages/` |
 | 3 | **FORGET** | `/forget <source>` or *"forget source X"* | Cascade-remove a source, clean citations in pages and views |
 | 4 | **QUERY** | any question | Agent reads the wiki, answers with citations |
@@ -90,12 +90,17 @@ language or with a slash command.
 
 ---
 
-## Eight slash commands
+## Eleven slash commands
 
-- **`/save [name]`** — save the current conversation to
-  `conversations/`. These feed `/reflect` and `/promote` later.
+- **`/fetch`** — process the URL queue in `inbox.md`. Run this before
+  `/ingest` — ingest needs the raw files that fetch downloads.
 - **`/ingest [slug]`** — compile raw sources into the wiki. Without a
   slug, discovers all uningested sources and confirms before starting.
+- **`/playwright-fetch`** — retrieve walled, paywalled, or JS-rendered
+  URLs that `/fetch` couldn't download. One URL at a time, with your
+  confirmation per URL.
+- **`/save [name]`** — save the current conversation to
+  `conversations/`. These feed `/reflect` and `/promote` later.
 - **`/view [kind] [topic]`** — build a view. Kinds: `timeline`,
   `comparison`, `concept-map`, `chart`, `slides`, `report`, `post`.
 - **`/reflect`** — write `compass.md`: where my thinking is going,
@@ -108,6 +113,8 @@ language or with a slash command.
   conversation into a wiki page, with full citation. Interactive only.
 - **`/refresh <source>`** — re-fetch a source whose content has
   changed, re-ingest it, and flag pages that may need review.
+- **`/hot`** — flush session state to `wiki/hot.md`. The agent runs
+  this automatically at the end of any writing session.
 
 For everything else, just ask in plain language.
 

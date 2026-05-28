@@ -76,8 +76,9 @@ For each `wiki/views/...` with the source in `based_on`:
 
 ### 5. Delete the source
 
-- Delete `wiki/sources/<slug>.md`.
-- Delete the `raw/` file (or directory, for `raw/web/<slug>/`).
+- Delete `wiki/sources/<slug>.md`. Delete the entire raw folder:
+  - Web sources: `raw/web/<slug>/` (includes `index.md` and `assets/`).
+  - PDF sources: `raw/papers/<slug>/` (includes `paper.pdf` and `index.md`).
 
 This is the one case where removing from `raw/` is allowed —
 invariant #1 covers *creation*, not user-directed removal.
