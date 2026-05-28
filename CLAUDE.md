@@ -177,7 +177,7 @@ stale views). If conversations hold insights not yet in the wiki, or
 views that could expand pages, mention them there too.
 
 ### LINT
-User says "lint" or auto-trigger after 5 ingests / 7 days → run
+User says "lint" or auto-trigger after 5 fetches / 7 days → run
 `vault-linter` skill. Deterministic checks only (dead links, missing
 frontmatter, naming consistency, view staleness). Output to
 `.lint/report.md`. Never auto-fix.
