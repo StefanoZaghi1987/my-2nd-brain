@@ -12,7 +12,8 @@ class TestCommands:
         assert "split" in init_vault.COMMANDS
 
     def test_split_md_exists(self):
+        """The commands/split.md source file must exist so init_vault can install it."""
         repo = Path(__file__).parent.parent
         assert (repo / "commands" / "split.md").exists()
 
-    # test_retry_* tests are added in Task 7 after commands/retry.md exists.
+    # Retry command tests will live here once commands/retry.md exists.

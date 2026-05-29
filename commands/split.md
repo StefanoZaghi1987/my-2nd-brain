@@ -20,8 +20,8 @@ to dissolve and the two new slugs name the resulting pages.
 
 If the target slugs are not supplied, ask the user before proceeding.
 
-> **Splitting a page?** See [`/split`](.claude/commands/split.md) — this is the
-> standalone split command. For merging, see [`/merge`](.claude/commands/merge.md).
+> **Merging two pages instead?** See [`/merge`](.claude/commands/merge.md) — it has its
+> own protocol for consolidating near-duplicate pages.
 
 ---
 
