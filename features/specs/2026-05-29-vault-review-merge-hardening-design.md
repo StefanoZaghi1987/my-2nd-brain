@@ -5,6 +5,55 @@
 
 ---
 
+## 0. Repo orientation
+
+`D:\my-2nd-brain` is the **template/engine repo** — it generates second-brain
+vaults via `init_vault.py` or `init-vault.sh`. There is no `wiki/`, `raw/`, or
+`inbox.md` on disk here; those are created in a target directory when bootstrap
+runs. Key layout:
+
+```
+init_vault.py           Canonical Python bootstrapper (cross-platform)
+init-vault.sh           Bash shim (should delegate to init_vault.py)
+CLAUDE.md               The LLM operating contract installed into every vault
+commands/               Slash command protocols (Markdown)
+skills/
+  inbox-fetcher/
+    scripts/fetch_inbox.py    URL queue → raw/web|papers/<slug>/
+    scripts/adopt_drop.py     Drop-zone → raw/local/<slug>/
+    SKILL.md
+  vault-linter/
+    scripts/lint.py           14 deterministic checks
+    SKILL.md
+  view-builder/
+    templates/                7 view kind templates + chart.py
+  shared/
+    vault_state.py            Config/state I/O (shared by all scripts)
+tests/                  pytest suite (~100 tests)
+  test_fetch_inbox.py   Uses requests_mock pytest fixture for HTTP mocking
+  test_adopt_drop.py    Uses monkeypatch for filesystem ops
+  test_lint.py          Uses make_vault() helper to build fixture vaults
+  test_vault_state.py
+features/
+  specs/                Design specs (this file lives here)
+  plans/                Implementation plans
+  backlog/tasks/        Backlog.md task files (task-0061 … task-0079)
+  backlog/milestones/   m-0, m-1, m-2
+```
+
+**Test import pattern** (used consistently across all test files):
+```python
+import sys
+from pathlib import Path
+sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "<skill>" / "scripts"))
+sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "shared"))
+from <module> import <symbol>   # e.g. from fetch_inbox import fetch_pdf
+```
+
+**Run tests:** `pytest tests/ -v` from the repo root.
+
+---
+
 ## 1. Problem
 
 A deep-dive audit (session 2026-05-29) against Karpathy's LLM-Wiki idea
@@ -122,9 +171,10 @@ A single failing check function (uncaught exception) aborts the entire lint run
 with exit 2. One edge-case in one check kills the whole health report.
 
 **Change:** wrap each check invocation in the `all_checks` loop (line ~805) in a
-try/except; on exception, append an `advisory` finding with message
-`"check crashed: <check_name>: <exc>"` and continue. Exit 2 only when no checks
-completed at all.
+try/except; on exception, append an `advisory` `Finding` with
+`detail="check '<name>' raised an unexpected error: <exc>"` and continue.
+`Finding` dataclass fields: `severity`, `check`, `file`, `detail`, `line` (NOT `message`).
+Exit 2 only when no checks completed at all.
 
 Tests: inject a mock check that raises; assert overall run exits 1 (not 2) and
 contains the crash advisory.

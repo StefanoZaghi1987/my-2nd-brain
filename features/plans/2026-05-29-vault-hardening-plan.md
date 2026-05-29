@@ -364,40 +364,35 @@ A single crashing check aborts the whole lint run with exit 2. One bad check kil
 
 - [ ] **Step 1: Write the failing test**
 
-  Add to `tests/test_lint.py`:
+  Add to `tests/test_lint.py` (note: the file already has `sys.path.insert` for
+  `skills/vault-linter/scripts` at line 5 — the import below works with that setup):
+
   ```python
-  def test_crashing_check_produces_advisory_not_exit_2(tmp_path):
-      """A check that raises should produce an advisory finding, not abort the run."""
-      from skills.vault_linter.scripts.lint import run_lint
+  class TestLintGracefulDegradation:
+      def test_crashing_check_produces_advisory_not_exit_2(self, tmp_path):
+          """A check that raises must produce an advisory, not abort the whole run."""
+          import unittest.mock as mock
+          import lint as lint_mod
+          from lint import run_lint
 
-      # Minimal valid vault
-      (tmp_path / "wiki" / "pages").mkdir(parents=True)
-      (tmp_path / "wiki" / "index.md").write_text(
-          "---\ntype: page\ncreated: 2026-01-01\nupdated: 2026-01-01\ntags: []\n---\n"
-      )
+          # Minimal valid vault with wiki/ structure
+          (tmp_path / "wiki" / "pages").mkdir(parents=True)
+          (tmp_path / "wiki" / "sources").mkdir(parents=True)
+          (tmp_path / ".lint").mkdir(parents=True)
 
-      # Inject a broken check by monkeypatching all_checks inside lint.py
-      import skills.vault_linter.scripts.lint as lint_mod
-      original_checks = lint_mod.all_checks if hasattr(lint_mod, "all_checks") else None
+          # Patch an existing check function at module level to raise.
+          # check_gaps() is a pure-pages check with no vault arg — easy to patch.
+          with mock.patch.object(lint_mod, "check_gaps",
+                                 side_effect=RuntimeError("intentional test crash")):
+              exit_code = run_lint(tmp_path, quiet=True)
 
-      def bad_check(pages):
-          raise RuntimeError("intentional crash in test")
+          # Must continue to exit 1 (findings), not 2 (catastrophic abort)
+          assert exit_code == 1
 
-      # run_lint reads all_checks at call time — patch it in the function scope
-      # by calling with a patched version via monkeypatching the module attribute
-      import unittest.mock as mock
-      with mock.patch.object(lint_mod, "_EXTRA_TEST_CHECKS", [("bad_check", bad_check)],
-                             create=True):
-          exit_code = run_lint(tmp_path, quiet=False)
-
-      # Should exit 1 (findings present), not 2 (catastrophic error)
-      # The crash advisory should appear in the report
-      report = (tmp_path / ".lint" / "report.md").read_text()
-      assert "bad_check" in report or "crashed" in report.lower()
-      assert exit_code == 1
+          # The report must mention the crash
+          report = (tmp_path / ".lint" / "report.md").read_text()
+          assert "check_gaps" in report or "intentional test crash" in report
   ```
-
-  Note: the test may need adjustment based on how you expose the check list. See Step 3.
 
 - [ ] **Step 2: Locate the all_checks loop**
 
@@ -416,11 +411,15 @@ A single crashing check aborts the whole lint run with exit 2. One bad check kil
 
 - [ ] **Step 3: Replace the abort-on-exception with a crash advisory**
 
-  Replace the `except` block in the loop:
+  Replace the `except` block in the loop. The key changes: initialize `out = []`
+  *before* the try (so `len(out)` is always valid in the print), build the crash
+  advisory as a `Finding` with `detail=` (the actual field name — NOT `message`):
+
   ```python
   findings: list[Finding] = []
   completed = 0
   for name, fn in all_checks:
+      out: list[Finding] = []   # always valid; overwritten on success
       try:
           if name in ("dead_links", "orphans", "based_on_dead_links", "index_sync"):
               out = fn(pages, vault)
@@ -428,33 +427,30 @@ A single crashing check aborts the whole lint run with exit 2. One bad check kil
               out = fn(vault)
           else:
               out = fn(pages)
-          findings.extend(out)
-          completed += 1
       except Exception as e:
           # A crashing check is recorded as an advisory finding so the rest of
           # the report remains useful rather than being lost entirely.
-          crash_msg = f"check '{name}' raised an unexpected error: {e}"
-          print(f"  ⚠ {crash_msg}", file=sys.stderr)
-          findings.append(Finding(
-              check=name,
+          crash_detail = f"check '{name}' raised an unexpected error: {e}"
+          print(f"  ⚠ {crash_detail}", file=sys.stderr)
+          out = [Finding(
               severity="advisory",
+              check=name,
               file="(linter)",
-              line=None,
-              message=crash_msg,
-          ))
-          completed += 1
+              detail=crash_detail,
+          )]
+      findings.extend(out)
+      completed += 1
       if not quiet:
-          print(f"  {name}: {len(out) if 'out' in dir() else '(crashed)'} finding(s)")
+          print(f"  {name}: {len(out)} finding(s)")
   ```
 
-  After the loop, change the catastrophic-failure guard:
+  After the loop, add the catastrophic-failure guard and remove the old `return 2`
+  that was inside the loop:
   ```python
   if completed == 0:
       print("ERROR: no checks completed — vault may be unreadable", file=sys.stderr)
       return 2
   ```
-
-  Remove the old `return 2` inside the loop.
 
 - [ ] **Step 4: Run all lint tests**
 

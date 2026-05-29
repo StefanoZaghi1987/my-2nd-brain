@@ -305,7 +305,9 @@ Every vault bootstrapped after this change should have the `.review/` directory 
 
 - [ ] **Step 4: Add .review/state.yaml stub**
 
-  Find where `.lint/state.yaml` is written (look for `_LINT_STATE` constant). Add a parallel constant and write call:
+  Find where `.lint/state.yaml` is written. In `init_vault.py` there is a `_LINT_STATE`
+  constant (around line 155) and a call `_write_if_absent(vault / ".lint" / "state.yaml",
+  _LINT_STATE, ".lint/state.yaml")` (line ~222). Add a parallel constant and call:
 
   ```python
   _REVIEW_STATE = """\
@@ -316,18 +318,22 @@ Every vault bootstrapped after this change should have the `.review/` directory 
   """
   ```
 
-  In the file-writing section, add:
+  In `write_base_files()` (around line 218), after the `.lint/` lines, add:
   ```python
-  write_if_absent(vault / ".review" / "state.yaml", _REVIEW_STATE)
+  _write_if_absent(vault / ".review" / "state.yaml", _REVIEW_STATE, ".review/state.yaml")
   ```
+  Note: the function is `_write_if_absent` (with leading underscore), not `write_if_absent`.
 
 - [ ] **Step 5: Add .review/ to .gitignore template**
 
-  Find the `.gitignore` template string in `init_vault.py`. Add `.review/` alongside `.lint/`:
+  Find the `_GITIGNORE` constant in `init_vault.py` (around line 169). The current
+  template does NOT include `.lint/` — append `.review/` at the end:
   ```
+  # Vault runtime output (do not commit lint/review reports)
   .lint/
   .review/
   ```
+  Add these lines before the closing `"""` of `_GITIGNORE`.
 
 - [ ] **Step 6: Smoke-test bootstrap**
 

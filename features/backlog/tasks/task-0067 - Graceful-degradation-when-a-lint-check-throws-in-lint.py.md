@@ -4,6 +4,7 @@ title: Graceful degradation when a lint check throws in lint.py
 status: To Do
 assignee: []
 created_date: '2026-05-29 11:43'
+updated_date: '2026-05-29 12:04'
 labels: []
 milestone: m-0
 dependencies: []
@@ -32,3 +33,25 @@ Wrap each check invocation in a try/except so a crashing check is recorded as an
 - [ ] #4 Exit code 2 is only returned when no checks complete at all (e.g., vault missing)
 - [ ] #5 One new test injects a mock check that raises; asserts exit 1 and the crash advisory in output
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Key implementation details for a fresh agent:
+
+**Finding dataclass** (lint.py line 69) has fields: `severity`, `check`, `file`, `detail`, `line`. The field is `detail`, NOT `message`.
+
+**all_checks is a local variable** inside `run_lint()` (line 787) — it cannot be patched as a module attribute. To test graceful degradation, patch an existing check function at module level, e.g.:
+```python
+import unittest.mock as mock
+import lint as lint_mod
+with mock.patch.object(lint_mod, "check_gaps", side_effect=RuntimeError("crash")):
+    exit_code = run_lint(vault_path, quiet=True)
+```
+
+**Implementation pattern**: initialize `out: list[Finding] = []` BEFORE the try block so the print statement always has a valid `len(out)`. Build the crash advisory as a Finding in `out`, extend findings, then continue the loop. Add `completed` counter and check `if completed == 0: return 2` AFTER the loop (not inside it).
+
+**Test imports** use the sys.path.insert pattern already in test_lint.py (line 5):
+`sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "vault-linter" / "scripts"))`
+Then: `from lint import run_lint`
+<!-- SECTION:NOTES:END -->
