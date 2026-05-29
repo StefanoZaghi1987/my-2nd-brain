@@ -85,6 +85,9 @@ UNCHECKED_PATTERN = re.compile(r"^- \[ \] (https?://\S+)\s*$")
 #   - [ ] https://example.com ⚠ reason text
 # Used by --retry mode to select only failed entries for re-attempt.
 FAILED_PATTERN = re.compile(r"^- \[ \] (https?://\S+) ⚠ .+$")
+# Near-miss: looks like an unchecked entry but has trailing text after the URL.
+# These are silently dropped by UNCHECKED_PATTERN; emit a visible warning instead.
+_NEAR_MISS_PATTERN = re.compile(r"^- \[ \] https?://\S+\s+\S")
 IMG_PATTERN = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
 
 PLAYWRIGHT_HINT = "try playwright"
@@ -425,6 +428,8 @@ def update_inbox(
     results: list[FetchResult],
     processed_section: str = "## Processed",
 ) -> str:
+    # Detect and preserve the original line separator
+    line_sep = "\r\n" if "\r\n" in inbox_text else "\n"
     lines = inbox_text.splitlines()
     today = date.today().isoformat()
 
@@ -438,7 +443,14 @@ def update_inbox(
         match = UNCHECKED_PATTERN.match(line)
         failed_match = FAILED_PATTERN.match(line) if not match else None
         if not match and not failed_match:
-            out_lines.append(line)
+            # Warn on near-miss: looks like an unchecked entry but URL is not alone
+            if _NEAR_MISS_PATTERN.match(line):
+                out_lines.append(
+                    line + " ⚠ skipped: inline text after URL"
+                    " — move notes to an indented sub-bullet"
+                )
+            else:
+                out_lines.append(line)
             i += 1
             continue
 
@@ -480,7 +492,8 @@ def update_inbox(
             final_lines.append("")
         final_lines.extend(new_processed_lines)
 
-    return "\n".join(final_lines) + ("\n" if inbox_text.endswith("\n") else "")
+    ending = line_sep if inbox_text.endswith(("\n", "\r\n")) else ""
+    return line_sep.join(final_lines) + ending
 
 
 # --- Orchestration ----------------------------------------------------------
@@ -612,12 +625,13 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    if not args.vault.is_dir():
-        print(f"ERROR: vault path is not a directory: {args.vault}",
+    vault = Path(args.vault).resolve()
+    if not vault.is_dir():
+        print(f"ERROR: vault path is not a directory: {vault}",
               file=sys.stderr)
         return 1
 
-    return process_vault(args.vault, dry_run=args.dry_run, retry=args.retry)
+    return process_vault(vault, dry_run=args.dry_run, retry=args.retry)
 
 
 if __name__ == "__main__":

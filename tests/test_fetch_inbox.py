@@ -478,3 +478,48 @@ class TestUpdateInboxRetry:
         new_text = update_inbox(inbox, inbox_text, [result])
         assert "new error: 503" in new_text
         assert "old error" not in new_text
+
+
+class TestUpdateInboxCRLFAndWarning:
+    """Tests for CRLF preservation and near-miss warning in update_inbox."""
+
+    def test_crlf_line_endings_are_preserved(self, tmp_path):
+        """CRLF inboxes must not be silently converted to LF on rewrite."""
+        from fetch_inbox import update_inbox, FetchResult
+
+        inbox_text = "# Inbox\r\n\r\n- [ ] https://example.com\r\n"
+        result = FetchResult(url="https://example.com", ok=True,
+                             kind="html", out_path=tmp_path / "raw/web/example")
+
+        inbox_file = tmp_path / "inbox.md"
+        inbox_file.write_text(inbox_text, encoding="utf-8")
+
+        output = update_inbox(inbox_file, inbox_text, [result])
+        assert "\r\n" in output, "CRLF line endings must be preserved"
+
+    def test_near_miss_entry_emits_warning(self, tmp_path):
+        """A line '- [ ] URL inline-text' should produce a visible warning."""
+        from fetch_inbox import update_inbox
+
+        inbox_text = "- [ ] https://example.com my inline note\n"
+        inbox_file = tmp_path / "inbox.md"
+        inbox_file.write_text(inbox_text, encoding="utf-8")
+
+        output = update_inbox(inbox_file, inbox_text, [])
+        assert "⚠" in output or "skipped" in output.lower(), (
+            "A near-miss unchecked line must produce a visible warning"
+        )
+
+    def test_lf_line_endings_are_preserved(self, tmp_path):
+        """LF-only inboxes stay LF."""
+        from fetch_inbox import update_inbox, FetchResult
+
+        inbox_text = "# Inbox\n\n- [ ] https://example.com\n"
+        result = FetchResult(url="https://example.com", ok=True,
+                             kind="html", out_path=tmp_path / "raw/web/example")
+
+        inbox_file = tmp_path / "inbox.md"
+        inbox_file.write_text(inbox_text, encoding="utf-8")
+
+        output = update_inbox(inbox_file, inbox_text, [result])
+        assert "\r\n" not in output, "LF-only inbox must not gain CRLF"
