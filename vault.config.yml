@@ -1,8 +1,13 @@
 # vault.config.yml — per-vault configuration for the second brain vault.
 #
 # All values here are defaults. Override any key in the copy installed
-# at your vault root. Lists must use inline syntax: [a, b, c].
-# Block-list syntax (- item per line) is not parsed.
+# at your vault root.
+#
+# List values support both inline syntax:   key: [a, b, c]
+# and block (multi-line) syntax:
+#   key:
+#     - a
+#     - b
 
 vault:
   version: 1
@@ -11,20 +16,25 @@ inbox:
   processed_section: "## Processed"   # header used by fetch_inbox.py for done entries
   tags_propagation: true              # whether to carry inbox tags into raw frontmatter
 
+# ── Keys below are READ BY fetch_inbox.py (script-enforced) ──────────────────
 fetch:
   html_timeout_seconds: 20
   pdf_timeout_seconds: 60
   max_pdf_size_mb: 50
   pdf_enabled: true
+  # Both inline and block-list syntax are supported here:
   walled_domains: [x.com, twitter.com, mobile.twitter.com, linkedin.com, www.linkedin.com, threads.net, facebook.com, www.facebook.com, instagram.com, www.instagram.com]
 
+# ── Keys below are READ BY lint.py (script-enforced) ─────────────────────────
 lint:
-  stale_source_days: 180             # advisory after this many days without update
-  view_stale_days: 30                # days a view can lag its based_on pages
-  auto_trigger_after_fetches: 5      # run lint automatically after N fetches
-  auto_trigger_after_days: 7        # run lint automatically after N days
-  reflect_reminder_days: 14          # suggest /reflect after N days without one
+  stale_source_days: 180             # read by lint.py — advisory after N days without update
+  view_stale_days: 30                # read by lint.py — days a view can lag its based_on pages
+  # The following three keys are honored by the LLM/command layer, NOT by lint.py:
+  auto_trigger_after_fetches: 5      # LLM-layer: run lint after N fetches
+  auto_trigger_after_days: 7         # LLM-layer: run lint after N days
+  reflect_reminder_days: 14          # LLM-layer: suggest /reflect after N days
 
+# ── Keys below are honored by the LLM/command layer, NOT by any script ────────
 ingest:
   max_new_pages_before_confirm: 3    # ask before creating more than N new pages
   max_files_per_operation: 15        # invariant #5 enforcement ceiling

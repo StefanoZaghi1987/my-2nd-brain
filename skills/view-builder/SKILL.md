@@ -57,13 +57,12 @@ shareable — you want to edit in place or create a new dated file?"
 1. Confirm the kind if ambiguous.
 2. Identify the pages that feed the view (`based_on`).
 3. For `slides`/`report`/`post` ask about `shareable` and the audience.
-4. For complex kinds (reveal decks, multi-page reports), propose the
-   outline before writing the full file.
+4. For multi-page reports, propose the outline before writing the full file.
 5. Load the right template.
 6. Fill it with real content, citing `[[wiki/...]]` for every claim.
 7. For `chart`, also run `chart.py` to produce the PNG in
    `wiki/views/assets/`.
-8. Write to `wiki/views/<slug>.md` (or `.html` for reveal).
+8. Write to `wiki/views/<slug>.md`.
 9. Update `wiki/index.md` (add to a "Views" section).
 10. Append to `wiki/log.md`: `## [YYYY-MM-DD] view | <slug>`.
 11. Tell the user the exact path.
@@ -113,6 +112,6 @@ purpose: "One-sentence description of what this view helps see."
 
 ## What this skill doesn't do
 
-- Render PDF/HTML from Marp or Reveal — the user does that separately.
+- Render PDF/HTML from Marp — the user does that separately. (A reveal.js template is not yet available.)
 - Auto-generate views — producing is always a deliberate act.
 - Read `shareable: true` views during future QUERY unless asked.
