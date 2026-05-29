@@ -30,7 +30,7 @@ wiki/                 Your domain
   log.md              Append-only log of operations
 conversations/        Transcripts saved with /save
 .lint/report.md       Latest lint output
-.claude/              Skills, commands, hooks (mechanisms, not content)
+.claude/              Skills, commands (mechanisms, not content)
 ```
 
 Three directories under `wiki/`. Everything you write goes to one of
@@ -232,6 +232,7 @@ for the full protocol.
 | REFLECT   | (LLM only)     | —                              |
 | PROMOTE   | (LLM only)     | —                              |
 | REFRESH   | (LLM only)     | —                              |
+| FORGET    | (LLM only)     | —                              |
 
 ---
 
