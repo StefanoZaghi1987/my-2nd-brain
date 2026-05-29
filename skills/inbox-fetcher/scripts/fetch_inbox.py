@@ -9,7 +9,7 @@ Usage:
 
 Reads `inbox.md` from the vault root, finds unchecked URL entries,
 fetches each, and writes clean markdown + images to raw/web/<slug>/.
-PDFs go to raw/papers/<slug>.pdf.
+PDFs go to raw/papers/<slug>/paper.pdf with a companion index.md.
 
 Idempotent: already-processed URLs are skipped.
 """

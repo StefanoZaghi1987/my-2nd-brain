@@ -90,7 +90,7 @@ The script is idempotent: already-processed URLs (marked `[x]`) are skipped. To 
 ## What the script does per URL
 
 1. **URL rewriting (pre-fetch).** Certain URLs are rewritten to reach the actual content instead of a landing page. Today: arxiv — any `arxiv.org/abs/<id>`, `arxiv.org/html/<id>`, or `arxiv.org/pdf/<id>` (with or without `.pdf`, with or without a `vN` version suffix) is rewritten to `arxiv.org/pdf/<id>.pdf` so we archive the paper itself. The slug becomes `arxiv-<id>` verbatim (no slugify — preserves the canonical ID). The inbox line still tracks the URL you wrote.
-2. **PDF detection.** If the (rewritten) URL path ends in `.pdf` or the server returns `Content-Type: application/pdf`, download as-is to `raw/papers/<slug>.pdf`.
+2. **PDF detection.** If the (rewritten) URL path ends in `.pdf` or the server returns `Content-Type: application/pdf`, download into `raw/papers/<slug>/paper.pdf` with a companion `index.md`.
 3. **HTML extraction.** Otherwise, use `trafilatura` to fetch and extract clean markdown with metadata (title, author, publish date, language).
 4. **Slug generation.** For rewritten URLs, use the override slug (e.g. `arxiv-2405.12345`). Otherwise prefer the article title, fallback to `<hostname>-<hash8>`.
 5. **Image download.** Parse `![alt](url)` patterns, download each image into `raw/web/<slug>/assets/` with a hash-based filename, rewrite paths to local.
