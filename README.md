@@ -37,7 +37,8 @@ vault-bundle/
 │   ├── ingest.md             /ingest
 │   ├── fetch.md              /fetch
 │   ├── hot.md                /hot
-│   └── playwright-fetch.md   /playwright-fetch
+│   ├── playwright-fetch.md   /playwright-fetch
+│   └── review.md             /review
 └── docs/examples/
     ├── research-example.md
     └── mealplan-example.md
@@ -80,16 +81,17 @@ python3 init_vault.py ~/knowledge/X    # Windows / cross-platform (canonical pat
 
 What happens on re-run:
 
-- **Always refreshed** — `skills/`, `commands/`, and
-  `skills/shared/vault_state.py`. This is the whole point of the
-  update: new operations, fixes, and slash commands land in the vault.
+- **Always refreshed** — `skills/`, `commands/`, and shared utilities
+  (`skills/shared/vault_state.py`, `skills/shared/review_scope.py`).
+  This is the whole point of the update: new operations, fixes, and
+  slash commands land in the vault.
 - **Prompts you** — `CLAUDE.md`. Default is *keep* (answer `y` to
   overwrite with the latest template). Say yes unless you've
   customized the contract locally.
 - **Created only if missing** — `vault.config.yml`, `inbox.md`,
   `wiki/index.md`, `wiki/log.md`, `wiki/hot.md`, `.lint/state.yaml`,
-  `.gitignore`. Edit `vault.config.yml` to customise timeouts,
-  walled domains, and lint thresholds.
+  `.review/state.yaml`, `.gitignore`. Edit `vault.config.yml` to
+  customise timeouts, walled domains, and lint thresholds.
 - **Never touched** — `raw/`, `wiki/pages/`, `wiki/sources/`,
   `wiki/views/`, `conversations/`, `wiki/compass.md`. Your
   knowledge and ongoing work are safe.
