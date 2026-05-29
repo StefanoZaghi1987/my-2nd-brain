@@ -161,6 +161,7 @@ cascade-remove a source and everything that depended only on it.
    - Web sources: `raw/web/<slug>/` (includes `index.md` and `assets/`).
    - PDF sources (URL-fetched): `raw/papers/<slug>/` (includes `paper.pdf` and `index.md`).
    - Local PDF sources: `raw/local/<slug>/` (includes `paper.pdf` and `index.md`).
+   - Local Markdown sources: `raw/local/<slug>/` (includes `content.md` and `index.md`).
 
    This is the one case where writing to `raw/` (as deletion) is allowed —
    invariant #1 covers creation, not user-directed removal.
