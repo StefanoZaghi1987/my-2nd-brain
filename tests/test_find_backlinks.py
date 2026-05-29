@@ -90,3 +90,15 @@ def test_finds_aliased_link(tmp_path):
         "---\ntype: page\ncreated: 2026-01-01\nupdated: 2026-01-01\ntags: []\n---\n\n"
         "See [[wiki/pages/alpha|Alpha display]].\n", encoding="utf-8")
     assert linker in find_backlinks(tmp_path, target)
+
+
+def test_self_link_included(tmp_path):
+    """A page linking to itself appears in the backlinks.
+
+    NOTE: The MERGE operation must filter the page being merged-away (target)
+    from the backlink results before rewriting, since that page will be deleted.
+    """
+    target = tmp_path / "wiki" / "pages" / "hub.md"
+    _make_page(target, ["wiki/pages/hub"])  # links to itself
+    result = find_backlinks(tmp_path, target)
+    assert target in result

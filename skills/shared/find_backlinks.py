@@ -4,9 +4,14 @@ find_backlinks.py — Enumerate all wiki pages that link to a given target page.
 
 Used by the MERGE operation to find every page that must be updated when a
 source page is merged into a destination page. Backlink resolution uses the
-same logic as the vault linter (normalize_link_target), so "backlinks found
-here match exactly what the linter tracks" — after a merge, lint.py will
-report zero dead_links if all backlinks returned by this helper are rewritten.
+same normalize_link_target logic as the vault linter.
+
+Scope note: the scan covers the **entire file content**, including YAML
+frontmatter. This means links in frontmatter fields such as ``based_on:``
+in views are also captured. The result set is therefore a **superset** of
+what ``check_dead_links`` in lint.py would flag — lint.py only tracks
+wikilinks in body prose, not frontmatter. Callers should be aware of this
+when deciding which files need rewriting.
 
 Usage:
     python find_backlinks.py <vault_root> <target_page_path>
@@ -22,7 +27,8 @@ import sys
 from pathlib import Path
 
 # Alias-aware wikilink regex — matches [[target]] and [[target|display label]].
-# Copied from skills/vault-linter/scripts/lint.py line 60.
+# WIKILINK_RE copied from skills/vault-linter/scripts/lint.py (same constant name).
+# Keep in sync if lint.py's regex changes.
 WIKILINK_RE = re.compile(r"\[\[([^\]|]+?)(?:\|([^\]]+))?\]\]")
 
 
@@ -63,10 +69,16 @@ def normalize_link_target(target: str, vault_root: Path, source_file: Path) -> P
 def find_backlinks(vault: Path, target: Path) -> list[Path]:
     """Return all wiki pages that contain a wikilink resolving to target.
 
-    Scans every .md file under wiki/ and checks whether any [[link]] in the
-    file resolves to the same filesystem path as target. Uses the same
-    resolution logic as the vault linter so that the result set matches
-    exactly what lint.py would flag as dead links after a page is removed.
+    Scans the **full content** of every .md file under wiki/ (including
+    frontmatter) and checks whether any [[link]] resolves to the same
+    filesystem path as target. Because frontmatter is included, the result
+    set is a superset of what lint.py's ``check_dead_links`` would flag —
+    views with ``based_on: [[wiki/pages/foo]]`` entries are captured here
+    but not by the linter's dead-link check.
+
+    Self-referential links (a page linking to itself) are included in the
+    results. The MERGE operation must filter the page being merged away
+    from the returned list before rewriting, since that page will be deleted.
 
     Args:
         vault:  Vault root directory (contains wiki/, raw/, etc.).
