@@ -161,9 +161,9 @@ Skips silently when `drop_zone.enabled: false`. Can also be run manually.
 
 **Run manually:**
 ```bash
-python3 skills/inbox-fetcher/scripts/adopt_drop.py            # adopt (default: cwd)
-python3 skills/inbox-fetcher/scripts/adopt_drop.py --vault /path/to/vault
-python3 skills/inbox-fetcher/scripts/adopt_drop.py --dry-run  # preview only; no files moved
+python3 .claude/skills/inbox-fetcher/scripts/adopt_drop.py            # adopt (default: cwd)
+python3 .claude/skills/inbox-fetcher/scripts/adopt_drop.py --vault /path/to/vault
+python3 .claude/skills/inbox-fetcher/scripts/adopt_drop.py --dry-run  # preview only; no files moved
 ```
 
 **Output contract (live run, mixed types):**
