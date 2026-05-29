@@ -184,24 +184,12 @@ class TestBlockListUnderSection:
 
 class TestDifferentialParity:
     """
-    Verify yamlmini produces IDENTICAL output to BOTH old parsers over their
+    Verify yamlmini produces IDENTICAL output to old parsers over their
     existing fixtures. This is the 'zero behavior change' gate.
 
-    These tests import the OLD functions while they still exist.
-    Remove this class once vault_state._parse_config_yaml and
-    lint.parse_frontmatter are deleted in Tasks 2 and 3.
+    vault_state._parse_config_yaml was deleted in Task 2; parity test removed.
+    Remove this class once lint.parse_frontmatter is deleted in Task 3.
     """
-
-    def _get_old_config_parser(self):
-        """Import the old vault_state._parse_config_yaml."""
-        import importlib.util
-        spec = importlib.util.spec_from_file_location(
-            "_vault_state_old",
-            Path(__file__).parent.parent / "skills" / "shared" / "vault_state.py",
-        )
-        mod = importlib.util.module_from_spec(spec)  # type: ignore
-        spec.loader.exec_module(mod)  # type: ignore
-        return mod._parse_config_yaml
 
     def _get_old_lint_parser(self):
         """Import the old lint.parse_frontmatter (returns (dict, body) tuple).
@@ -226,15 +214,6 @@ class TestDifferentialParity:
             raise
         return mod.parse_frontmatter
 
-    CONFIG_FIXTURES = [
-        "fetch:\n  html_timeout_seconds: 45\n",
-        "fetch:\n  pdf_enabled: false\n",
-        "fetch:\n  walled_domains: [example.com, other.com]\n",
-        "lint:\n  stale_source_days: 90  # comment\n",
-        "fetch:\n  html_timeout_seconds: 20\nlint:\n  stale_source_days: 180\n",
-        "fetch:\n  walled_domains: []\n",
-    ]
-
     FM_FIXTURES = [
         "No frontmatter here.\n",
         "---\ntype: page\ncreated: 2026-01-01\nupdated: 2026-05-29\n---\n",
@@ -254,17 +233,6 @@ class TestDifferentialParity:
     FM_FIXTURES_COERCION_DIVERGENT = {
         "---\nshareable: false\n---\n",  # old: {"shareable": "false"}, new: {"shareable": False}
     }
-
-    def test_config_parser_parity(self):
-        """parse_yaml matches _parse_config_yaml on all config fixtures."""
-        old_parse = self._get_old_config_parser()
-        for fixture in self.CONFIG_FIXTURES:
-            expected = old_parse(fixture)
-            actual = parse_yaml(fixture)
-            assert actual == expected, (
-                f"Parity failure on fixture:\n{fixture!r}\n"
-                f"old={expected!r}\nnew={actual!r}"
-            )
 
     def test_frontmatter_dict_parity(self):
         """parse_frontmatter dict matches lint.parse_frontmatter dict on non-coercion fixtures.

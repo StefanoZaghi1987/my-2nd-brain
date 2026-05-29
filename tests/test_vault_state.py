@@ -17,7 +17,7 @@ class TestReadState:
         )
         state = read_state(tmp_path)
         assert state["last_lint"] == "2026-01-01"
-        assert state["fetches_since_last_lint"] == "3"
+        assert state["fetches_since_last_lint"] == 3
 
     def test_ignores_comment_lines(self, tmp_path):
         (tmp_path / ".lint").mkdir()
@@ -40,7 +40,7 @@ class TestWriteState:
             "last_lint: 2026-01-01\nfetches_since_last_lint: 3\n"
         )
         write_state(tmp_path, {"fetches_since_last_lint": 5})
-        assert read_state(tmp_path)["fetches_since_last_lint"] == "5"
+        assert read_state(tmp_path)["fetches_since_last_lint"] == 5
 
     def test_preserves_keys_not_in_updates(self, tmp_path):
         (tmp_path / ".lint").mkdir()
@@ -55,8 +55,20 @@ class TestWriteState:
         (tmp_path / ".lint" / "state.yaml").write_text("last_lint: 2026-01-01\n")
         write_state(tmp_path, {"fetches_since_last_lint": 1})
         state = read_state(tmp_path)
-        assert state["fetches_since_last_lint"] == "1"
+        assert state["fetches_since_last_lint"] == 1
         assert state["last_lint"] == "2026-01-01"
+
+    def test_null_value_round_trips_as_none(self, tmp_path):
+        """last_lint: null survives write → read as Python None, not the string 'null'."""
+        write_state(tmp_path, {"last_lint": None})
+        state = read_state(tmp_path)
+        assert state["last_lint"] is None
+
+    def test_date_string_round_trips_unchanged(self, tmp_path):
+        """A date string written and read back remains a string (not coerced)."""
+        write_state(tmp_path, {"last_lint": "2026-01-15"})
+        state = read_state(tmp_path)
+        assert state["last_lint"] == "2026-01-15"
 
 
 class TestLoadConfig:
@@ -86,7 +98,7 @@ class TestLoadConfig:
 
     def test_raises_valueerror_on_unreadable_file(self, tmp_path):
         (tmp_path / "vault.config.yml").write_bytes(b"\xff\xfe\x00\x01invalid")
-        with pytest.raises((ValueError, UnicodeDecodeError)):
+        with pytest.raises(ValueError):
             load_config(tmp_path)
 
     def test_parses_boolean_values(self, tmp_path):
@@ -109,6 +121,22 @@ class TestLoadConfig:
         )
         config = load_config(tmp_path)
         assert config["lint"]["stale_source_days"] == 90
+
+    def test_block_list_walled_domains(self, tmp_path):
+        """walled_domains written as a YAML block list parses to a real list.
+
+        This is the headline regression guard: before the fix, this silently
+        produced an empty list, disabling all walled-domain protection.
+        """
+        (tmp_path / "vault.config.yml").write_text(
+            "fetch:\n"
+            "  walled_domains:\n"
+            "    - x.com\n"
+            "    - twitter.com\n"
+            "    - linkedin.com\n"
+        )
+        config = load_config(tmp_path)
+        assert config["fetch"]["walled_domains"] == ["x.com", "twitter.com", "linkedin.com"]
 
 
 class TestDropZoneDefaults:
