@@ -443,8 +443,9 @@ def update_inbox(
         match = UNCHECKED_PATTERN.match(line)
         failed_match = FAILED_PATTERN.match(line) if not match else None
         if not match and not failed_match:
-            # Warn on near-miss: looks like an unchecked entry but URL is not alone
-            if _NEAR_MISS_PATTERN.match(line):
+            # Warn on near-miss: looks like an unchecked entry but URL is not alone.
+            # Guard "⚠ skipped:" sentinel to stay idempotent across repeated runs.
+            if _NEAR_MISS_PATTERN.match(line) and "⚠ skipped:" not in line:
                 out_lines.append(
                     line + " ⚠ skipped: inline text after URL"
                     " — move notes to an indented sub-bullet"

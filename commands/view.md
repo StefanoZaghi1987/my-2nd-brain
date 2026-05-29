@@ -35,7 +35,7 @@ externally. See `.claude/skills/view-builder/SKILL.md` for details.
 6. Fill it with real content, citing `[[wiki/...]]` for every claim.
 7. For `chart`, copy `chart.py` too, adapt data, run it, save PNG
    to `wiki/views/assets/`.
-8. Write to `wiki/views/<name>.md` (or `.html` for reveal).
+8. Write to `wiki/views/<name>.md`.
 9. Update `wiki/index.md` and append to `wiki/log.md`.
 10. Tell the user the exact path.
 
@@ -49,7 +49,7 @@ externally. See `.claude/skills/view-builder/SKILL.md` for details.
 - `based_on` is mandatory.
 - Every claim cites `[[wiki/...]]`.
 - No invented data — if numbers aren't in the wiki, ask or abort.
-- Propose outline first for complex kinds (reveal, multi-section reports).
+- Propose outline first for complex kinds (multi-section reports).
 
 ## Example
 

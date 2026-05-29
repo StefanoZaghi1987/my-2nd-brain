@@ -44,3 +44,18 @@ class TestNonInteractiveBootstrap:
             capture_output=True, timeout=60, stdin=subprocess.DEVNULL,
         )
         assert (vault / ".claude" / "skills" / "shared" / "linkutil.py").exists()
+
+    def test_yes_flag_deploys_yamlmini_and_console(self, tmp_path):
+        """yamlmini.py and console.py must be present after --yes bootstrap.
+
+        These are new shared modules added in Phase 5. If either filename is
+        accidentally removed from _SHARED_SCRIPTS in init_vault.py, this test fails.
+        """
+        vault = tmp_path / "test-vault"
+        subprocess.run(
+            [sys.executable, str(REPO_ROOT / "init_vault.py"), str(vault), "--yes"],
+            capture_output=True, timeout=60, stdin=subprocess.DEVNULL,
+        )
+        shared = vault / ".claude" / "skills" / "shared"
+        assert (shared / "yamlmini.py").exists(), "yamlmini.py missing from installed vault"
+        assert (shared / "console.py").exists(), "console.py missing from installed vault"
