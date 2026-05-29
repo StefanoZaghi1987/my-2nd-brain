@@ -121,7 +121,6 @@ def adopt_pdf(pdf_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptRe
         return AdoptResult(filename=pdf_path.name, slug=slug, ok=True)
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    pdf_path.rename(out_dir / "paper.pdf")
 
     title = title_from_slug(slug)
     index_lines = [
@@ -135,13 +134,20 @@ def adopt_pdf(pdf_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptRe
         "PDF: [[paper.pdf]]",
         "",
     ]
+    index_path = out_dir / "index.md"
     try:
-        (out_dir / "index.md").write_text("\n".join(index_lines), encoding="utf-8")
+        index_path.write_text("\n".join(index_lines), encoding="utf-8")
     except Exception:
-        # Roll back: restore PDF, remove partial index.md (if any), then remove
-        # the now-empty directory. Unlink first so rmdir finds an empty dir.
-        (out_dir / "paper.pdf").rename(pdf_path)
-        (out_dir / "index.md").unlink(missing_ok=True)
+        # index.md write failed before PDF moved — clean up dir only, no rename needed.
+        index_path.unlink(missing_ok=True)
+        out_dir.rmdir()
+        raise
+
+    try:
+        pdf_path.rename(out_dir / "paper.pdf")
+    except Exception:
+        # rename failed after index.md written — undo index and dir.
+        index_path.unlink(missing_ok=True)
         out_dir.rmdir()
         raise
 

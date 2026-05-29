@@ -136,11 +136,13 @@ class TestAdoptPdf:
 
         drop = tmp_path / "raw" / "drop"
         drop.mkdir(parents=True)
-        (drop / "my-paper.pdf").write_bytes(b"%PDF")
+        pdf_file = drop / "my-paper.pdf"
+        pdf_file.write_bytes(b"%PDF")
         local = tmp_path / "raw" / "local"
         local.mkdir(parents=True)
 
-        # Simulate write_text raising an OSError after PDF has been moved
+        # Simulate write_text raising an OSError on index.md write.
+        # With write-index-first ordering the PDF never moves before the write.
         original_write_text = Path.write_text
 
         def failing_write_text(self, *args, **kwargs):
@@ -151,12 +153,11 @@ class TestAdoptPdf:
         monkeypatch.setattr(Path, "write_text", failing_write_text)
 
         with pytest.raises(OSError, match="simulated disk full"):
-            adopt_pdf(drop / "my-paper.pdf", local)
+            adopt_pdf(pdf_file, local)
 
-        # PDF must be restored to drop zone
-        assert (drop / "my-paper.pdf").exists()
-        # Partial directory must be fully cleaned up
-        assert not (local / "my-paper").exists()
+        assert pdf_file.exists()                              # original still in drop zone (never moved)
+        assert not (local / "my-paper" / "paper.pdf").exists()  # never placed in dest
+        assert not (local / "my-paper").exists()              # partial dir cleaned up
 
 
 class TestProcessDropZone:
