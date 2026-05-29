@@ -20,7 +20,7 @@ any PDFs waiting to be adopted.
 1. Read `drop_zone.path` from `vault.config.yml` (default: `raw/drop`).
 2. Scan for files with supported types (`.pdf`, `.md`) in the drop zone directory.
 3. If any are found:
-   a. Run: `python3 skills/inbox-fetcher/scripts/adopt_drop.py --vault <vault_root>`
+   a. Run: `python3 .claude/skills/inbox-fetcher/scripts/adopt_drop.py --vault <vault_root>`
    b. Report which slugs were adopted. If the script exits with code 2, also
       report the skipped file(s) and reason (slug collision) before proceeding.
    c. Ask once (batch prompt):
