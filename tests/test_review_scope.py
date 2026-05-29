@@ -39,6 +39,15 @@ def test_filters_to_pages_newer_than_last_review(tmp_path):
     assert "old.md" not in names
 
 
+def test_excludes_page_updated_on_same_day_as_last_review(tmp_path):
+    """A page updated on exactly last_review day is NOT in scope (strictly after)."""
+    wiki = tmp_path / "wiki" / "pages"
+    _write_page(wiki / "same-day.md", "2026-03-01")
+
+    result = get_changed_pages(tmp_path, last_review=date(2026, 3, 1))
+    assert result == []
+
+
 def test_returns_empty_when_nothing_changed(tmp_path):
     """Returns empty list when no pages were updated after last_review."""
     wiki = tmp_path / "wiki" / "pages"
