@@ -164,7 +164,14 @@ _REVIEW_STATE = """\
 last_review: null
 scope: null           # changed | tag:<tag> | topic:<slug> | all
 findings_count: 0
-last_exit_code: 0     # 0 = clean, 1 = findings, 2 = error
+last_exit_code: null  # 0 = clean, 1 = findings, 2 = error
+"""
+
+_REVIEW_REPORT = """\
+# Review Report
+
+No review run yet. Run `/review` from within your vault to generate
+the semantic health report.
 """
 
 _LINT_REPORT = """\
@@ -232,8 +239,9 @@ def write_base_files(vault: Path, script_dir: Path) -> None:
     _write_if_absent(vault / "wiki" / "log.md", _LOG_MD, "wiki/log.md")
     _write_if_absent(vault / "wiki" / "hot.md", _HOT_MD, "wiki/hot.md")
     _write_if_absent(vault / ".lint" / "state.yaml", _LINT_STATE, ".lint/state.yaml")
-    _write_if_absent(vault / ".review" / "state.yaml", _REVIEW_STATE, ".review/state.yaml")
     _write_if_absent(vault / ".lint" / "report.md", _LINT_REPORT, ".lint/report.md")
+    _write_if_absent(vault / ".review" / "state.yaml", _REVIEW_STATE, ".review/state.yaml")
+    _write_if_absent(vault / ".review" / "report.md", _REVIEW_REPORT, ".review/report.md")
     _write_if_absent(vault / ".gitignore", _GITIGNORE, ".gitignore")
 
     obs_cfg = vault / ".obsidian" / "app.json"
