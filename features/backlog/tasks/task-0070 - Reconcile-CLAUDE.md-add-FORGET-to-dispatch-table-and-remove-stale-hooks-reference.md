@@ -3,9 +3,10 @@ id: TASK-0070
 title: >-
   Reconcile CLAUDE.md: add FORGET to dispatch table and remove stale hooks
   reference
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:44'
+updated_date: '2026-05-29 15:03'
 labels: []
 milestone: m-0
 dependencies: []
@@ -29,7 +30,15 @@ Two inconsistencies in `CLAUDE.md` erode it as an authoritative contract:
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Skill dispatch table has 9 rows, including a FORGET row: `FORGET | (LLM only) | —`
-- [ ] #2 Line 33 (or wherever the .claude/ directory description appears) no longer mentions 'hooks'
-- [ ] #3 Grep for 'hooks' in CLAUDE.md returns zero matches in the directory-listing context (non-hooks uses like 'workflow hooks' are fine if present elsewhere)
+- [x] #1 Skill dispatch table has 9 rows, including a FORGET row: `FORGET | (LLM only) | —`
+- [x] #2 Line 33 (or wherever the .claude/ directory description appears) no longer mentions 'hooks'
+- [x] #3 Grep for 'hooks' in CLAUDE.md returns zero matches in the directory-listing context (non-hooks uses like 'workflow hooks' are fine if present elsewhere)
 <!-- AC:END -->
+
+
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added FORGET row to dispatch table (9 rows total). Removed 'hooks' from .claude/ dir listing. Also added missing Local Markdown deletion branch to FORGET step 5. Three commits: bf65ed2 (main fix) + f64f4c3 (Local Markdown branch). CLAUDE.md is now internally consistent — INGEST 4 source types match FORGET 4 deletion branches.
+<!-- SECTION:FINAL_SUMMARY:END -->

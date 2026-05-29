@@ -1,9 +1,10 @@
 ---
 id: TASK-0071
 title: 'Fix check count in vault-linter SKILL.md (says 15, code has 14)'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:44'
+updated_date: '2026-05-29 15:03'
 labels: []
 milestone: m-0
 dependencies: []
@@ -25,7 +26,15 @@ The 14 checks are: `dead_links`, `based_on_dead_links`, `pdf_index`, `drop_zone`
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 SKILL.md states '14 deterministic checks' (or equivalent accurate phrasing)
-- [ ] #2 Grep for '15' near the check-count sentence in SKILL.md returns zero matches
-- [ ] #3 The 14 check names listed in the spec description are consistent with what is in lint.py all_checks
+- [x] #1 SKILL.md states '14 deterministic checks' (or equivalent accurate phrasing)
+- [x] #2 Grep for '15' near the check-count sentence in SKILL.md returns zero matches
+- [x] #3 The 14 check names listed in the spec description are consistent with what is in lint.py all_checks
 <!-- AC:END -->
+
+
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Full reconciliation: merged table rows #11+#14 into single PDF index row, renumbered to 14, updated YAML description and advisory list. Commit 620bba1. Clean — no remaining "Fifteen" references.
+<!-- SECTION:FINAL_SUMMARY:END -->

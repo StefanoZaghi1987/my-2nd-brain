@@ -1,9 +1,10 @@
 ---
 id: TASK-0065
 title: Honour inbox.tags_propagation config flag in fetch_inbox.py
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:43'
+updated_date: '2026-05-29 15:03'
 labels: []
 milestone: m-0
 dependencies: []
@@ -26,7 +27,15 @@ Wrap the propagation block so it only runs when the config flag is true (default
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 When vault.config.yml sets inbox.tags_propagation: false, fetched sources have no tags or note in their raw/ index.md frontmatter
-- [ ] #2 When vault.config.yml sets inbox.tags_propagation: true (or the key is absent), tags and note are propagated as before
-- [ ] #3 One new test covers the tags_propagation: false case; existing propagation tests remain green
+- [x] #1 When vault.config.yml sets inbox.tags_propagation: false, fetched sources have no tags or note in their raw/ index.md frontmatter
+- [x] #2 When vault.config.yml sets inbox.tags_propagation: true (or the key is absent), tags and note are propagated as before
+- [x] #3 One new test covers the tags_propagation: false case; existing propagation tests remain green
 <!-- AC:END -->
+
+
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+_should_propagate_tags() helper; propagate_tags param in both fetch functions; all 3 call sites in process_vault() wired. Integration test exercises config→callsite path. 25/25 pass. Commit 35c5b41.
+<!-- SECTION:FINAL_SUMMARY:END -->

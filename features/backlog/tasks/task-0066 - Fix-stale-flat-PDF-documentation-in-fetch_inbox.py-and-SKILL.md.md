@@ -1,9 +1,10 @@
 ---
 id: TASK-0066
 title: Fix stale flat-PDF documentation in fetch_inbox.py and SKILL.md
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:43'
+updated_date: '2026-05-29 15:03'
 labels: []
 milestone: m-0
 dependencies: []
@@ -31,7 +32,15 @@ Update both strings to match the current folder layout: `raw/papers/<slug>/paper
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 fetch_inbox.py module docstring describes PDFs going to raw/papers/<slug>/ (folder) not raw/papers/<slug>.pdf (flat file)
-- [ ] #2 SKILL.md PDF detection step describes raw/papers/<slug>/paper.pdf + index.md
-- [ ] #3 Grep for 'raw/papers/<slug>.pdf' in fetch_inbox.py and SKILL.md returns zero matches
+- [x] #1 fetch_inbox.py module docstring describes PDFs going to raw/papers/<slug>/ (folder) not raw/papers/<slug>.pdf (flat file)
+- [x] #2 SKILL.md PDF detection step describes raw/papers/<slug>/paper.pdf + index.md
+- [x] #3 Grep for 'raw/papers/<slug>.pdf' in fetch_inbox.py and SKILL.md returns zero matches
 <!-- AC:END -->
+
+
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Fixed module docstring (fetch_inbox.py:12) and PDF detection step (SKILL.md:93) from flat raw/papers/<slug>.pdf to folder layout. Zero flat-path references remain. Full suite 125/125 pass. Commit 0b233ef.
+<!-- SECTION:FINAL_SUMMARY:END -->

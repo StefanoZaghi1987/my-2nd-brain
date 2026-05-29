@@ -1,9 +1,10 @@
 ---
 id: TASK-0069
 title: Collapse init-vault.sh to a thin shim delegating to init_vault.py
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:43'
+updated_date: '2026-05-29 15:03'
 labels: []
 milestone: m-0
 dependencies: []
@@ -27,8 +28,16 @@ The shim should include a brief comment explaining it delegates to the Python bo
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 init-vault.sh is a short script (< 10 lines) that calls python3 init_vault.py with all arguments forwarded
-- [ ] #2 Running ./init-vault.sh <tmp_dir> and python init_vault.py <tmp_dir> produce identical vault structures including adopt_drop.py, raw/local/, and raw/drop/
-- [ ] #3 A comment explains why this is a shim rather than a standalone implementation
-- [ ] #4 init-vault.sh remains executable (chmod +x preserved)
+- [x] #1 init-vault.sh is a short script (< 10 lines) that calls python3 init_vault.py with all arguments forwarded
+- [x] #2 Running ./init-vault.sh <tmp_dir> and python init_vault.py <tmp_dir> produce identical vault structures including adopt_drop.py, raw/local/, and raw/drop/
+- [x] #3 A comment explains why this is a shim rather than a standalone implementation
+- [x] #4 init-vault.sh remains executable (chmod +x preserved)
 <!-- AC:END -->
+
+
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Replaced 396-line stale bootstrapper with 6-line shim using $(dirname $0) path resolution and set -euo pipefail. git mode 100755 preserved. Smoke test verified Python path installs adopt_drop.py + raw/local/ + raw/drop/. Commit aa95880.
+<!-- SECTION:FINAL_SUMMARY:END -->

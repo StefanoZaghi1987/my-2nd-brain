@@ -3,9 +3,10 @@ id: TASK-0061
 title: >-
   Fix adopt_drop.py path in commands/ingest.md (breaks /ingest in deployed
   vaults)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:42'
+updated_date: '2026-05-29 15:03'
 labels: []
 milestone: m-0
 dependencies: []
@@ -27,7 +28,15 @@ The fix is a one-line path correction in the command file.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 commands/ingest.md line 23 invokes `.claude/skills/inbox-fetcher/scripts/adopt_drop.py` (not bare `skills/…`)
-- [ ] #2 Every other adopt_drop.py invocation in commands/ uses the same `.claude/skills/…` prefix
-- [ ] #3 Grep for `skills/inbox-fetcher/scripts/adopt_drop` in commands/ returns zero bare-path matches
+- [x] #1 commands/ingest.md line 23 invokes `.claude/skills/inbox-fetcher/scripts/adopt_drop.py` (not bare `skills/…`)
+- [x] #2 Every other adopt_drop.py invocation in commands/ uses the same `.claude/skills/…` prefix
+- [x] #3 Grep for `skills/inbox-fetcher/scripts/adopt_drop` in commands/ returns zero bare-path matches
 <!-- AC:END -->
+
+
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Fixed line 23 of commands/ingest.md: bare `skills/inbox-fetcher/scripts/adopt_drop.py` → `.claude/skills/inbox-fetcher/scripts/adopt_drop.py`. Commit 0eefa41. Spec compliant; code quality approved (reviewer noted task-0062 is the companion SKILL.md fix, correctly a separate task).
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -3,9 +3,10 @@ id: TASK-0068
 title: >-
   Replace Path.rename() with shutil.move() in adopt_drop.py for cross-filesystem
   safety
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:43'
+updated_date: '2026-05-29 15:03'
 labels: []
 milestone: m-0
 dependencies: []
@@ -28,8 +29,16 @@ Replace the `rename()` call with `shutil.move(str(src), str(dst))`, which handle
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 adopt_drop.py uses shutil.move() instead of Path.rename() for the file adoption step
-- [ ] #2 A comment near the call explains why shutil.move is used rather than Path.rename
-- [ ] #3 One new test mocks Path.rename to raise OSError(18, 'Invalid cross-device link') and asserts adoption still succeeds via shutil.move
-- [ ] #4 Existing adoption tests (happy path, rollback on failure) remain green
+- [x] #1 adopt_drop.py uses shutil.move() instead of Path.rename() for the file adoption step
+- [x] #2 A comment near the call explains why shutil.move is used rather than Path.rename
+- [x] #3 One new test mocks Path.rename to raise OSError(18, 'Invalid cross-device link') and asserts adoption still succeeds via shutil.move
+- [x] #4 Existing adoption tests (happy path, rollback on failure) remain green
 <!-- AC:END -->
+
+
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Replaced both Path.rename() calls with shutil.move(str,str). Added import shutil + WHY comments. Updated existing rollback tests to patch shutil.move. New cross-device test. 53/53 pass. Commit 1d39f20.
+<!-- SECTION:FINAL_SUMMARY:END -->

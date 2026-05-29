@@ -1,10 +1,10 @@
 ---
 id: TASK-0067
 title: Graceful degradation when a lint check throws in lint.py
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:43'
-updated_date: '2026-05-29 12:04'
+updated_date: '2026-05-29 15:03'
 labels: []
 milestone: m-0
 dependencies: []
@@ -27,12 +27,14 @@ Wrap each check invocation in a try/except so a crashing check is recorded as an
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 When one check function raises an exception, the lint run continues and other checks produce results
-- [ ] #2 The crashed check appears in the report as an advisory finding with the check name and exception message
-- [ ] #3 Exit code is 1 (findings present) when some checks pass and one crashes; not 2
-- [ ] #4 Exit code 2 is only returned when no checks complete at all (e.g., vault missing)
-- [ ] #5 One new test injects a mock check that raises; asserts exit 1 and the crash advisory in output
+- [x] #1 When one check function raises an exception, the lint run continues and other checks produce results
+- [x] #2 The crashed check appears in the report as an advisory finding with the check name and exception message
+- [x] #3 Exit code is 1 (findings present) when some checks pass and one crashes; not 2
+- [x] #4 Exit code 2 is only returned when no checks complete at all (e.g., vault missing)
+- [x] #5 One new test injects a mock check that raises; asserts exit 1 and the crash advisory in output
 <!-- AC:END -->
+
+
 
 ## Implementation Notes
 
@@ -55,3 +57,9 @@ with mock.patch.object(lint_mod, "check_gaps", side_effect=RuntimeError("crash")
 `sys.path.insert(0, str(Path(__file__).parent.parent / "skills" / "vault-linter" / "scripts"))`
 Then: `from lint import run_lint`
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Per-check try/except in all_checks loop. Crash → advisory Finding with detail= field. completed counter; exit 2 only if zero complete. 31/31 tests pass. TDD confirmed. Commit 58fbf7c.
+<!-- SECTION:FINAL_SUMMARY:END -->
