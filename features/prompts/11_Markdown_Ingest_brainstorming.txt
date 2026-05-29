@@ -1,0 +1,4 @@
+/brainstorming
+You are an expert about knowledge base organization and maintenance.
+Deep dive, analyze and understand this LLM Wiki implementation, based on Andrej Karpathy's LLM Wiki (https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) idea.
+I want to allow users to drop Markdown files into a dedicated folder, then run `/ingest`, and have them automatically adopted and ingested into the wiki.

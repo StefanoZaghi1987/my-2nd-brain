@@ -18,8 +18,8 @@ inbox.md              URL queue — user adds URLs, you fetch them
 raw/                  Immutable sources. Never write here.
   papers/             PDFs fetched via URL
   web/<slug>/         Web articles converted to markdown
-  local/<slug>/       PDFs copy-pasted by the user
-  drop/               Drop zone — paste PDFs here; emptied by /ingest
+  local/<slug>/       PDFs or Markdown files copy-pasted by the user
+  drop/               Drop zone — paste files here; emptied by /ingest
 wiki/                 Your domain
   pages/              All concepts, people, orgs, projects — one file each
   sources/            One file per source in raw/, with summary
@@ -126,6 +126,14 @@ Read `index.md`. Write `wiki/sources/<slug>.md` with the full summary.
 3. Write `wiki/sources/<slug>.md` — omit the `source_url` field entirely.
    Use `source_path: raw/local/<slug>/` and `fetch_method: local-pdf` in frontmatter.
 4. Carry `tags` and `note` as with other source types.
+
+**Local Markdown files** (`raw/local/<slug>/index.md` with `fetch_method: local-md`):
+1. Read `index.md` — get `title`, `source_url` (if present), `tags`, `note`. There is no `source_url` if none was found at adoption time.
+2. Read `content.md` in full (plain text; no page limit).
+3. Infer real title from content if better than index.md title.
+4. Write `wiki/sources/<slug>.md` — omit `source_url` field if not present.
+   Use `source_path: raw/local/<slug>/` and `fetch_method: local-md` in frontmatter.
+5. Carry `tags` and `note` as with other source types.
 
 **Tags and note propagation** (applies to all source types):
 After reading any raw source `index.md`:

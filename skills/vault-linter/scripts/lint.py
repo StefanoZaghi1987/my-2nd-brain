@@ -369,8 +369,12 @@ def check_pdf_index(vault: Path) -> list[Finding]:
     return findings
 
 
+# Extensions mirroring adopt_drop.py HANDLERS keys — keep these in sync
+_DROP_ZONE_SUPPORTED = {".pdf", ".md"}
+
+
 def check_drop_zone(vault: Path) -> list[Finding]:
-    """Advisory check: PDFs in the drop zone have not been adopted yet."""
+    """Advisory check: supported files in the drop zone have not been adopted yet."""
     cfg = load_config(vault)
     if not cfg["drop_zone"]["enabled"]:
         return []
@@ -378,17 +382,26 @@ def check_drop_zone(vault: Path) -> list[Finding]:
     drop_dir = vault / drop_path
     if not drop_dir.is_dir():
         return []
-    pdfs = [
-        p for p in drop_dir.iterdir()
-        if p.is_file() and p.suffix.lower() == ".pdf"
-    ]
-    if not pdfs:
+
+    _TYPE_ORDER = [".pdf", ".md"]   # display priority: PDF first
+    type_labels = {".pdf": "PDF", ".md": "Markdown"}
+    counts: dict[str, int] = {}
+    for p in drop_dir.iterdir():
+        if p.is_file() and p.suffix.lower() in _DROP_ZONE_SUPPORTED:
+            ext = p.suffix.lower()
+            counts[ext] = counts.get(ext, 0) + 1
+
+    if not counts:
         return []
+
+    parts = [f"{counts[e]} {type_labels[e]}(s)" for e in _TYPE_ORDER if e in counts]
+    detail = f"Drop zone has {' and '.join(parts)} - run /ingest to adopt them."
+
     return [Finding(
         severity="advisory",
         check="drop_zone_not_empty",
         file=str(drop_dir.relative_to(vault)),
-        detail=f"Drop zone has {len(pdfs)} unprocessed file(s) - run /ingest to adopt them.",
+        detail=detail,
     )]
 
 

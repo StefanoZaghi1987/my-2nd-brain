@@ -16,7 +16,10 @@ Idempotent: skips if raw/local/<slug>/ already exists.
 from __future__ import annotations
 
 import argparse
+import json
+import re
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -48,6 +51,52 @@ def title_from_slug(slug: str) -> str:
     return " ".join(w.capitalize() for w in words) if words else slug
 
 
+def extract_title_from_md(path: Path) -> str | None:
+    """Cascade: frontmatter title: → first # H1 → None."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+
+    fm_match = re.match(r"^---\n(.*?)\n---", text, re.DOTALL)
+    if fm_match:
+        for line in fm_match.group(1).splitlines():
+            if line.startswith("title:"):
+                _, _, value = line.partition(":")
+                value = value.strip().strip("\"'")
+                if value:
+                    return value
+
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("# "):
+            return stripped[2:].strip()
+
+    return None
+
+
+def extract_source_url_from_md(path: Path) -> str | None:
+    """Check frontmatter for source_url, url, link, source keys."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+
+    fm_match = re.match(r"^---\n(.*?)\n---", text, re.DOTALL)
+    if not fm_match:
+        return None
+
+    fm_block = fm_match.group(1)
+    for key in ("source_url", "url", "link", "source"):
+        for line in fm_block.splitlines():
+            if line.startswith(f"{key}:"):
+                _, _, value = line.partition(":")
+                value = value.strip().strip("\"'")
+                if value:
+                    return value
+    return None
+
+
 @dataclass
 class AdoptResult:
     filename: str
@@ -72,13 +121,12 @@ def adopt_pdf(pdf_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptRe
         return AdoptResult(filename=pdf_path.name, slug=slug, ok=True)
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    pdf_path.rename(out_dir / "paper.pdf")
 
     title = title_from_slug(slug)
     index_lines = [
         "---",
         "fetch_method: local-pdf",
-        f'title: "{title}"',
+        f"title: {json.dumps(title)}",
         f"fetched: {date.today().isoformat()}",
         "tags: []",
         "---",
@@ -86,17 +134,78 @@ def adopt_pdf(pdf_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptRe
         "PDF: [[paper.pdf]]",
         "",
     ]
+    index_path = out_dir / "index.md"
     try:
-        (out_dir / "index.md").write_text("\n".join(index_lines), encoding="utf-8")
+        index_path.write_text("\n".join(index_lines), encoding="utf-8")
     except Exception:
-        # Roll back: restore PDF, remove partial index.md (if any), then remove
-        # the now-empty directory. Unlink first so rmdir finds an empty dir.
-        (out_dir / "paper.pdf").rename(pdf_path)
-        (out_dir / "index.md").unlink(missing_ok=True)
+        # index.md write failed before PDF moved — clean up dir only, no rename needed.
+        index_path.unlink(missing_ok=True)
+        out_dir.rmdir()
+        raise
+
+    try:
+        pdf_path.rename(out_dir / "paper.pdf")
+    except Exception:
+        # rename failed after index.md written — undo index and dir.
+        index_path.unlink(missing_ok=True)
         out_dir.rmdir()
         raise
 
     return AdoptResult(filename=pdf_path.name, slug=slug, ok=True)
+
+
+def adopt_md(md_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptResult:
+    """Adopt a single Markdown file from the drop zone into raw/local/<slug>/."""
+    slug = slug_from_filename(md_path.name)
+    if not slug:
+        return AdoptResult(filename=md_path.name, slug="", ok=False,
+                           reason="could not derive a slug from filename")
+
+    out_dir = local_dir / slug
+    if out_dir.is_dir():
+        return AdoptResult(filename=md_path.name, slug=slug, ok=False,
+                           reason=f"raw/local/{slug}/ already exists - skipped")
+
+    if dry_run:
+        return AdoptResult(filename=md_path.name, slug=slug, ok=True)
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    title = extract_title_from_md(md_path) or title_from_slug(slug)
+    source_url = extract_source_url_from_md(md_path)
+
+    index_lines = [
+        "---",
+        "fetch_method: local-md",
+        f"title: {json.dumps(title)}",
+        f"fetched: {date.today().isoformat()}",
+    ]
+    if source_url:
+        index_lines.append(f"source_url: {source_url}")
+    index_lines += ["tags: []", "---", "", "Content: [[content.md]]", ""]
+
+    index_path = out_dir / "index.md"
+    try:
+        index_path.write_text("\n".join(index_lines), encoding="utf-8")
+    except Exception:
+        index_path.unlink(missing_ok=True)
+        out_dir.rmdir()
+        raise
+
+    try:
+        md_path.rename(out_dir / "content.md")
+    except Exception:
+        index_path.unlink(missing_ok=True)
+        out_dir.rmdir()
+        raise
+
+    return AdoptResult(filename=md_path.name, slug=slug, ok=True)
+
+
+HANDLERS: dict[str, Callable[[Path, Path, bool], AdoptResult]] = {
+    ".pdf": adopt_pdf,
+    ".md":  adopt_md,
+}
 
 
 def process_drop_zone(vault: Path, dry_run: bool = False) -> int:
@@ -118,25 +227,34 @@ def process_drop_zone(vault: Path, dry_run: bool = False) -> int:
     local_dir.mkdir(parents=True, exist_ok=True)
 
     all_files = [p for p in drop_dir.iterdir() if p.is_file()]
-    non_pdfs = [p for p in all_files if p.suffix.lower() != ".pdf"]
-    pdf_files = [p for p in all_files if p.suffix.lower() == ".pdf"]
+    supported   = [f for f in all_files if f.suffix.lower() in HANDLERS]
+    unsupported = [f for f in all_files if f.suffix.lower() not in HANDLERS]
 
-    for f in non_pdfs:
-        print(f"  [!] ignored (not a PDF): {f.name}")
+    for f in unsupported:
+        print(f"  [!] ignored (unsupported type): {f.name}")
 
-    if not pdf_files:
+    if not supported:
         print("Drop zone empty. Nothing to adopt.")
         return 0
 
-    print(f"Found {len(pdf_files)} PDF(s) in drop zone.")
+    _TYPE_ORDER = [".pdf", ".md"]   # display priority: PDF first
+    type_labels = {".pdf": "PDF", ".md": "Markdown"}
+    counts: dict[str, int] = {}
+    for f in supported:
+        ext = f.suffix.lower()
+        counts[ext] = counts.get(ext, 0) + 1
+    parts = [f"{counts[e]} {type_labels[e]}(s)" for e in _TYPE_ORDER if e in counts]
+    print(f"Found {' and '.join(parts)} in drop zone.")
+
     if dry_run:
-        for p in pdf_files:
-            print(f"  would adopt: {p.name} -> raw/local/{slug_from_filename(p.name)}/")
+        for f in supported:
+            print(f"  would adopt: {f.name} -> raw/local/{slug_from_filename(f.name)}/")
         return 0
 
     results: list[AdoptResult] = []
-    for pdf in pdf_files:
-        r = adopt_pdf(pdf, local_dir, dry_run=dry_run)
+    for f in supported:
+        handler = HANDLERS[f.suffix.lower()]
+        r = handler(f, local_dir, dry_run=dry_run)
         results.append(r)
         if r.ok:
             print(f"  [ok] adopted  raw/local/{r.slug}/")

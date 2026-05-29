@@ -21,7 +21,7 @@ The agent does the bookkeeping. You do the thinking.
 
 ```
 ┌─────────────┐                  ┌──────────────────┐
-│  inbox.md   │  ← add URLs      │  raw/drop/       │  ← paste PDFs here
+│  inbox.md   │  ← add URLs      │  raw/drop/       │  ← paste PDFs or .md files here
 └──────┬──────┘                  └────────┬─────────┘
        │ FETCH (agent pulls URLs)          │ /ingest pre-flight
        ▼                                   │ (adopt_drop.py moves files)
@@ -80,7 +80,7 @@ language or with a slash command.
 | # | Operation | How to trigger | What happens |
 |---|---|---|---|
 | 1 | **FETCH** | `/fetch` or *"process the inbox"* | URLs in `inbox.md` → `raw/web/` or `raw/papers/<slug>/` |
-| 2 | **INGEST** | `/ingest` or *"ingest the new content"* | Pre-flight: adopts PDFs from `raw/drop/`. Then `raw/` → summaries in `wiki/sources/`, links in `wiki/pages/` |
+| 2 | **INGEST** | `/ingest` or *"ingest the new content"* | Pre-flight: adopts PDFs and `.md` files from `raw/drop/`. Then `raw/` → summaries in `wiki/sources/`, links in `wiki/pages/` |
 | 3 | **FORGET** | `/forget <source>` or *"forget source X"* | Cascade-remove a source, clean citations in pages and views |
 | 4 | **QUERY** | any question | Agent reads the wiki, answers with citations |
 | 5 | **VIEW** | `/view timeline agent-skills` or *"make a timeline of X"* | Build a view in `wiki/views/` |
@@ -96,7 +96,7 @@ language or with a slash command.
 - **`/fetch`** — process the URL queue in `inbox.md`. Run this before
   `/ingest` — ingest needs the raw files that fetch downloads.
 - **`/ingest [slug]`** — compile raw sources into the wiki. Without a
-  slug, first adopts any PDFs waiting in `raw/drop/` (prompts once for
+  slug, first adopts any PDFs or Markdown files waiting in `raw/drop/` (prompts once for
   tags/notes), then discovers all uningested sources and confirms before starting.
 - **`/playwright-fetch`** — retrieve walled, paywalled, or JS-rendered
   URLs that `/fetch` couldn't download. One URL at a time, with your
@@ -129,8 +129,8 @@ For everything else, just ask in plain language.
 URLs to `inbox.md`. Tell the agent: *"process the inbox, then ingest the new
 content"*. You'll have your first few pages and sources.
 
-**No URL?** Copy a PDF directly into `raw/drop/` in your vault, then run
-`/ingest`. The agent adopts it automatically before processing other sources.
+**No URL?** Copy a PDF or Markdown file (`.md`) directly into `raw/drop/` in your
+vault, then run `/ingest`. The agent adopts it automatically before processing other sources.
 
 > **Windows:** use `python` if `python3` is not recognised.
 
