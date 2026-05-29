@@ -18,7 +18,7 @@ Before discovering uningested sources, check whether the drop zone contains
 any PDFs waiting to be adopted.
 
 1. Read `drop_zone.path` from `vault.config.yml` (default: `raw/drop`).
-2. Scan for `*.pdf` files in the drop zone directory.
+2. Scan for files with supported types (`.pdf`, `.md`) in the drop zone directory.
 3. If any are found:
    a. Run: `python3 skills/inbox-fetcher/scripts/adopt_drop.py --vault <vault_root>`
    b. Report which slugs were adopted. If the script exits with code 2, also
@@ -91,6 +91,20 @@ Source: `raw/papers/<slug>/index.md` with `fetch_method: pdf`, **or**
    - For `fetch_method: local-pdf`: include `source_path: raw/local/<slug>/` and
      `fetch_method: local-pdf` in the wiki source frontmatter.
      Do **not** include a `source_url` field.
+5. Propagate `tags` and `note` as with other source types.
+
+### Local Markdown files
+
+Source: `raw/local/<slug>/index.md` with `fetch_method: local-md`.
+
+1. Read `index.md` — get `title`, `source_url` (if present), `tags`, `note`.
+2. Read `content.md` in full (plain text; no page limit).
+3. Infer real title from content if better than `index.md` title
+   (first H1 heading takes precedence over the filename-derived title).
+4. Write `wiki/sources/<slug>.md`:
+   - Include `source_url` only if present in `index.md`.
+   - `source_path: raw/local/<slug>/`
+   - `fetch_method: local-md`
 5. Propagate `tags` and `note` as with other source types.
 
 ## Guards
