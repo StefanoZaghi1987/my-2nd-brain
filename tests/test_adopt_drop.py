@@ -159,6 +159,27 @@ class TestAdoptPdf:
         assert not (local / "my-paper" / "paper.pdf").exists()  # never placed in dest
         assert not (local / "my-paper").exists()              # partial dir cleaned up
 
+    def test_rollback_on_rename_failure(self, tmp_path, monkeypatch):
+        from adopt_drop import adopt_pdf
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        pdf_file = drop / "my-paper.pdf"
+        pdf_file.write_bytes(b"%PDF")
+        local = tmp_path / "raw" / "local"
+        local.mkdir(parents=True)
+
+        def failing_rename(self, *args, **kwargs):
+            raise OSError("simulated rename failure")
+
+        monkeypatch.setattr(Path, "rename", failing_rename)
+
+        with pytest.raises(OSError, match="simulated rename failure"):
+            adopt_pdf(pdf_file, local)
+
+        assert pdf_file.exists()                                    # original still in drop zone (rename never succeeded)
+        assert not (local / "my-paper" / "paper.pdf").exists()     # never placed in dest
+        assert not (local / "my-paper").exists()                    # partial dir cleaned up
+
 
 class TestProcessDropZone:
     def test_ignores_non_pdf_files(self, tmp_path):
@@ -526,3 +547,21 @@ class TestAdoptMd:
 
         assert md_file.exists()          # original still in drop zone
         assert not (local / "my-note").exists()   # partial dir cleaned up
+
+    def test_rollback_on_rename_failure(self, tmp_path, monkeypatch):
+        from adopt_drop import adopt_md
+        drop, local = self._make_drop(tmp_path)
+        md_file = drop / "my-note.md"
+        md_file.write_text("# My Note\ncontent")
+
+        def failing_rename(self, *args, **kwargs):
+            raise OSError("simulated rename failure")
+
+        monkeypatch.setattr(Path, "rename", failing_rename)
+
+        with pytest.raises(OSError, match="simulated rename failure"):
+            adopt_md(md_file, local)
+
+        assert md_file.exists()                                   # original still in drop zone
+        assert not (local / "my-note" / "content.md").exists()   # never placed in dest
+        assert not (local / "my-note").exists()                   # partial dir cleaned up
