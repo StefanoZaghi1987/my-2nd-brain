@@ -18,6 +18,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -144,9 +145,11 @@ def adopt_pdf(pdf_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptRe
         raise
 
     try:
-        pdf_path.rename(out_dir / "paper.pdf")
+        # shutil.move handles cross-filesystem moves transparently;
+        # Path.rename() raises OSError on cross-device moves.
+        shutil.move(str(pdf_path), str(out_dir / "paper.pdf"))
     except Exception:
-        # rename failed after index.md written — undo index and dir.
+        # move failed after index.md written — undo index and dir.
         index_path.unlink(missing_ok=True)
         out_dir.rmdir()
         raise
@@ -193,7 +196,9 @@ def adopt_md(md_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptResu
         raise
 
     try:
-        md_path.rename(out_dir / "content.md")
+        # shutil.move handles cross-filesystem moves transparently;
+        # Path.rename() raises OSError on cross-device moves.
+        shutil.move(str(md_path), str(out_dir / "content.md"))
     except Exception:
         index_path.unlink(missing_ok=True)
         out_dir.rmdir()
