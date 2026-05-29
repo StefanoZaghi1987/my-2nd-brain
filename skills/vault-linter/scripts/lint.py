@@ -802,7 +802,9 @@ def run_lint(vault: Path, quiet: bool = False) -> int:
     ]
 
     findings: list[Finding] = []
+    completed = 0
     for name, fn in all_checks:
+        out: list[Finding] = []
         try:
             # Not all checks accept vault; use signature-based dispatch
             if name in ("dead_links", "orphans", "based_on_dead_links", "index_sync"):
@@ -812,11 +814,22 @@ def run_lint(vault: Path, quiet: bool = False) -> int:
             else:
                 out = fn(pages)
         except Exception as e:
-            print(f"ERROR in check '{name}': {e}", file=sys.stderr)
-            return 2
+            crash_detail = f"check '{name}' raised an unexpected error: {e}"
+            print(f"  ⚠ {crash_detail}", file=sys.stderr)
+            out = [Finding(
+                severity="advisory",
+                check=name,
+                file="(linter)",
+                detail=crash_detail,
+            )]
         findings.extend(out)
+        completed += 1
         if not quiet:
             print(f"  {name}: {len(out)} finding(s)")
+
+    if completed == 0:
+        print("ERROR: no checks completed — vault may be unreadable", file=sys.stderr)
+        return 2
 
     # Sort: blocking first, then important, then advisory; within, by file
     findings.sort(key=lambda f: (severity_rank(f.severity), f.file, f.line or 0))

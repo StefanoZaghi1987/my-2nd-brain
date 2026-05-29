@@ -72,9 +72,9 @@ Views come in two flavors:
 
 ---
 
-## Nine operations
+## Eleven operations
 
-The agent knows how to do nine things. You trigger them in plain
+The agent knows how to do eleven things. You trigger them in plain
 language or with a slash command.
 
 | # | Operation | How to trigger | What happens |
@@ -85,13 +85,15 @@ language or with a slash command.
 | 4 | **QUERY** | any question | Agent reads the wiki, answers with citations |
 | 5 | **VIEW** | `/view timeline agent-skills` or *"make a timeline of X"* | Build a view in `wiki/views/` |
 | 6 | **REFLECT** | `/reflect` or *"reflect on my vault"* | Writes `wiki/compass.md` with trajectory + blind spots |
-| 7 | **LINT** | `/lint` or automatic after 5 fetches / 7 days | Deterministic checks, report in `.lint/` |
-| 8 | **PROMOTE** | `/promote [slug] [page]` or *"promote this conversation"* | Synthesis claims from a saved conversation → wiki pages |
-| 9 | **REFRESH** | `/refresh <source>` or *"the article changed"* | Re-fetch a changed source, re-ingest, flag affected pages |
+| 7 | **REVIEW** | `/review [scope]` or *"review the vault"* | Semantic health pass: contradictions, claim↔source faithfulness, summary quality. Report-only, scoped to changed pages by default, report in `.review/` |
+| 8 | **LINT** | `/lint` or automatic after 5 fetches / 7 days | Deterministic checks, report in `.lint/` |
+| 9 | **PROMOTE** | `/promote [slug] [page]` or *"promote this conversation"* | Synthesis claims from a saved conversation → wiki pages |
+| 10 | **REFRESH** | `/refresh <source>` or *"the article changed"* | Re-fetch a changed source, re-ingest, flag affected pages |
+| 11 | **MERGE** | `/merge <page-A> <page-B>` or *"merge these pages"* / `/split <page> <a> <b>` or *"split this page"* | Resolve near-duplicate pages: merge two into one canonical page with full backlink rewriting, or split an overgrown page into two. Interactive only; never available unattended |
 
 ---
 
-## Eleven slash commands
+## Fourteen slash commands
 
 - **`/fetch`** — process the URL queue in `inbox.md`. Run this before
   `/ingest` — ingest needs the raw files that fetch downloads.
@@ -115,6 +117,20 @@ language or with a slash command.
   conversation into a wiki page, with full citation. Interactive only.
 - **`/refresh <source>`** — re-fetch a source whose content has
   changed, re-ingest it, and flag pages that may need review.
+- **`/review [scope]`** — semantic health pass: checks for
+  contradictions between pages, claims that don't trace to their
+  source, and thin/copied summaries. Report-only (proposes fixes,
+  never applies them). Scoped to changed pages by default; use
+  `/review --all` for a full sweep (expensive, asks to confirm).
+- **`/merge <page-A> <page-B>`** — merge two near-duplicate pages
+  into one canonical page with full backlink rewriting. Interactive:
+  shows a content diff, asks for direction and title, checks fanout
+  (stops if >15 files linked), rewrites all link forms including
+  aliased `[[page|Display]]` links. Closes the loop on `check_duplicates`
+  lint findings and `/review` contradiction findings.
+- **`/split <page> <new-page-A> <new-page-B>`** — split an overgrown
+  page into two focused ones. Fanout check before any writes; asks
+  per-link when the destination is ambiguous. Inverse of `/merge`.
 - **`/hot`** — flush session state to `wiki/hot.md`. The agent runs
   this automatically at the end of any writing session.
 
@@ -227,7 +243,8 @@ should work.
 
 **"Do I need Obsidian?"** No, but it helps. The vault is markdown
 files with `[[wiki-links]]` — Obsidian renders them natively.
-Both `init-vault.sh` and `init_vault.py` create `.obsidian/app.json`
-with `useMarkdownLinks: false`, which keeps Obsidian writing
-`[[wikilinks]]` rather than `[text](path)` links (the linter needs
-wikilink syntax to track links). Other markdown editors work too.
+`init_vault.py` creates `.obsidian/app.json` with `useMarkdownLinks: false`,
+which keeps Obsidian writing `[[wikilinks]]` rather than `[text](path)`
+links (the linter needs wikilink syntax to track links). `init-vault.sh`
+is a thin shim that delegates to `init_vault.py`, so both entry points
+produce identical results. Other markdown editors work too.

@@ -160,6 +160,7 @@ class TestAdoptPdf:
         assert not (local / "my-paper").exists()              # partial dir cleaned up
 
     def test_rollback_on_rename_failure(self, tmp_path, monkeypatch):
+        import shutil
         from adopt_drop import adopt_pdf
         drop = tmp_path / "raw" / "drop"
         drop.mkdir(parents=True)
@@ -168,15 +169,15 @@ class TestAdoptPdf:
         local = tmp_path / "raw" / "local"
         local.mkdir(parents=True)
 
-        def failing_rename(self, *args, **kwargs):
+        def failing_move(src, dst):
             raise OSError("simulated rename failure")
 
-        monkeypatch.setattr(Path, "rename", failing_rename)
+        monkeypatch.setattr(shutil, "move", failing_move)
 
         with pytest.raises(OSError, match="simulated rename failure"):
             adopt_pdf(pdf_file, local)
 
-        assert pdf_file.exists()                                    # original still in drop zone (rename never succeeded)
+        assert pdf_file.exists()                                    # original still in drop zone (move never succeeded)
         assert not (local / "my-paper" / "paper.pdf").exists()     # never placed in dest
         assert not (local / "my-paper").exists()                    # partial dir cleaned up
 
@@ -400,6 +401,34 @@ class TestExtractSourceUrlFromMd:
         assert extract_source_url_from_md(f) is None
 
 
+class TestAdoptPdfCrossDeviceSafety:
+    def test_adopt_pdf_uses_shutil_move_for_cross_device_safety(self, tmp_path, monkeypatch):
+        """adopt_pdf must succeed even when rename() would fail cross-device."""
+        from pathlib import Path
+        from adopt_drop import adopt_pdf
+
+        drop_dir = tmp_path / "drop"
+        local_dir = tmp_path / "local"
+        drop_dir.mkdir()
+        local_dir.mkdir()
+
+        pdf = drop_dir / "my-paper.pdf"
+        pdf.write_bytes(b"%PDF-1.4 test")
+
+        # Simulate cross-device rename failure
+        original_rename = Path.rename
+
+        def failing_rename(self, target):
+            raise OSError(18, "Invalid cross-device link", str(self))
+
+        monkeypatch.setattr(Path, "rename", failing_rename)
+
+        result = adopt_pdf(pdf, local_dir)
+        assert result.ok, f"Expected ok but got: {result.reason}"
+        # Output location is local_dir / result.slug
+        assert (local_dir / result.slug / "paper.pdf").exists()
+
+
 class TestAdoptMd:
     def _make_drop(self, tmp_path):
         drop = tmp_path / "raw" / "drop"
@@ -549,15 +578,16 @@ class TestAdoptMd:
         assert not (local / "my-note").exists()   # partial dir cleaned up
 
     def test_rollback_on_rename_failure(self, tmp_path, monkeypatch):
+        import shutil
         from adopt_drop import adopt_md
         drop, local = self._make_drop(tmp_path)
         md_file = drop / "my-note.md"
         md_file.write_text("# My Note\ncontent")
 
-        def failing_rename(self, *args, **kwargs):
+        def failing_move(src, dst):
             raise OSError("simulated rename failure")
 
-        monkeypatch.setattr(Path, "rename", failing_rename)
+        monkeypatch.setattr(shutil, "move", failing_move)
 
         with pytest.raises(OSError, match="simulated rename failure"):
             adopt_md(md_file, local)

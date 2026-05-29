@@ -1,6 +1,6 @@
 ---
 name: vault-linter
-description: Runs deterministic health checks on a second brain wiki vault (dead links, orphan pages, duplicates, missing metadata, inconsistent naming, stale sources, gaps, view staleness, missing cross-references, view based_on dead links, PDF index integrity, conversation schema, source index sync, local PDF index integrity, drop zone not empty) and writes a report to .lint/report.md. Use this skill when the user says "lint", "check the vault", "vault health", "find broken links". Also run periodically — triggered when 5+ ingests have occurred since last lint OR 7+ days have passed. Supports unattended mode via --unattended flag. Fast, no LLM tokens consumed.
+description: Runs deterministic health checks on a second brain wiki vault (dead links, orphan pages, duplicates, missing metadata, inconsistent naming, stale sources, gaps, view staleness, missing cross-references, view based_on dead links, PDF index integrity (papers and local), conversation schema, source index sync, drop zone not empty) and writes a report to .lint/report.md. Use this skill when the user says "lint", "check the vault", "vault health", "find broken links". Also run periodically — triggered when 5+ ingests have occurred since last lint OR 7+ days have passed. Supports unattended mode via --unattended flag. Fast, no LLM tokens consumed.
 provides: lint
 config_section: lint
 requires:
@@ -23,7 +23,7 @@ zero LLM tokens.
 
 ## What it checks
 
-Fifteen deterministic checks. Each produces findings with concrete paths.
+Fourteen deterministic checks. Each produces findings with concrete paths.
 
 | # | Check | What it catches |
 |---|---|---|
@@ -37,11 +37,10 @@ Fifteen deterministic checks. Each produces findings with concrete paths.
 | 8 | **View staleness** | Evolving views (`shareable: false`) whose `based_on` pages changed more than 30 days after |
 | 9 | **Missing cross-references** | Source pages citing a page in prose without a link |
 | 10 | **Based-on dead links** | `based_on` entries in view frontmatter pointing to non-existent pages |
-| 11 | **Papers PDF index integrity** | `raw/papers/` subdir missing `index.md`, or legacy flat `.pdf` in `raw/papers/` |
+| 11 | **PDF index integrity** | `raw/papers/` and `raw/local/` subdirs missing `index.md`, or legacy flat `.pdf` in either |
 | 12 | **Conversation schema** | `conversations/` files missing `type: conversation` frontmatter field |
 | 13 | **Source index sync** | `wiki/sources/` entry not mentioned in `wiki/index.md` |
-| 14 | **Local PDF index integrity** | `raw/local/` subdir missing `index.md`, or legacy flat `.pdf` in `raw/local/` |
-| 15 | **Drop zone not empty** | PDFs or Markdown files waiting in the configured drop zone (default: `raw/drop/`) that haven't been adopted by `/ingest` (skipped when `drop_zone.enabled: false`) |
+| 14 | **Drop zone not empty** | PDFs or Markdown files waiting in the configured drop zone (default: `raw/drop/`) that haven't been adopted by `/ingest` (skipped when `drop_zone.enabled: false`) |
 
 Checks 3, 5, 7, 9 are heuristic — they can produce false positives and
 are marked as advisory.
@@ -73,7 +72,7 @@ Findings grouped by severity:
 
 - **Blocking** — dead links, missing required metadata, based-on dead links.
 - **Important** — orphans.
-- **Advisory** — duplicates, stale, naming, view staleness, gaps, missing cross-references, PDF index integrity, conversation schema, source index sync, local PDF index integrity, drop zone not empty.
+- **Advisory** — duplicates, stale, naming, view staleness, gaps, missing cross-references, PDF index integrity (papers and local), conversation schema, source index sync, drop zone not empty.
 
 ### `.lint/state.yaml`
 

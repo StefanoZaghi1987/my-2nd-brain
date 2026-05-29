@@ -256,3 +256,139 @@ class TestPdfEnabled:
             entry.is_file()
             for entry in (tmp_path / "raw" / "papers").rglob("*")
         )
+
+
+class TestTagsPropagation:
+    def test_tags_omitted_when_propagation_disabled(self, tmp_path, requests_mock):
+        """With propagate_tags=False, tags must not appear in raw/ index.md."""
+        from fetch_inbox import fetch_pdf
+        papers_dir = tmp_path / "papers"
+        papers_dir.mkdir(parents=True)
+
+        requests_mock.get(
+            "https://arxiv.org/pdf/2501.00001.pdf",
+            content=b"%PDF-1.4 test",
+            headers={"Content-Type": "application/pdf"},
+        )
+        result = fetch_pdf(
+            "https://arxiv.org/pdf/2501.00001.pdf",
+            papers_dir,
+            slug_override="arxiv-2501-00001",
+            tags=["ai", "llm"],
+            note="read section 2",
+            propagate_tags=False,
+        )
+
+        assert result.ok
+        index_text = (result.out_path / "index.md").read_text()
+        assert "tags: [ai, llm]" not in index_text
+        assert "note:" not in index_text
+
+    def test_tags_present_when_propagation_enabled(self, tmp_path, requests_mock):
+        """Default behaviour (propagate_tags=True) must still work."""
+        from fetch_inbox import fetch_pdf
+        papers_dir = tmp_path / "papers"
+        papers_dir.mkdir(parents=True)
+
+        requests_mock.get(
+            "https://arxiv.org/pdf/2501.00002.pdf",
+            content=b"%PDF-1.4 test",
+            headers={"Content-Type": "application/pdf"},
+        )
+        result = fetch_pdf(
+            "https://arxiv.org/pdf/2501.00002.pdf",
+            papers_dir,
+            slug_override="arxiv-2501-00002",
+            tags=["rl"],
+            note="check experiments",
+            propagate_tags=True,
+        )
+
+        assert result.ok
+        index_text = (result.out_path / "index.md").read_text()
+        assert "tags: [rl]" in index_text
+        assert "check experiments" in index_text
+
+    def test_config_wiring_tags_absent_when_flag_false(self, tmp_path, requests_mock):
+        """When vault config has inbox.tags_propagation: false, process_vault must not propagate tags."""
+        from fetch_inbox import process_vault
+
+        # Build minimal vault structure
+        vault = tmp_path
+        (vault / "raw" / "web").mkdir(parents=True)
+        (vault / "raw" / "papers").mkdir(parents=True)
+
+        # Write an inbox.md with a tagged entry
+        (vault / "inbox.md").write_text(
+            "## To fetch\n"
+            "- [ ] https://example.com/paper.pdf\n"
+            "  - tags: test-tag\n"
+            "  - note: test note\n"
+        )
+
+        # Set tags_propagation: false via vault.config.yml (matches TestPdfEnabled pattern)
+        (vault / "vault.config.yml").write_text(
+            "inbox:\n  tags_propagation: false\n"
+        )
+
+        # Mock the HTTP response
+        requests_mock.get(
+            "https://example.com/paper.pdf",
+            content=b"%PDF-1.4 test",
+            headers={"Content-Type": "application/pdf"},
+        )
+
+        rc = process_vault(vault)
+        assert rc == 0  # one successful fetch → n_fail == 0
+
+        # Find the raw index.md for the fetched paper
+        index_files = list((vault / "raw" / "papers").rglob("index.md"))
+        assert len(index_files) == 1, "Expected exactly one paper to be fetched"
+        index_text = index_files[0].read_text()
+
+        assert "test-tag" not in index_text
+        assert "test note" not in index_text
+
+
+class TestFetchPdfSizeLimit:
+    def test_rejects_oversized_with_content_length(self, tmp_path, requests_mock):
+        """PDF fetch must fail fast when Content-Length exceeds the limit."""
+        from fetch_inbox import fetch_pdf
+        papers_dir = tmp_path / "papers"
+        papers_dir.mkdir(parents=True)
+
+        # 60 MB declared via Content-Length; limit is 50 MB
+        requests_mock.get(
+            "https://example.com/big.pdf",
+            content=b"%PDF-1.4 fake",
+            headers={"Content-Type": "application/pdf",
+                     "Content-Length": str(60 * 1024 * 1024)},
+        )
+        result = fetch_pdf("https://example.com/big.pdf",
+                           papers_dir, max_pdf_mb=50)
+
+        assert not result.ok
+        assert "too large" in result.reason.lower()
+        # No paper.pdf should have been written
+        assert not list(papers_dir.rglob("paper.pdf"))
+
+    def test_rejects_oversized_discovered_mid_stream(self, tmp_path, requests_mock):
+        """PDF fetch must abort and clean up when size limit exceeded mid-stream."""
+        from fetch_inbox import fetch_pdf
+        papers_dir = tmp_path / "papers"
+        papers_dir.mkdir(parents=True)
+
+        # No Content-Length header; body exceeds the limit
+        big_body = b"\x00" * (60 * 1024 * 1024)
+        requests_mock.get(
+            "https://example.com/huge.pdf",
+            content=big_body,
+            headers={"Content-Type": "application/pdf"},
+        )
+        result = fetch_pdf("https://example.com/huge.pdf",
+                           papers_dir, max_pdf_mb=50)
+
+        assert not result.ok
+        assert "too large" in result.reason.lower()
+        # Partial file must be cleaned up
+        assert not list(papers_dir.rglob("paper.pdf"))

@@ -30,7 +30,8 @@ wiki/                 Your domain
   log.md              Append-only log of operations
 conversations/        Transcripts saved with /save
 .lint/report.md       Latest lint output
-.claude/              Skills, commands, hooks (mechanisms, not content)
+.review/report.md     Latest semantic review output
+.claude/              Skills, commands (mechanisms, not content)
 ```
 
 Three directories under `wiki/`. Everything you write goes to one of
@@ -94,7 +95,7 @@ update it. When `shareable: false` (default), the view evolves.
 
 ---
 
-## Nine operations
+## Eleven operations
 
 ### FETCH
 User says "process inbox" → run `inbox-fetcher` skill, which pulls
@@ -161,6 +162,7 @@ cascade-remove a source and everything that depended only on it.
    - Web sources: `raw/web/<slug>/` (includes `index.md` and `assets/`).
    - PDF sources (URL-fetched): `raw/papers/<slug>/` (includes `paper.pdf` and `index.md`).
    - Local PDF sources: `raw/local/<slug>/` (includes `paper.pdf` and `index.md`).
+   - Local Markdown sources: `raw/local/<slug>/` (includes `content.md` and `index.md`).
 
    This is the one case where writing to `raw/` (as deletion) is allowed —
    invariant #1 covers creation, not user-directed removal.
@@ -199,6 +201,22 @@ Include any structural issues in section 2 (duplicates, orphans,
 stale views). If conversations hold insights not yet in the wiki, or
 views that could expand pages, mention them there too.
 
+### REVIEW
+User says "review the vault", "check for contradictions", "review my sources",
+or runs `/review [scope]` → run the semantic health pass. Three checks:
+contradictions (pages making conflicting claims about the same entity),
+claim↔source faithfulness (wiki claims traceable to their cited `raw/` sources),
+and summary quality (thin, copied, or unlinked summaries). Report-only —
+proposes fixes, never applies them. See `commands/review.md` for the full
+protocol with scoping options and output format.
+
+Cost note: Check B reads source files and should be scoped to avoid excessive
+token spend. Default scope covers only pages changed since the last review.
+`/review --all` is available but requires user confirmation.
+
+REVIEW has no auto-trigger. Unlike LINT, it consumes LLM tokens and must be
+invoked explicitly. There is no `fetches_since_last_review` counter.
+
 ### LINT
 User says "lint" or auto-trigger after 5 fetches / 7 days → run
 `vault-linter` skill. Deterministic checks only (dead links, missing
@@ -220,6 +238,17 @@ re-fetch a source and re-ingest it, preserving the citation graph. Flags pages
 that cite the source with `needs-review` frontmatter tag. See `commands/refresh.md`
 for the full protocol.
 
+### MERGE
+User says "merge these pages", "these are duplicates", "split this page", or
+runs `/merge <page-A> <page-B>` or `/split <page> <new-page-A> <new-page-B>` →
+resolve near-duplicate pages by merging them into a canonical page (or splitting
+an overgrown one), with full backlink rewriting. Guards: stops if fanout > 15
+files (Invariant #5); asks before deleting any prose; never silently touches
+`shareable: true` views. See `commands/merge.md` for the full MERGE and SPLIT
+protocols.
+
+Not available unattended.
+
 ## Skill dispatch
 
 | Operation | Skill          | Backed by                      |
@@ -232,14 +261,17 @@ for the full protocol.
 | REFLECT   | (LLM only)     | —                              |
 | PROMOTE   | (LLM only)     | —                              |
 | REFRESH   | (LLM only)     | —                              |
+| FORGET    | (LLM only)     | —                              |
+| REVIEW    | (LLM only)     | —                              |
+| MERGE     | (LLM only)     | find_backlinks.py              |
 
 ---
 
 ## Hot cache
 
 After any session in which `wiki/` was written to, run `/hot` before the
-final response. "Written to" means any ingest, promote, view, reflect,
-forget, or refresh that produced file changes — not queries.
+final response. "Written to" means any ingest, promote, view, reflect, review,
+forget, refresh, or merge that produced file changes — not queries.
 
 `/hot` replaces the entire file. `wiki/log.md` is the append-only record;
 `wiki/hot.md` is the current snapshot.
@@ -266,10 +298,11 @@ At the start of every session:
 When invoked with `--unattended`, `VAULT_UNATTENDED=1`, or the word
 "unattended" in the prompt:
 
-You CAN: read anything, run LINT, run REFLECT, update
-`wiki/compass.md`, `hot.md`, `log.md`, `.lint/report.md`.
+You CAN: read anything, run LINT, run REFLECT, run REVIEW, update
+`wiki/compass.md`, `hot.md`, `log.md`, `.lint/report.md`,
+`.review/report.md`, `.review/state.yaml`.
 
-You CANNOT: ingest, forget, create views, modify `wiki/pages/`,
+You CANNOT: merge or split pages, ingest, forget, create views, modify `wiki/pages/`,
 delete anything from `raw/` or `wiki/sources/`, apply any structural
 change. Proposals stay as proposals until the user confirms
 interactively.
@@ -285,6 +318,9 @@ interactively.
 - `/promote [slug] [page]` — promote conversation insights to a wiki page
 - `/refresh <source>` — re-fetch and re-ingest a changed source
 - `/fetch` — process the URL queue in inbox.md (see FETCH above)
+- `/review [scope]` — semantic health pass: contradictions, faithfulness, quality (see REVIEW above)
+- `/merge <page-A> <page-B>` — merge two wiki pages into one canonical page
+- `/split <page> <new-page-A> <new-page-B>` — split an overgrown page into two focused ones
 - `/hot` — flush session state to wiki/hot.md
 - `/playwright-fetch` — retrieve walled URLs via browser
 

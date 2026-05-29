@@ -9,7 +9,7 @@ Usage:
 
 Reads `inbox.md` from the vault root, finds unchecked URL entries,
 fetches each, and writes clean markdown + images to raw/web/<slug>/.
-PDFs go to raw/papers/<slug>.pdf.
+PDFs go to raw/papers/<slug>/paper.pdf with a companion index.md.
 
 Idempotent: already-processed URLs are skipped.
 """
@@ -82,6 +82,11 @@ UNCHECKED_PATTERN = re.compile(r"^- \[ \] (https?://\S+)\s*$")
 IMG_PATTERN = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
 
 PLAYWRIGHT_HINT = "try playwright"
+
+
+def _should_propagate_tags(config: dict) -> bool:
+    """Return True when inbox tag/note propagation is enabled (default: True)."""
+    return bool(config.get("inbox", {}).get("tags_propagation", True))
 
 
 # --- Core operations --------------------------------------------------------
@@ -169,7 +174,8 @@ def fetch_pdf(url: str, papers_dir: Path,
               pdf_timeout: int = 60,
               max_pdf_mb: int = 50,
               tags: list | None = None,
-              note: str | None = None) -> FetchResult:
+              note: str | None = None,
+              propagate_tags: bool = True) -> FetchResult:
     """Download a PDF into a raw/papers/<slug>/ folder with a companion index.md."""
     try:
         r = requests.get(
@@ -184,16 +190,47 @@ def fetch_pdf(url: str, papers_dir: Path,
                            reason=f"pdf download failed: {e}")
 
     size = int(r.headers.get("Content-Length", 0))
-    if size > max_pdf_mb * 1024 * 1024:
-        print(f"  ⚠ large PDF ({size // 1024 // 1024} MB): {url}")
+    max_bytes = max_pdf_mb * 1024 * 1024
+
+    # Fail fast when the server declares the size upfront
+    if size > max_bytes:
+        return FetchResult(url=url, ok=False, kind="failed",
+                           reason=f"PDF too large ({size // 1024 // 1024} MB > {max_pdf_mb} MB limit)")
 
     slug = slug_override or slug_from(url, None)
     out_dir = papers_dir / slug
     out_dir.mkdir(parents=True, exist_ok=True)
+    pdf_file = out_dir / "paper.pdf"
 
-    with open(out_dir / "paper.pdf", "wb") as f:
-        for chunk in r.iter_content(chunk_size=8192):
-            f.write(chunk)
+    # Stream to disk, abort and clean up if we exceed the limit mid-download
+    # (handles servers that omit Content-Length)
+    accumulated = 0
+    overflow = False
+    try:
+        with open(pdf_file, "wb") as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                accumulated += len(chunk)
+                if accumulated > max_bytes:
+                    overflow = True
+                    break
+                f.write(chunk)
+    except Exception as e:
+        pdf_file.unlink(missing_ok=True)
+        try:
+            out_dir.rmdir()
+        except OSError:
+            pass
+        return FetchResult(url=url, ok=False, kind="failed",
+                           reason=f"pdf download failed: {e}")
+
+    if overflow:
+        pdf_file.unlink(missing_ok=True)
+        try:
+            out_dir.rmdir()
+        except OSError:
+            pass
+        return FetchResult(url=url, ok=False, kind="failed",
+                           reason=f"PDF too large (exceeded {max_pdf_mb} MB mid-stream)")
 
     # Infer a human-readable title from the slug override
     if slug_override and slug_override.startswith("arxiv-"):
@@ -209,10 +246,11 @@ def fetch_pdf(url: str, papers_dir: Path,
         f"fetched: {date.today().isoformat()}",
         "fetch_method: pdf",
     ]
-    if tags:
-        fm_lines.append(f"tags: [{', '.join(tags)}]")
-    if note:
-        fm_lines.append(f"note: {yaml_escape(note)}")
+    if propagate_tags:
+        if tags:
+            fm_lines.append(f"tags: [{', '.join(tags)}]")
+        if note:
+            fm_lines.append(f"note: {yaml_escape(note)}")
     fm_lines += ["---", "", "PDF: [[paper.pdf]]", ""]
 
     (out_dir / "index.md").write_text("\n".join(fm_lines), encoding="utf-8")
@@ -221,7 +259,8 @@ def fetch_pdf(url: str, papers_dir: Path,
 
 
 def fetch_html(url: str, web_dir: Path, html_timeout: int = 20,
-               tags: list | None = None, note: str | None = None) -> FetchResult:
+               tags: list | None = None, note: str | None = None,
+               propagate_tags: bool = True) -> FetchResult:
     """Fetch an HTML article, extract clean markdown, download images."""
     downloaded = trafilatura.fetch_url(url)
     if not downloaded:
@@ -266,10 +305,11 @@ def fetch_html(url: str, web_dir: Path, html_timeout: int = 20,
         frontmatter_lines.append(f"published: {pub_date}")
     if language:
         frontmatter_lines.append(f"language: {language}")
-    if tags:
-        frontmatter_lines.append(f"tags: [{', '.join(tags)}]")
-    if note:
-        frontmatter_lines.append(f"note: {yaml_escape(note)}")
+    if propagate_tags:
+        if tags:
+            frontmatter_lines.append(f"tags: [{', '.join(tags)}]")
+        if note:
+            frontmatter_lines.append(f"note: {yaml_escape(note)}")
     frontmatter_lines.append(f"fetched: {date.today().isoformat()}")
     frontmatter_lines.append("---")
     frontmatter = "\n".join(frontmatter_lines) + "\n\n"
@@ -407,6 +447,7 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
     max_pdf_mb = cfg["fetch"]["max_pdf_size_mb"]
     pdf_enabled = cfg["fetch"]["pdf_enabled"]
     walled = frozenset(cfg["fetch"]["walled_domains"])
+    propagate_tags = _should_propagate_tags(cfg)
 
     inbox_path = vault / "inbox.md"
     if not inbox_path.exists():
@@ -446,7 +487,8 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
             else:
                 r = fetch_pdf(fetch_url, papers_dir, slug_override=slug_override,
                               pdf_timeout=pdf_timeout, max_pdf_mb=max_pdf_mb,
-                              tags=e.tags, note=e.note)
+                              tags=e.tags, note=e.note,
+                              propagate_tags=propagate_tags)
         elif is_walled(fetch_url, walled):
             host = urlparse(fetch_url).netloc.lower()
             r = FetchResult(
@@ -462,10 +504,12 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
             else:
                 r = fetch_pdf(fetch_url, papers_dir, slug_override=slug_override,
                               pdf_timeout=pdf_timeout, max_pdf_mb=max_pdf_mb,
-                              tags=e.tags, note=e.note)
+                              tags=e.tags, note=e.note,
+                              propagate_tags=propagate_tags)
         else:
             r = fetch_html(fetch_url, web_dir, html_timeout=html_timeout,
-                           tags=e.tags, note=e.note)
+                           tags=e.tags, note=e.note,
+                           propagate_tags=propagate_tags)
 
         # Track by the original inbox URL, not the rewritten fetch URL,
         # so update_inbox can match the line back.
