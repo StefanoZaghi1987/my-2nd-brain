@@ -256,3 +256,47 @@ class TestPdfEnabled:
             entry.is_file()
             for entry in (tmp_path / "raw" / "papers").rglob("*")
         )
+
+
+class TestFetchPdfSizeLimit:
+    def test_rejects_oversized_with_content_length(self, tmp_path, requests_mock):
+        """PDF fetch must fail fast when Content-Length exceeds the limit."""
+        from fetch_inbox import fetch_pdf
+        papers_dir = tmp_path / "papers"
+        papers_dir.mkdir(parents=True)
+
+        # 60 MB declared via Content-Length; limit is 50 MB
+        requests_mock.get(
+            "https://example.com/big.pdf",
+            content=b"%PDF-1.4 fake",
+            headers={"Content-Type": "application/pdf",
+                     "Content-Length": str(60 * 1024 * 1024)},
+        )
+        result = fetch_pdf("https://example.com/big.pdf",
+                           papers_dir, max_pdf_mb=50)
+
+        assert not result.ok
+        assert "too large" in result.reason.lower()
+        # No paper.pdf should have been written
+        assert not list(papers_dir.rglob("paper.pdf"))
+
+    def test_rejects_oversized_discovered_mid_stream(self, tmp_path, requests_mock):
+        """PDF fetch must abort and clean up when size limit exceeded mid-stream."""
+        from fetch_inbox import fetch_pdf
+        papers_dir = tmp_path / "papers"
+        papers_dir.mkdir(parents=True)
+
+        # No Content-Length header; body exceeds the limit
+        big_body = b"\x00" * (60 * 1024 * 1024)
+        requests_mock.get(
+            "https://example.com/huge.pdf",
+            content=big_body,
+            headers={"Content-Type": "application/pdf"},
+        )
+        result = fetch_pdf("https://example.com/huge.pdf",
+                           papers_dir, max_pdf_mb=50)
+
+        assert not result.ok
+        assert "too large" in result.reason.lower()
+        # Partial file must be cleaned up
+        assert not list(papers_dir.rglob("paper.pdf"))

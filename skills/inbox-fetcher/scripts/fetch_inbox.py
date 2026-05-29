@@ -184,16 +184,47 @@ def fetch_pdf(url: str, papers_dir: Path,
                            reason=f"pdf download failed: {e}")
 
     size = int(r.headers.get("Content-Length", 0))
-    if size > max_pdf_mb * 1024 * 1024:
-        print(f"  ⚠ large PDF ({size // 1024 // 1024} MB): {url}")
+    max_bytes = max_pdf_mb * 1024 * 1024
+
+    # Fail fast when the server declares the size upfront
+    if size > max_bytes:
+        return FetchResult(url=url, ok=False, kind="failed",
+                           reason=f"PDF too large ({size // 1024 // 1024} MB > {max_pdf_mb} MB limit)")
 
     slug = slug_override or slug_from(url, None)
     out_dir = papers_dir / slug
     out_dir.mkdir(parents=True, exist_ok=True)
+    pdf_file = out_dir / "paper.pdf"
 
-    with open(out_dir / "paper.pdf", "wb") as f:
-        for chunk in r.iter_content(chunk_size=8192):
-            f.write(chunk)
+    # Stream to disk, abort and clean up if we exceed the limit mid-download
+    # (handles servers that omit Content-Length)
+    accumulated = 0
+    overflow = False
+    try:
+        with open(pdf_file, "wb") as f:
+            for chunk in r.iter_content(chunk_size=8192):
+                accumulated += len(chunk)
+                if accumulated > max_bytes:
+                    overflow = True
+                    break
+                f.write(chunk)
+    except Exception as e:
+        pdf_file.unlink(missing_ok=True)
+        try:
+            out_dir.rmdir()
+        except OSError:
+            pass
+        return FetchResult(url=url, ok=False, kind="failed",
+                           reason=f"pdf download failed: {e}")
+
+    if overflow:
+        pdf_file.unlink(missing_ok=True)
+        try:
+            out_dir.rmdir()
+        except OSError:
+            pass
+        return FetchResult(url=url, ok=False, kind="failed",
+                           reason=f"PDF too large (exceeded {max_pdf_mb} MB mid-stream)")
 
     # Infer a human-readable title from the slug override
     if slug_override and slug_override.startswith("arxiv-"):
