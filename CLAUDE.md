@@ -222,7 +222,7 @@ User says "lint" or auto-trigger after 5 fetches / 7 days → run
 `vault-linter` skill. Deterministic checks only (14 checks: dead links, based_on dead links, orphans, duplicates,
 missing metadata, inconsistent naming, stale sources, gaps, view staleness, missing
 cross-references, PDF index, conversations schema, drop zone, index sync). No LLM cost.
-Full check list in `vault-linter/SKILL.md`. Output to
+Full check list in `.claude/skills/vault-linter/SKILL.md`. Output to
 `.lint/report.md`. Never auto-fix.
 
 ### PROMOTE
