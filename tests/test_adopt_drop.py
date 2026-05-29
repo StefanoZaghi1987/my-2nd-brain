@@ -311,6 +311,15 @@ class TestProcessDropZone:
         assert "Markdown" in captured.out
         assert captured.out.index("PDF") < captured.out.index("Markdown")
 
+    def test_vault_path_resolve_smoke(self, tmp_path, monkeypatch):
+        """process_drop_zone accepts a relative path without crashing (smoke test for --vault resolve)."""
+        drop_dir = tmp_path / "raw" / "drop"
+        drop_dir.mkdir(parents=True)
+        monkeypatch.chdir(tmp_path)
+        from adopt_drop import process_drop_zone
+        rc = process_drop_zone(Path("."))
+        assert rc == 0  # empty drop zone
+
 
 class TestExtractTitleFromMd:
     def test_returns_frontmatter_title(self, tmp_path):
