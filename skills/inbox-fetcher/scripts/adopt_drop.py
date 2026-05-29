@@ -16,6 +16,7 @@ Idempotent: skips if raw/local/<slug>/ already exists.
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 from dataclasses import dataclass
 from datetime import date
@@ -46,6 +47,52 @@ def title_from_slug(slug: str) -> str:
     """Convert a slug to a human-readable title (hyphens/underscores → spaces, title-case)."""
     words = slug.replace("-", " ").replace("_", " ").split()
     return " ".join(w.capitalize() for w in words) if words else slug
+
+
+def extract_title_from_md(path: Path) -> str | None:
+    """Cascade: frontmatter title: → first # H1 → None."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+
+    fm_match = re.match(r"^---\n(.*?)\n---", text, re.DOTALL)
+    if fm_match:
+        for line in fm_match.group(1).splitlines():
+            if line.startswith("title:"):
+                _, _, value = line.partition(":")
+                value = value.strip().strip("\"'")
+                if value:
+                    return value
+
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("# "):
+            return stripped[2:].strip()
+
+    return None
+
+
+def extract_source_url_from_md(path: Path) -> str | None:
+    """Check frontmatter for source_url, url, link, source keys."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return None
+
+    fm_match = re.match(r"^---\n(.*?)\n---", text, re.DOTALL)
+    if not fm_match:
+        return None
+
+    fm_block = fm_match.group(1)
+    for key in ("source_url", "url", "link", "source"):
+        for line in fm_block.splitlines():
+            if line.startswith(f"{key}:"):
+                _, _, value = line.partition(":")
+                value = value.strip().strip("\"'")
+                if value:
+                    return value
+    return None
 
 
 @dataclass

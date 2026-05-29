@@ -230,3 +230,92 @@ class TestProcessDropZone:
         process_drop_zone(tmp_path, dry_run=True)
 
         assert (drop / "paper.pdf").exists()
+
+
+class TestExtractTitleFromMd:
+    def test_returns_frontmatter_title(self, tmp_path):
+        from adopt_drop import extract_title_from_md
+        f = tmp_path / "note.md"
+        f.write_text('---\ntitle: "My Obsidian Note"\n---\n# Different Heading\nsome body')
+        assert extract_title_from_md(f) == "My Obsidian Note"
+
+    def test_frontmatter_title_without_quotes(self, tmp_path):
+        from adopt_drop import extract_title_from_md
+        f = tmp_path / "note.md"
+        f.write_text("---\ntitle: Plain Title\n---\nsome body")
+        assert extract_title_from_md(f) == "Plain Title"
+
+    def test_falls_back_to_h1_when_no_frontmatter_title(self, tmp_path):
+        from adopt_drop import extract_title_from_md
+        f = tmp_path / "note.md"
+        f.write_text("---\nauthor: Alice\n---\n# My Heading\nsome body")
+        assert extract_title_from_md(f) == "My Heading"
+
+    def test_falls_back_to_h1_when_no_frontmatter(self, tmp_path):
+        from adopt_drop import extract_title_from_md
+        f = tmp_path / "note.md"
+        f.write_text("# My Heading\nsome body")
+        assert extract_title_from_md(f) == "My Heading"
+
+    def test_returns_none_when_nothing_found(self, tmp_path):
+        from adopt_drop import extract_title_from_md
+        f = tmp_path / "note.md"
+        f.write_text("just some prose with no heading")
+        assert extract_title_from_md(f) is None
+
+    def test_handles_empty_frontmatter(self, tmp_path):
+        from adopt_drop import extract_title_from_md
+        f = tmp_path / "note.md"
+        f.write_text("---\n---\n# Heading After Empty\n")
+        assert extract_title_from_md(f) == "Heading After Empty"
+
+    def test_handles_malformed_frontmatter_no_closing(self, tmp_path):
+        from adopt_drop import extract_title_from_md
+        f = tmp_path / "note.md"
+        f.write_text("---\ntitle: orphan\n# Heading\n")
+        # No closing ---, frontmatter regex won't match; falls to H1
+        assert extract_title_from_md(f) == "Heading"
+
+
+class TestExtractSourceUrlFromMd:
+    def test_reads_source_url_key(self, tmp_path):
+        from adopt_drop import extract_source_url_from_md
+        f = tmp_path / "clip.md"
+        f.write_text("---\nsource_url: https://example.com/article\n---\nbody")
+        assert extract_source_url_from_md(f) == "https://example.com/article"
+
+    def test_reads_url_key(self, tmp_path):
+        from adopt_drop import extract_source_url_from_md
+        f = tmp_path / "clip.md"
+        f.write_text("---\nurl: https://example.com\n---\nbody")
+        assert extract_source_url_from_md(f) == "https://example.com"
+
+    def test_reads_link_key(self, tmp_path):
+        from adopt_drop import extract_source_url_from_md
+        f = tmp_path / "clip.md"
+        f.write_text("---\nlink: https://example.com\n---\nbody")
+        assert extract_source_url_from_md(f) == "https://example.com"
+
+    def test_reads_source_key(self, tmp_path):
+        from adopt_drop import extract_source_url_from_md
+        f = tmp_path / "clip.md"
+        f.write_text("---\nsource: https://example.com\n---\nbody")
+        assert extract_source_url_from_md(f) == "https://example.com"
+
+    def test_returns_none_when_no_known_key(self, tmp_path):
+        from adopt_drop import extract_source_url_from_md
+        f = tmp_path / "note.md"
+        f.write_text("---\ntitle: My Note\nauthor: Alice\n---\nbody")
+        assert extract_source_url_from_md(f) is None
+
+    def test_returns_none_when_no_frontmatter(self, tmp_path):
+        from adopt_drop import extract_source_url_from_md
+        f = tmp_path / "note.md"
+        f.write_text("# Just a heading\nno frontmatter here")
+        assert extract_source_url_from_md(f) is None
+
+    def test_handles_empty_frontmatter(self, tmp_path):
+        from adopt_drop import extract_source_url_from_md
+        f = tmp_path / "note.md"
+        f.write_text("---\n---\nbody")
+        assert extract_source_url_from_md(f) is None
