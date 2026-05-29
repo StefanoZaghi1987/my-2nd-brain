@@ -266,3 +266,35 @@ class TestCheckDropZone:
         (drop / "paper.pdf").write_bytes(b"%PDF")
         from lint import check_drop_zone
         assert check_drop_zone(tmp_path) == []
+
+    def test_detects_md_files_in_drop_zone(self, tmp_path):
+        from lint import check_drop_zone
+        (tmp_path / "vault.config.yml").write_text(
+            "drop_zone:\n  enabled: true\n  path: raw/drop\n"
+        )
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "my-note.md").write_text("# My Note\ncontent")
+
+        findings = check_drop_zone(tmp_path)
+
+        assert len(findings) == 1
+        assert findings[0].check == "drop_zone_not_empty"
+        assert "Markdown" in findings[0].detail
+
+    def test_reports_mixed_types_pdf_first(self, tmp_path):
+        from lint import check_drop_zone
+        (tmp_path / "vault.config.yml").write_text(
+            "drop_zone:\n  enabled: true\n  path: raw/drop\n"
+        )
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "paper.pdf").write_bytes(b"%PDF")
+        (drop / "note.md").write_text("# Note\n")
+
+        findings = check_drop_zone(tmp_path)
+
+        assert len(findings) == 1
+        assert "PDF" in findings[0].detail
+        assert "Markdown" in findings[0].detail
+        assert findings[0].detail.index("PDF") < findings[0].detail.index("Markdown")
