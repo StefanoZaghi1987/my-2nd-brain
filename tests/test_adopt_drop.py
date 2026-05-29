@@ -231,6 +231,63 @@ class TestProcessDropZone:
 
         assert (drop / "paper.pdf").exists()
 
+    def test_adopts_md_file(self, tmp_path):
+        from adopt_drop import process_drop_zone
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "my-note.md").write_text("# My Note\ncontent")
+        (tmp_path / "raw" / "local").mkdir(parents=True)
+
+        exit_code = process_drop_zone(tmp_path)
+
+        assert exit_code == 0
+        assert (tmp_path / "raw" / "local" / "my-note" / "content.md").exists()
+        assert (tmp_path / "raw" / "local" / "my-note" / "index.md").exists()
+
+    def test_adopts_mixed_pdf_and_md(self, tmp_path):
+        from adopt_drop import process_drop_zone
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "paper.pdf").write_bytes(b"%PDF")
+        (drop / "note.md").write_text("# Note\ncontent")
+        (tmp_path / "raw" / "local").mkdir(parents=True)
+
+        exit_code = process_drop_zone(tmp_path)
+
+        assert exit_code == 0
+        assert (tmp_path / "raw" / "local" / "paper" / "paper.pdf").exists()
+        assert (tmp_path / "raw" / "local" / "note" / "content.md").exists()
+
+    def test_unsupported_types_ignored_md_still_adopted(self, tmp_path):
+        from adopt_drop import process_drop_zone
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "doc.docx").write_bytes(b"fake docx")
+        (drop / "note.md").write_text("# Note\ncontent")
+        (tmp_path / "raw" / "local").mkdir(parents=True)
+
+        exit_code = process_drop_zone(tmp_path)
+
+        assert exit_code == 0
+        assert (drop / "doc.docx").exists()  # docx not moved
+        assert (tmp_path / "raw" / "local" / "note" / "content.md").exists()
+
+    def test_mixed_output_is_pdf_first(self, tmp_path, capsys):
+        """PDF-first display order regardless of filesystem order."""
+        from adopt_drop import process_drop_zone
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        (drop / "paper.pdf").write_bytes(b"%PDF")
+        (drop / "note.md").write_text("# Note\ncontent")
+        (tmp_path / "raw" / "local").mkdir(parents=True)
+
+        process_drop_zone(tmp_path)
+
+        captured = capsys.readouterr()
+        assert "PDF" in captured.out
+        assert "Markdown" in captured.out
+        assert captured.out.index("PDF") < captured.out.index("Markdown")
+
 
 class TestExtractTitleFromMd:
     def test_returns_frontmatter_title(self, tmp_path):

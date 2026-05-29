@@ -19,6 +19,7 @@ import argparse
 import json
 import re
 import sys
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
 from pathlib import Path
@@ -195,6 +196,12 @@ def adopt_md(md_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptResu
     return AdoptResult(filename=md_path.name, slug=slug, ok=True)
 
 
+HANDLERS: dict[str, Callable[[Path, Path, bool], AdoptResult]] = {
+    ".pdf": adopt_pdf,
+    ".md":  adopt_md,
+}
+
+
 def process_drop_zone(vault: Path, dry_run: bool = False) -> int:
     cfg = load_config(vault)
     dz = cfg["drop_zone"]
@@ -214,25 +221,34 @@ def process_drop_zone(vault: Path, dry_run: bool = False) -> int:
     local_dir.mkdir(parents=True, exist_ok=True)
 
     all_files = [p for p in drop_dir.iterdir() if p.is_file()]
-    non_pdfs = [p for p in all_files if p.suffix.lower() != ".pdf"]
-    pdf_files = [p for p in all_files if p.suffix.lower() == ".pdf"]
+    supported   = [f for f in all_files if f.suffix.lower() in HANDLERS]
+    unsupported = [f for f in all_files if f.suffix.lower() not in HANDLERS]
 
-    for f in non_pdfs:
-        print(f"  [!] ignored (not a PDF): {f.name}")
+    for f in unsupported:
+        print(f"  [!] ignored (unsupported type): {f.name}")
 
-    if not pdf_files:
+    if not supported:
         print("Drop zone empty. Nothing to adopt.")
         return 0
 
-    print(f"Found {len(pdf_files)} PDF(s) in drop zone.")
+    _TYPE_ORDER = [".pdf", ".md"]   # display priority: PDF first
+    type_labels = {".pdf": "PDF", ".md": "Markdown"}
+    counts: dict[str, int] = {}
+    for f in supported:
+        ext = f.suffix.lower()
+        counts[ext] = counts.get(ext, 0) + 1
+    parts = [f"{counts[e]} {type_labels[e]}(s)" for e in _TYPE_ORDER if e in counts]
+    print(f"Found {' and '.join(parts)} in drop zone.")
+
     if dry_run:
-        for p in pdf_files:
-            print(f"  would adopt: {p.name} -> raw/local/{slug_from_filename(p.name)}/")
+        for f in supported:
+            print(f"  would adopt: {f.name} -> raw/local/{slug_from_filename(f.name)}/")
         return 0
 
     results: list[AdoptResult] = []
-    for pdf in pdf_files:
-        r = adopt_pdf(pdf, local_dir, dry_run=dry_run)
+    for f in supported:
+        handler = HANDLERS[f.suffix.lower()]
+        r = handler(f, local_dir, dry_run=dry_run)
         results.append(r)
         if r.ok:
             print(f"  [ok] adopted  raw/local/{r.slug}/")
