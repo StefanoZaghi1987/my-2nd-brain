@@ -24,7 +24,7 @@ This is the LLM-judgment counterpart to the deterministic `/lint`.
 
 | Invocation | Scope |
 |---|---|
-| `/review` (default) | Pages with `updated` newer than `last_review` in `.review/state.yaml`. If no prior run, covers all pages. |
+| `/review` (default) | Pages whose `updated` date is strictly after `last_review` in `.review/state.yaml`. If no prior run, covers all pages. |
 | `/review <topic-or-tag>` | Pages matching that tag, or pages that link to the named topic page. |
 | `/review --all` | All wiki pages. Expensive — ask the user to confirm before starting. |
 
@@ -34,6 +34,8 @@ This is the LLM-judgment counterpart to the deterministic `/lint`.
 
 For each pair of pages in scope that both mention the same named entity
 (person, organisation, project, date, version number):
+
+Entity detection should focus on proper nouns and versioned identifiers (e.g., "GPT-4", "OpenAI", "v3.2"). Bare years or generic dates should only be compared when both appear in the same semantic context (e.g., both attributed to the same product release or event).
 
 - Read the relevant claim in each page.
 - If the two claims are mutually inconsistent (e.g. different founding years,
@@ -50,7 +52,8 @@ For each pair of pages in scope that both mention the same named entity
 ### Check B — Claim↔source faithfulness
 
 For a sample of pages from the scope (up to `review.max_faithfulness_pages`
-pages, default 10; configurable in `vault.config.yml`):
+pages, default 10 if the key is absent; configurable in `vault.config.yml`
+under `review: max_faithfulness_pages:`):
 
 - For each claim that cites a `raw/` source via a `[[wiki/sources/...]]` link
   or a direct `raw/` path:
@@ -77,7 +80,13 @@ For all pages in scope, flag summaries that are:
 - **Unlinked**: contain no `[[wikilink]]` cross-references to other pages
   (the deterministic linter's `missing_cross_references` check is the
   cheaper complement; this check catches cases it misses).
-- **Finding format:** advisory; list the page, the issue, and a suggestion.
+- **Finding format:**
+  ```
+  Page: wiki/pages/foo.md
+  Issue: <thin | copied | unlinked>
+  Detail: <one sentence describing the specific problem>
+  Suggested action: <expand summary | rewrite in own words | add cross-links>
+  ```
 
 ## Protocol
 
@@ -89,7 +98,9 @@ For all pages in scope, flag summaries that are:
    entities. Avoid O(n²) full cross-product: focus on entity clusters (pages
    sharing the same tag or linking to the same entity page).
 4. Run Check B (faithfulness) on a sample of up to `max_faithfulness_pages`
-   pages from the scope, prioritising pages updated most recently.
+   pages from the scope, prioritising pages updated most recently. For each
+   sampled page, inspect up to 3 cited claims (the first 3 encountered, or
+   those closest to the most recently updated content).
 5. Run Check C (summary quality) across all scoped pages.
 6. Write `.review/report.md` with findings grouped by check:
    ```markdown
@@ -118,8 +129,9 @@ For all pages in scope, flag summaries that are:
    ```
 8. Append to `wiki/log.md` (Invariant #6):
    `## [YYYY-MM-DD] review | scope: <scope> | findings: N`
+   `.review/report.md` is a runtime artifact — do not add it to `wiki/index.md`.
 9. Suggest next actions based on findings:
-   - Contradictions → "consider `/merge` to reconcile, or edit the claims manually"
+   - Contradictions → "consider `/merge` to reconcile (Phase 3, not yet available), or edit the claims manually"
    - Faithfulness failures → "consider `/refresh <source>` or editing the claim"
    - Summary quality → "consider expanding the summary or adding cross-links"
 
