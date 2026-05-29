@@ -16,4 +16,11 @@ class TestCommands:
         repo = Path(__file__).parent.parent
         assert (repo / "commands" / "split.md").exists()
 
-    # Retry command tests will live here once commands/retry.md exists.
+    def test_retry_in_commands(self):
+        """retry must be in the COMMANDS list now that commands/retry.md exists."""
+        assert "retry" in init_vault.COMMANDS
+
+    def test_retry_md_exists(self):
+        """The commands/retry.md source file must exist so init_vault can install it."""
+        repo = Path(__file__).parent.parent
+        assert (repo / "commands" / "retry.md").exists()
