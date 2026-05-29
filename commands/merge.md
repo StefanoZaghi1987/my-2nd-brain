@@ -1,8 +1,5 @@
 ---
-description: Merge two near-duplicate wiki pages into one canonical page, rewriting
-  all backlinks. Or split an overgrown page into two focused ones. Used to resolve
-  findings from check_duplicates (lint) and contradiction findings from /review.
-  Interactive — never available in unattended mode.
+description: Merge two near-duplicate wiki pages into one canonical page (rewriting all backlinks), or split an overgrown page into two focused ones. Used to resolve lint duplicates and /review contradictions. Interactive — never available in unattended mode.
 ---
 
 # /merge — Merge or split wiki pages
@@ -108,7 +105,8 @@ Do not write any files until the user has approved the draft.
 
 Write the approved content to page-B (or to a new slug if the title
 changed in step 3). Use the standard wiki frontmatter. Update the
-`updated` date.
+`updated` date. Preserve page-B's existing `created` date if writing
+to the same slug. If writing to a new slug, set `created` to today.
 
 If page-B was renamed to a new slug, the new file must go to
 `wiki/pages/<new-slug>.md`. Note the new path — it will be the
@@ -133,14 +131,16 @@ to the user in the final report.
 
 ### 8. Delete page-A
 
-Delete `wiki/pages/page-A.md`. This is the one write-to-`wiki/` as
-deletion that is permitted — it completes the merge by removing the
-now-redundant source page.
+Delete `wiki/pages/page-A.md`. This completes the merge by removing
+the now-redundant source page.
 
 ### 9. Update bookkeeping
 
 - `wiki/index.md`: remove the page-A entry; update or add the page-B
-  entry (reflecting any title change from step 3).
+  entry (reflecting any title change from step 3). If the merged page
+  has a new slug (step 6), remove both the page-A entry and the old
+  page-B entry from `wiki/index.md`, and add a single new entry for
+  the merged page.
 - `wiki/log.md`: append one line:
   `## [YYYY-MM-DD] merge <page-A> → <page-B>` with a count of files
   rewritten and whether any views were affected.
@@ -172,23 +172,28 @@ Wait for the user to confirm the full assignment before proceeding.
 
 Write `wiki/pages/<new-page-A>.md` and `wiki/pages/<new-page-B>.md`
 with the content assigned in step 2. Apply standard wiki frontmatter
-to each. Do not copy claims that belong to the other new page.
+to each. Set `created` and `updated` to today's date for both new
+pages. Do not copy claims that belong to the other new page.
 
 ### 4. Rewrite backlinks
 
 Run `.claude/skills/shared/find_backlinks.py` against the original
-page. For each file in the backlink list:
+page. For each file in the backlink list, **excluding the original
+page itself** (it will be deleted in step 5):
 
 - If the context of the link clearly belongs to one of the two new
   pages (e.g., the surrounding text refers to content that went to
   new-page-A), rewrite the link to that page.
 - If the context is ambiguous, ask the user per-link before rewriting.
+- If the user chooses neither new page, leave the link unchanged and
+  flag it in the final report as requiring manual resolution after
+  the split.
 
 Apply the same four-form rewriting rule as in MERGE step 7 — all link
 variants in a given file must be rewritten in one pass.
 
-The >15-file fanout guard applies here too: if the original page has
-more than 15 backlinks, stop and report the full list before proceeding.
+See the Guards section for the full fanout protocol. Stop immediately
+and do not proceed if fanout exceeds 15.
 
 ### 5. Delete the original page
 
