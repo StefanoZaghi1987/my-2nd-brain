@@ -1,9 +1,10 @@
 ---
 id: TASK-0077
 title: Author commands/merge.md — interactive MERGE and SPLIT operations
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:45'
+updated_date: '2026-05-29 16:50'
 labels: []
 milestone: m-2
 dependencies:
@@ -36,11 +37,17 @@ References `.claude/skills/shared/find_backlinks.py` for backlink enumeration.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 commands/merge.md defines the full MERGE protocol (steps matching the spec)
-- [ ] #2 commands/merge.md defines the SPLIT protocol as an inverse operation
-- [ ] #3 The >15 fanout guard is explicit: stop, report the list, do not proceed
-- [ ] #4 shareable: true view handling is explicit: warn, do not modify
-- [ ] #5 'Not available in unattended mode' is stated
-- [ ] #6 The command references .claude/skills/shared/find_backlinks.py for backlink enumeration
-- [ ] #7 The command notes updating wiki/index.md and wiki/log.md as final steps
+- [x] #1 commands/merge.md defines the full MERGE protocol (steps matching the spec)
+- [x] #2 commands/merge.md defines the SPLIT protocol as an inverse operation
+- [x] #3 The >15 fanout guard is explicit: stop, report the list, do not proceed
+- [x] #4 shareable: true view handling is explicit: warn, do not modify
+- [x] #5 'Not available in unattended mode' is stated
+- [x] #6 The command references .claude/skills/shared/find_backlinks.py for backlink enumeration
+- [x] #7 The command notes updating wiki/index.md and wiki/log.md as final steps
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created commands/merge.md with 10-step MERGE protocol and 7-step SPLIT protocol (fanout guard moved before writes). Includes: >15 fanout guard, shareable:true view protection, unattended refusal, new-slug orphan handling (both page-A and page-B deleted/rewritten), aliased-link rewriting in Step 7, self-link exclusion in both MERGE Step 7 and SPLIT Step 5. Commits: 70c9b08, e67101d, 7155d4c.
+<!-- SECTION:FINAL_SUMMARY:END -->

@@ -3,9 +3,10 @@ id: TASK-0076
 title: >-
   Add find_backlinks.py helper — enumerate all wiki files linking to a target
   page
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:45'
+updated_date: '2026-05-29 16:50'
 labels: []
 milestone: m-2
 dependencies: []
@@ -37,10 +38,16 @@ This helper is the only testable script in Phase 3; MERGE itself is LLM-only.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 skills/shared/find_backlinks.py exists and is stdlib-only
-- [ ] #2 Given a vault fixture with known links, the script returns exactly the files linking to the target
-- [ ] #3 Link resolution matches lint.py normalize_link_target() — same handling of .md extension, vault-relative vs source-relative paths
-- [ ] #4 Exit codes: 0 (found), 1 (none found), 2 (error / bad args)
-- [ ] #5 Tests cover: direct match, match via .md extension, no matches, multiple files linking to same target, dot-containing slug (e.g. arxiv-2602.20867)
-- [ ] #6 init_vault.py installs find_backlinks.py into .claude/skills/shared/
+- [x] #1 skills/shared/find_backlinks.py exists and is stdlib-only
+- [x] #2 Given a vault fixture with known links, the script returns exactly the files linking to the target
+- [x] #3 Link resolution matches lint.py normalize_link_target() — same handling of .md extension, vault-relative vs source-relative paths
+- [x] #4 Exit codes: 0 (found), 1 (none found), 2 (error / bad args)
+- [x] #5 Tests cover: direct match, match via .md extension, no matches, multiple files linking to same target, dot-containing slug (e.g. arxiv-2602.20867)
+- [x] #6 init_vault.py installs find_backlinks.py into .claude/skills/shared/
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Implemented skills/shared/find_backlinks.py (stdlib-only, alias-aware WIKILINK_RE from lint.py:60, normalize_link_target copied verbatim from lint.py:168-197) and tests/test_find_backlinks.py (8 tests: direct match, .md-extension, no false positives, multi-file, dot-slug, empty, aliased link, self-link). All 137 tests pass. Commits: 5c0e764, a66a5fe.
+<!-- SECTION:FINAL_SUMMARY:END -->

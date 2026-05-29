@@ -1,9 +1,10 @@
 ---
 id: TASK-0078
 title: Add MERGE operation to CLAUDE.md (operations section + dispatch table)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:45'
+updated_date: '2026-05-29 16:50'
 labels: []
 milestone: m-2
 dependencies:
@@ -31,8 +32,14 @@ Depends on task-0077 (commands/merge.md) for the protocol details.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 CLAUDE.md has a MERGE section describing both MERGE and SPLIT
-- [ ] #2 Dispatch table includes MERGE row with find_backlinks.py as backing and heading says 'Eleven operations'
-- [ ] #3 Unattended mode CANNOT list includes MERGE (or a note that structural operations including MERGE are not available)
-- [ ] #4 CLAUDE.md operation count is consistent throughout (Eleven in heading, 11 rows in table, 11 sections)
+- [x] #1 CLAUDE.md has a MERGE section describing both MERGE and SPLIT
+- [x] #2 Dispatch table includes MERGE row with find_backlinks.py as backing and heading says 'Eleven operations'
+- [x] #3 Unattended mode CANNOT list includes MERGE (or a note that structural operations including MERGE are not available)
+- [x] #4 CLAUDE.md operation count is consistent throughout (Eleven in heading, 11 rows in table, 11 sections)
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+CLAUDE.md updated: heading changed to "Eleven operations", MERGE section added after REFRESH, dispatch table row added (MERGE | LLM only | find_backlinks.py), /merge and /split entries added to slash commands list, "merge or split pages" added to unattended CANNOT list, "merge" added to hot-cache "Written to" list. Commits: bad42e7, 958e3d9.
+<!-- SECTION:FINAL_SUMMARY:END -->
