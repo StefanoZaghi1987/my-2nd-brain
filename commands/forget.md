@@ -78,10 +78,11 @@ For each `wiki/views/...` with the source in `based_on`:
 
 - Delete `wiki/sources/<slug>.md`. Delete the entire raw folder:
   - Web sources: `raw/web/<slug>/` (includes `index.md` and `assets/`).
-  - PDF sources: `raw/papers/<slug>/` (includes `paper.pdf` and `index.md`).
+  - PDF sources (URL-fetched): `raw/papers/<slug>/` (includes `paper.pdf` and `index.md`).
+  - Local PDF sources: `raw/local/<slug>/` (includes `paper.pdf` and `index.md`).
 
-This is the one case where removing from `raw/` is allowed —
-invariant #1 covers *creation*, not user-directed removal.
+This is the one case where writing to `raw/` (as deletion) is allowed —
+invariant #1 covers creation, not user-directed removal.
 
 ### 6. Update bookkeeping
 
