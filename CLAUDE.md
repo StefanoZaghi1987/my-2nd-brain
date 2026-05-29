@@ -240,14 +240,12 @@ for the full protocol.
 
 ### MERGE
 User says "merge these pages", "these are duplicates", "split this page", or
-runs `/merge <page-A> <page-B>` or `/merge split <page>` → resolve near-duplicate
-pages by merging them into a canonical page (or splitting an overgrown one),
-with full backlink rewriting. Guards: stops if fanout > 15 files (Invariant #5);
-asks before deleting any prose; never silently touches `shareable: true` views.
-See `commands/merge.md` for the full MERGE and SPLIT protocols.
-
-Backed by `find_backlinks.py` (installed at `.claude/skills/shared/find_backlinks.py`)
-for enumerating backlinks before rewriting.
+runs `/merge <page-A> <page-B>` or `/split <page> <new-page-A> <new-page-B>` →
+resolve near-duplicate pages by merging them into a canonical page (or splitting
+an overgrown one), with full backlink rewriting. Guards: stops if fanout > 15
+files (Invariant #5); asks before deleting any prose; never silently touches
+`shareable: true` views. See `commands/merge.md` for the full MERGE and SPLIT
+protocols.
 
 Not available unattended.
 
@@ -273,7 +271,7 @@ Not available unattended.
 
 After any session in which `wiki/` was written to, run `/hot` before the
 final response. "Written to" means any ingest, promote, view, reflect, review,
-forget, or refresh that produced file changes — not queries.
+forget, refresh, or merge that produced file changes — not queries.
 
 `/hot` replaces the entire file. `wiki/log.md` is the append-only record;
 `wiki/hot.md` is the current snapshot.
@@ -321,7 +319,8 @@ interactively.
 - `/refresh <source>` — re-fetch and re-ingest a changed source
 - `/fetch` — process the URL queue in inbox.md (see FETCH above)
 - `/review [scope]` — semantic health pass: contradictions, faithfulness, quality (see REVIEW above)
-- `/merge <page-A> <page-B>` — merge two wiki pages into one; or `/merge split <page>` to split
+- `/merge <page-A> <page-B>` — merge two wiki pages into one canonical page
+- `/split <page> <new-page-A> <new-page-B>` — split an overgrown page into two focused ones
 - `/hot` — flush session state to wiki/hot.md
 - `/playwright-fetch` — retrieve walled URLs via browser
 
