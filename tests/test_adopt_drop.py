@@ -435,6 +435,19 @@ class TestAdoptMd:
         assert md_file.exists()
         assert not (local / "my-note").exists()
 
+    def test_title_with_embedded_quotes_is_valid_yaml(self, tmp_path):
+        import json
+        from adopt_drop import adopt_md
+        drop, local = self._make_drop(tmp_path)
+        (drop / "my-note.md").write_text('# Why "AI" Won\'t Save Us\ncontent')
+
+        adopt_md(drop / "my-note.md", local)
+
+        index = (local / "my-note" / "index.md").read_text()
+        raw_title = 'Why "AI" Won\'t Save Us'
+        expected = "title: " + json.dumps(raw_title)
+        assert expected in index
+
     def test_rollback_on_index_write_failure(self, tmp_path, monkeypatch):
         from adopt_drop import adopt_md
         drop, local = self._make_drop(tmp_path)

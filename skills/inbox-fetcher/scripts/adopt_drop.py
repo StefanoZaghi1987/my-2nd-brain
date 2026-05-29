@@ -16,6 +16,7 @@ Idempotent: skips if raw/local/<slug>/ already exists.
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import sys
 from dataclasses import dataclass
@@ -125,7 +126,7 @@ def adopt_pdf(pdf_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptRe
     index_lines = [
         "---",
         "fetch_method: local-pdf",
-        f'title: "{title}"',
+        f"title: {json.dumps(title)}",
         f"fetched: {date.today().isoformat()}",
         "tags: []",
         "---",
@@ -169,7 +170,7 @@ def adopt_md(md_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptResu
     index_lines = [
         "---",
         "fetch_method: local-md",
-        f'title: "{title}"',
+        f"title: {json.dumps(title)}",
         f"fetched: {date.today().isoformat()}",
     ]
     if source_url:
