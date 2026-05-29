@@ -362,7 +362,14 @@ def install_skills(vault: Path, script_dir: Path) -> None:
                         shutil.copy2(f, dst_dir / "templates" / f.name)
         ok(f"skill: {skill_name}")
 
-    _SHARED_SCRIPTS = ["vault_state.py", "review_scope.py", "find_backlinks.py", "linkutil.py"]
+    _SHARED_SCRIPTS = [
+        "vault_state.py",
+        "yamlmini.py",
+        "console.py",
+        "review_scope.py",
+        "find_backlinks.py",
+        "linkutil.py",
+    ]
     for _script in _SHARED_SCRIPTS:
         _shared_src = script_dir / "skills" / "shared" / _script
         if _shared_src.exists():
