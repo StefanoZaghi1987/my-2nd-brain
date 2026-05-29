@@ -92,8 +92,23 @@ For all pages in scope, flag summaries that are:
 
 1. Read `.review/state.yaml` to determine `last_review` date and prior scope.
    If the file is absent or `last_review` is null, treat this as the first run.
-2. Determine scope (see Scoping table above). For `/review --all`, ask the user
-   to confirm before proceeding — state the approximate page count.
+2. **Determine scope.** For the default `changed` scope, run:
+
+   ```bash
+   python3 .claude/skills/shared/review_scope.py <vault_root>
+   ```
+
+   (Use `python` on Windows, `python3` on macOS/Linux.)
+
+   The script exits 0 and prints one path per line when pages are in scope,
+   exits 1 when nothing has changed since last review (report "nothing new —
+   skipping"), and exits 2 on error. The printed paths ARE the scope for steps 3–5.
+
+   For `/review <topic-or-tag>`: pages matching that tag, or pages that link to
+   the named topic page. Select them from the vault manually.
+
+   For `/review --all`: all pages in `wiki/pages/`. Ask the user to confirm before
+   proceeding — state the approximate page count.
 3. Run Check A (contradictions) across all scoped page pairs that share named
    entities. Avoid O(n²) full cross-product: focus on entity clusters (pages
    sharing the same tag or linking to the same entity page).
