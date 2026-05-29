@@ -23,7 +23,7 @@ vault-bundle/
 ├── GETTING-STARTED.md    10-minute walkthrough for newcomers
 ├── README.md             this file
 ├── skills/
-│   ├── inbox-fetcher/    URL → markdown in raw/ (web + PDFs); also raw/drop/ adoption
+│   ├── inbox-fetcher/    URL → markdown in raw/ (web + PDFs); raw/drop/ adoption (PDFs and .md)
 │   ├── vault-linter/     deterministic health checks (15 checks)
 │   └── view-builder/     timelines, comparisons, charts, slides, reports, posts
 ├── commands/
@@ -64,8 +64,9 @@ Script is idempotent — safe to re-run.
 Then open Claude Code (or another CLI) in the vault and follow
 [GETTING-STARTED.md](GETTING-STARTED.md).
 
-**To add a local PDF (no URL needed):** copy it into `raw/drop/` in your vault,
-then run `/ingest`. The agent adopts it into `raw/local/` and summarises it.
+**To add a local file (no URL needed):** copy a PDF or Markdown file (`.md`) into
+`raw/drop/` in your vault, then run `/ingest`. The agent adopts it into `raw/local/`
+and summarises it.
 
 ### Updating an existing vault
 
