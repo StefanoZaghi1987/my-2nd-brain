@@ -30,6 +30,7 @@ wiki/                 Your domain
   log.md              Append-only log of operations
 conversations/        Transcripts saved with /save
 .lint/report.md       Latest lint output
+.review/report.md     Latest semantic review output
 .claude/              Skills, commands (mechanisms, not content)
 ```
 
@@ -257,7 +258,7 @@ for the full protocol.
 ## Hot cache
 
 After any session in which `wiki/` was written to, run `/hot` before the
-final response. "Written to" means any ingest, promote, view, reflect,
+final response. "Written to" means any ingest, promote, view, reflect, review,
 forget, or refresh that produced file changes — not queries.
 
 `/hot` replaces the entire file. `wiki/log.md` is the append-only record;
