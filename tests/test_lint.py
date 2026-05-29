@@ -298,3 +298,27 @@ class TestCheckDropZone:
         assert "PDF" in findings[0].detail
         assert "Markdown" in findings[0].detail
         assert findings[0].detail.index("PDF") < findings[0].detail.index("Markdown")
+
+
+class TestLintGracefulDegradation:
+    def test_crashing_check_produces_advisory_not_exit_2(self, tmp_path):
+        """A check that raises must produce an advisory, not abort the whole run."""
+        import unittest.mock as mock
+        import lint as lint_mod
+        from lint import run_lint
+
+        # Minimal valid vault with wiki/ structure
+        (tmp_path / "wiki" / "pages").mkdir(parents=True)
+        (tmp_path / "wiki" / "sources").mkdir(parents=True)
+        (tmp_path / ".lint").mkdir(parents=True)
+
+        with mock.patch.object(lint_mod, "check_gaps",
+                               side_effect=RuntimeError("intentional test crash")):
+            exit_code = run_lint(tmp_path, quiet=True)
+
+        # Must exit 1 (findings), not 2 (catastrophic abort)
+        assert exit_code == 1
+
+        # The report must mention the crash
+        report = (tmp_path / ".lint" / "report.md").read_text()
+        assert "check_gaps" in report or "intentional test crash" in report
