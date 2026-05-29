@@ -22,6 +22,8 @@ If either condition is met, run lint before proceeding with the session.
 
 ## How to run
 
+> **Windows:** replace `python3` with `python` in all commands below.
+
 ```bash
 python3 .claude/skills/vault-linter/scripts/lint.py
 ```

@@ -29,6 +29,9 @@ the pages and views built on top of it.
    **Web article** (`fetch_method` absent or `html`):
    Add the URL back to `inbox.md` as an unchecked entry under "To process"
    (`inbox.md` is not under `raw/` — this write is permitted by invariant #1):
+
+   > **Windows:** replace `python3` with `python` in all commands below.
+
    ```
    - [ ] <source_url>
    ```

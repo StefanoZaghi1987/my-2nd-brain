@@ -14,6 +14,8 @@ Also when asked to "ingest", "summarise the new sources", or "add this to the wi
 
 ## Pre-flight: drop zone adoption
 
+> **Windows:** replace `python3` with `python` in all commands below.
+
 Before discovering uningested sources, check whether the drop zone contains
 any PDFs waiting to be adopted.
 

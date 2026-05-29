@@ -62,8 +62,10 @@ the merged page adopts a new slug, note it now.
 
 Run `.claude/skills/shared/find_backlinks.py` against page-A:
 
+> **Windows:** replace `python3` with `python` in all commands below.
+
 ```
-python .claude/skills/shared/find_backlinks.py <vault_root> <path-to-page-A>
+python3 .claude/skills/shared/find_backlinks.py <vault_root> <path-to-page-A>
 ```
 
 If a new slug C was chosen in Step 3, also run `find_backlinks.py`
