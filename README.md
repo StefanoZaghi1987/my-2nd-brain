@@ -86,7 +86,7 @@ What happens on re-run:
 
 - **Always refreshed** — `skills/`, `commands/`, and shared utilities
   (`skills/shared/vault_state.py`, `skills/shared/review_scope.py`,
-  `skills/shared/find_backlinks.py`).
+  `skills/shared/find_backlinks.py`, `skills/shared/linkutil.py`).
   This is the whole point of the update: new operations, fixes, and
   slash commands land in the vault.
 - **Prompts you** — `CLAUDE.md`. Default is *keep* (answer `y` to
