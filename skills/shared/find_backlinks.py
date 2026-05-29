@@ -22,48 +22,12 @@ Exit codes:
     2 — error (vault not found, target not found, etc.)
 """
 from __future__ import annotations
-import re
 import sys
 from pathlib import Path
 
-# Alias-aware wikilink regex — matches [[target]] and [[target|display label]].
-# WIKILINK_RE copied from skills/vault-linter/scripts/lint.py (same constant name).
-# Keep in sync if lint.py's regex changes.
-WIKILINK_RE = re.compile(r"\[\[([^\]|]+?)(?:\|([^\]]+))?\]\]")
-
-
-# Copied verbatim from skills/vault-linter/scripts/lint.py::normalize_link_target().
-# Keep in sync if lint.py's resolution logic changes.
-def normalize_link_target(target: str, vault_root: Path, source_file: Path) -> Path | None:
-    """Resolve a [[link]] target into an absolute path, or None if unresolvable.
-
-    Rules:
-    - Try target as-is (vault-relative, then source-relative).
-    - If not found, also try with .md appended — slugs like
-      arxiv-2602.20867 look like they have an extension but don't.
-    - This way both [[wiki/sources/foo]] and [[wiki/sources/foo.md]] work,
-      and slugs containing dots resolve correctly.
-    """
-    target = target.strip()
-    if not target:
-        return None
-
-    base = Path(target)
-    candidates = [base]
-    if base.suffix != ".md":
-        candidates.append(base.with_name(base.name + ".md"))
-
-    # Try each candidate vault-relative, then source-relative.
-    for cand in candidates:
-        abs_vault = vault_root / cand
-        if abs_vault.exists():
-            return abs_vault
-        abs_local = source_file.parent / cand
-        if abs_local.exists():
-            return abs_local.resolve()
-
-    # Fall back to first candidate vault-relative (for error reporting).
-    return vault_root / candidates[0]
+# linkutil.py lives in the same directory; no extra path manipulation needed.
+sys.path.insert(0, str(Path(__file__).parent))
+from linkutil import WIKILINK_RE, normalize_link_target
 
 
 def find_backlinks(vault: Path, target: Path) -> list[Path]:
