@@ -87,6 +87,7 @@ GITKEEP_DIRS = [
 COMMANDS = [
     "save", "view", "reflect", "forget", "lint",
     "promote", "refresh", "ingest", "fetch", "hot", "playwright-fetch", "review", "merge",
+    "split",
 ]
 
 
