@@ -15,7 +15,10 @@ from yamlmini import parse_yaml as _parse_yaml
 
 
 # ---------------------------------------------------------------------------
-# Scalar coercion (kept local — vault_state must not import private yamlmini internals)
+# Scalar coercion — kept local, NOT replaced with parse_yaml.
+# read_state uses a hand-rolled line parser; parse_yaml would interpret an
+# empty top-level value (e.g. "last_lint:") as a section header and return
+# {"last_lint": {}}, breaking the None round-trip that write_state relies on.
 # ---------------------------------------------------------------------------
 
 def _parse_scalar(val: str) -> Any:

@@ -184,7 +184,7 @@ def parse_yaml(text: str) -> dict:
             elif val == "":
                 # Block list under a section key
                 items, next_i = _collect_block_list(lines, i + 1)
-                result[current_section][key] = items if items else ""
+                result[current_section][key] = items if items else None
                 i = next_i
 
             else:
