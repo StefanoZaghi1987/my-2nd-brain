@@ -3,9 +3,10 @@ id: TASK-0075
 title: >-
   Add optional review_scope.py helper for enumerating pages changed since last
   review
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:45'
+updated_date: '2026-05-29 15:50'
 labels: []
 milestone: m-1
 dependencies:
@@ -32,10 +33,16 @@ Install location: `skills/shared/review_scope.py` (alongside `vault_state.py`). 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 skills/shared/review_scope.py exists and is stdlib-only (no pip dependencies)
-- [ ] #2 Given a vault with mixed updated dates, the script prints only pages newer than last_review
-- [ ] #3 When last_review is null (first run), the script returns all wiki pages
-- [ ] #4 Exit 0 with results, exit 1 with no pages in scope, exit 2 on error
-- [ ] #5 At least two tests: one with a prior last_review date (filters correctly), one with null last_review (returns all)
-- [ ] #6 init_vault.py installs review_scope.py into .claude/skills/shared/
+- [x] #1 skills/shared/review_scope.py exists and is stdlib-only (no pip dependencies)
+- [x] #2 Given a vault with mixed updated dates, the script prints only pages newer than last_review
+- [x] #3 When last_review is null (first run), the script returns all wiki pages
+- [x] #4 Exit 0 with results, exit 1 with no pages in scope, exit 2 on error
+- [x] #5 At least two tests: one with a prior last_review date (filters correctly), one with null last_review (returns all)
+- [x] #6 init_vault.py installs review_scope.py into .claude/skills/shared/
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+TDD: test file written first (ImportError confirmed), then skills/shared/review_scope.py implemented. get_changed_pages(vault, last_review) returns all pages when last_review=None, filters strictly-after when date given, returns [] for future date. CLI exits 0/1/2. 4 tests (including boundary test for == last_review). All 129 tests pass. Installed via shared-scripts loop in init_vault.py.
+<!-- SECTION:FINAL_SUMMARY:END -->

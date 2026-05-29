@@ -1,9 +1,10 @@
 ---
 id: TASK-0072
 title: 'Author commands/review.md — semantic, report-only health pass'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:44'
+updated_date: '2026-05-29 15:49'
 labels: []
 milestone: m-1
 dependencies: []
@@ -37,9 +38,15 @@ Protocol steps (9 steps as defined in the spec).
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 commands/review.md exists and defines the full 9-step protocol
-- [ ] #2 All three checks (contradictions, faithfulness, quality) are described with their output format
-- [ ] #3 Scoping behaviour (default/topic/--all) is documented with cost implications
-- [ ] #4 Report-only posture is explicit: the command proposes fixes and never applies them
-- [ ] #5 The command notes it writes .review/report.md and updates .review/state.yaml and wiki/log.md
+- [x] #1 commands/review.md exists and defines the full 9-step protocol
+- [x] #2 All three checks (contradictions, faithfulness, quality) are described with their output format
+- [x] #3 Scoping behaviour (default/topic/--all) is documented with cost implications
+- [x] #4 Report-only posture is explicit: the command proposes fixes and never applies them
+- [x] #5 The command notes it writes .review/report.md and updates .review/state.yaml and wiki/log.md
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Created commands/review.md with the full 9-step REVIEW protocol. Three checks defined (contradictions/faithfulness/quality) each with explicit finding formats. Scoping table with default/topic/--all modes. Unattended-safe. Report-only posture explicit. Quality fixes applied: Check C finding format, defensive vault.config.yml reference, Invariant #6 wiki/index.md exclusion, strictly-after date wording, /merge Phase 3 annotation, named entity definition, per-page claim limit.
+<!-- SECTION:FINAL_SUMMARY:END -->

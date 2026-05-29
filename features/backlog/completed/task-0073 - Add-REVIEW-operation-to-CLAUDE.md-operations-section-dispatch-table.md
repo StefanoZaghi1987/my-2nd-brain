@@ -1,9 +1,10 @@
 ---
 id: TASK-0073
 title: Add REVIEW operation to CLAUDE.md (operations section + dispatch table)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:44'
+updated_date: '2026-05-29 15:50'
 labels: []
 milestone: m-1
 dependencies:
@@ -34,9 +35,15 @@ Depends on task-0072 (commands/review.md) being authored first so the protocol d
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 CLAUDE.md has a REVIEW operation section describing the three checks and scoping
-- [ ] #2 Dispatch table includes REVIEW row and heading says 'Ten operations'
-- [ ] #3 Unattended mode CAN list includes 'run REVIEW, update .review/report.md'
-- [ ] #4 Session-start section or REVIEW section explicitly states no auto-trigger for REVIEW
-- [ ] #5 CLAUDE.md operation count is consistent throughout (Ten in heading, 10 rows in table, 10 sections)
+- [x] #1 CLAUDE.md has a REVIEW operation section describing the three checks and scoping
+- [x] #2 Dispatch table includes REVIEW row and heading says 'Ten operations'
+- [x] #3 Unattended mode CAN list includes 'run REVIEW, update .review/report.md'
+- [x] #4 Session-start section or REVIEW section explicitly states no auto-trigger for REVIEW
+- [x] #5 CLAUDE.md operation count is consistent throughout (Ten in heading, 10 rows in table, 10 sections)
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Added REVIEW as the tenth operation in CLAUDE.md. ### REVIEW section inserted between REFLECT and LINT. Dispatch table updated to 10 rows, heading updated to "Ten operations". Unattended CAN list extended with REVIEW + .review/ files. No-auto-trigger note added. /review [scope] added to slash commands. .review/report.md added to vault structure diagram. "review" added to hot-cache trigger enumeration.
+<!-- SECTION:FINAL_SUMMARY:END -->

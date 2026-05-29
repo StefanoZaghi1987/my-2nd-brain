@@ -1,10 +1,10 @@
 ---
 id: TASK-0074
 title: Add .review/ state and report templates; update init_vault.py and .gitignore
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 11:44'
-updated_date: '2026-05-29 12:04'
+updated_date: '2026-05-29 15:50'
 labels: []
 milestone: m-1
 dependencies:
@@ -39,11 +39,11 @@ Also register `review.md` in the `COMMANDS` list in `init_vault.py` so it is ins
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 init_vault.py creates .review/ directory during bootstrap
-- [ ] #2 init_vault.py writes a .review/state.yaml stub with the four fields and inline comments
-- [ ] #3 .gitignore template in init_vault.py includes .review/ alongside .lint/
-- [ ] #4 'review.md' appears in the COMMANDS list in init_vault.py
-- [ ] #5 Running python init_vault.py <tmp> produces a vault with .review/ and state.yaml present
+- [x] #1 init_vault.py creates .review/ directory during bootstrap
+- [x] #2 init_vault.py writes a .review/state.yaml stub with the four fields and inline comments
+- [x] #3 .gitignore template in init_vault.py includes .review/ alongside .lint/
+- [x] #4 'review.md' appears in the COMMANDS list in init_vault.py
+- [x] #5 Running python init_vault.py <tmp> produces a vault with .review/ and state.yaml present
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -63,3 +63,9 @@ Key implementation details for a fresh agent:
 
 **Shared scripts block** (lines 340-348): currently copies only `vault_state.py`. Extend to a loop over a list to also copy `review_scope.py`.
 <!-- SECTION:NOTES:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+init_vault.py updated: ".review" added to DIRS and GITKEEP_DIRS, "review" added to COMMANDS, _REVIEW_STATE constant added (last_exit_code: null), write_base_files() writes .review/state.yaml and .review/report.md, _GITIGNORE extended with .lint/ and .review/ entries, shared-scripts install refactored to a loop over ["vault_state.py", "review_scope.py"]. Bootstrap smoke-test confirmed all artifacts created correctly.
+<!-- SECTION:FINAL_SUMMARY:END -->
