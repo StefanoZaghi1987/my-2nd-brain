@@ -30,10 +30,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Iterable
-
-import sys as _sys
-_sys.path.insert(0, str(Path(__file__).parent.parent.parent / "shared"))
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "shared"))
 from vault_state import load_config, write_state as _write_state
 from linkutil import WIKILINK_RE, normalize_link_target
 

@@ -14,11 +14,18 @@ WIKILINK_RE = re.compile(r"\[\[([^\]|]+?)(?:\|([^\]]+))?\]\]")
 
 
 def normalize_link_target(target: str, vault_root: Path, source_file: Path) -> Path | None:
-    """Resolve a [[link]] target into an absolute path, or None if unresolvable.
+    """Resolve a [[link]] target into an absolute path.
 
     Tries target vault-relative, then source-relative. Also tries with .md
     appended when the path has no .md suffix — slugs like arxiv-2602.20867
     look like they have an extension but don't.
+
+    Returns:
+        An existing absolute Path when the target resolves to a real file.
+        None only when target is empty or whitespace.
+        A non-existent vault-relative Path as a fallback for error reporting
+        when the target is non-empty but cannot be resolved to any existing
+        file — callers use .exists() to distinguish this case.
     """
     target = target.strip()
     if not target:

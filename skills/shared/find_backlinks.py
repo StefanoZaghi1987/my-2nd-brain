@@ -25,7 +25,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-# linkutil.py lives in the same directory; no extra path manipulation needed.
+# The shared directory is not on sys.path by default when invoked standalone;
+# insert it so the import below resolves regardless of cwd.
 sys.path.insert(0, str(Path(__file__).parent))
 from linkutil import WIKILINK_RE, normalize_link_target
 
