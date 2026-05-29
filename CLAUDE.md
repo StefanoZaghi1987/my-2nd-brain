@@ -95,7 +95,7 @@ update it. When `shareable: false` (default), the view evolves.
 
 ---
 
-## Ten operations
+## Eleven operations
 
 ### FETCH
 User says "process inbox" → run `inbox-fetcher` skill, which pulls
@@ -238,6 +238,19 @@ re-fetch a source and re-ingest it, preserving the citation graph. Flags pages
 that cite the source with `needs-review` frontmatter tag. See `commands/refresh.md`
 for the full protocol.
 
+### MERGE
+User says "merge these pages", "these are duplicates", "split this page", or
+runs `/merge <page-A> <page-B>` or `/merge split <page>` → resolve near-duplicate
+pages by merging them into a canonical page (or splitting an overgrown one),
+with full backlink rewriting. Guards: stops if fanout > 15 files (Invariant #5);
+asks before deleting any prose; never silently touches `shareable: true` views.
+See `commands/merge.md` for the full MERGE and SPLIT protocols.
+
+Backed by `find_backlinks.py` (installed at `.claude/skills/shared/find_backlinks.py`)
+for enumerating backlinks before rewriting.
+
+Not available unattended.
+
 ## Skill dispatch
 
 | Operation | Skill          | Backed by                      |
@@ -252,6 +265,7 @@ for the full protocol.
 | REFRESH   | (LLM only)     | —                              |
 | FORGET    | (LLM only)     | —                              |
 | REVIEW    | (LLM only)     | —                              |
+| MERGE     | (LLM only)     | find_backlinks.py              |
 
 ---
 
@@ -290,7 +304,7 @@ You CAN: read anything, run LINT, run REFLECT, run REVIEW, update
 `wiki/compass.md`, `hot.md`, `log.md`, `.lint/report.md`,
 `.review/report.md`, `.review/state.yaml`.
 
-You CANNOT: ingest, forget, create views, modify `wiki/pages/`,
+You CANNOT: merge or split pages, ingest, forget, create views, modify `wiki/pages/`,
 delete anything from `raw/` or `wiki/sources/`, apply any structural
 change. Proposals stay as proposals until the user confirms
 interactively.
@@ -307,6 +321,7 @@ interactively.
 - `/refresh <source>` — re-fetch and re-ingest a changed source
 - `/fetch` — process the URL queue in inbox.md (see FETCH above)
 - `/review [scope]` — semantic health pass: contradictions, faithfulness, quality (see REVIEW above)
+- `/merge <page-A> <page-B>` — merge two wiki pages into one; or `/merge split <page>` to split
 - `/hot` — flush session state to wiki/hot.md
 - `/playwright-fetch` — retrieve walled URLs via browser
 
