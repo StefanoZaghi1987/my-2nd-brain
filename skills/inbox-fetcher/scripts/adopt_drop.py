@@ -146,6 +146,54 @@ def adopt_pdf(pdf_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptRe
     return AdoptResult(filename=pdf_path.name, slug=slug, ok=True)
 
 
+def adopt_md(md_path: Path, local_dir: Path, dry_run: bool = False) -> AdoptResult:
+    """Adopt a single Markdown file from the drop zone into raw/local/<slug>/."""
+    slug = slug_from_filename(md_path.name)
+    if not slug:
+        return AdoptResult(filename=md_path.name, slug="", ok=False,
+                           reason="could not derive a slug from filename")
+
+    out_dir = local_dir / slug
+    if out_dir.is_dir():
+        return AdoptResult(filename=md_path.name, slug=slug, ok=False,
+                           reason=f"raw/local/{slug}/ already exists - skipped")
+
+    if dry_run:
+        return AdoptResult(filename=md_path.name, slug=slug, ok=True)
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+
+    title = extract_title_from_md(md_path) or title_from_slug(slug)
+    source_url = extract_source_url_from_md(md_path)
+
+    index_lines = [
+        "---",
+        "fetch_method: local-md",
+        f'title: "{title}"',
+        f"fetched: {date.today().isoformat()}",
+    ]
+    if source_url:
+        index_lines.append(f"source_url: {source_url}")
+    index_lines += ["tags: []", "---", "", "Content: [[content.md]]", ""]
+
+    index_path = out_dir / "index.md"
+    try:
+        index_path.write_text("\n".join(index_lines), encoding="utf-8")
+    except Exception:
+        index_path.unlink(missing_ok=True)
+        out_dir.rmdir()
+        raise
+
+    try:
+        md_path.rename(out_dir / "content.md")
+    except Exception:
+        index_path.unlink(missing_ok=True)
+        out_dir.rmdir()
+        raise
+
+    return AdoptResult(filename=md_path.name, slug=slug, ok=True)
+
+
 def process_drop_zone(vault: Path, dry_run: bool = False) -> int:
     cfg = load_config(vault)
     dz = cfg["drop_zone"]

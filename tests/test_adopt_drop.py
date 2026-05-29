@@ -319,3 +319,139 @@ class TestExtractSourceUrlFromMd:
         f = tmp_path / "note.md"
         f.write_text("---\n---\nbody")
         assert extract_source_url_from_md(f) is None
+
+
+class TestAdoptMd:
+    def _make_drop(self, tmp_path):
+        drop = tmp_path / "raw" / "drop"
+        drop.mkdir(parents=True)
+        local = tmp_path / "raw" / "local"
+        local.mkdir(parents=True)
+        return drop, local
+
+    def test_moves_file_and_creates_index(self, tmp_path):
+        from adopt_drop import adopt_md
+        drop, local = self._make_drop(tmp_path)
+        md_file = drop / "my-note.md"
+        md_file.write_text("# My Note\nsome content")
+
+        result = adopt_md(md_file, local)
+
+        assert result.ok
+        assert result.slug == "my-note"
+        assert not md_file.exists()
+        assert (local / "my-note" / "content.md").exists()
+        assert (local / "my-note" / "content.md").read_text() == "# My Note\nsome content"
+        assert (local / "my-note" / "index.md").exists()
+
+    def test_index_has_required_frontmatter_fields(self, tmp_path):
+        from adopt_drop import adopt_md
+        drop, local = self._make_drop(tmp_path)
+        (drop / "my-note.md").write_text("# My Note\ncontent")
+
+        adopt_md(drop / "my-note.md", local)
+
+        index = (local / "my-note" / "index.md").read_text()
+        assert "fetch_method: local-md" in index
+        assert "title:" in index
+        assert "fetched:" in index
+        assert "tags: []" in index
+        assert "Content: [[content.md]]" in index
+
+    def test_title_extracted_from_h1(self, tmp_path):
+        from adopt_drop import adopt_md
+        drop, local = self._make_drop(tmp_path)
+        (drop / "my-note.md").write_text("# Extracted Title\ncontent")
+
+        adopt_md(drop / "my-note.md", local)
+
+        index = (local / "my-note" / "index.md").read_text()
+        assert 'title: "Extracted Title"' in index
+
+    def test_title_extracted_from_frontmatter(self, tmp_path):
+        from adopt_drop import adopt_md
+        drop, local = self._make_drop(tmp_path)
+        (drop / "my-note.md").write_text('---\ntitle: "FM Title"\n---\n# H1 Title\ncontent')
+
+        adopt_md(drop / "my-note.md", local)
+
+        index = (local / "my-note" / "index.md").read_text()
+        assert 'title: "FM Title"' in index
+
+    def test_title_falls_back_to_slug_when_no_title(self, tmp_path):
+        from adopt_drop import adopt_md
+        drop, local = self._make_drop(tmp_path)
+        (drop / "my-note.md").write_text("just prose, no heading")
+
+        adopt_md(drop / "my-note.md", local)
+
+        index = (local / "my-note" / "index.md").read_text()
+        assert 'title: "My Note"' in index
+
+    def test_source_url_written_when_found(self, tmp_path):
+        from adopt_drop import adopt_md
+        drop, local = self._make_drop(tmp_path)
+        (drop / "web-clip.md").write_text(
+            "---\nurl: https://example.com/article\n---\n# Article\ncontent"
+        )
+
+        adopt_md(drop / "web-clip.md", local)
+
+        index = (local / "web-clip" / "index.md").read_text()
+        assert "source_url: https://example.com/article" in index
+
+    def test_source_url_omitted_when_not_found(self, tmp_path):
+        from adopt_drop import adopt_md
+        drop, local = self._make_drop(tmp_path)
+        (drop / "personal-note.md").write_text("# Personal Note\nno url here")
+
+        adopt_md(drop / "personal-note.md", local)
+
+        index = (local / "personal-note" / "index.md").read_text()
+        assert "source_url" not in index
+
+    def test_skips_on_slug_collision(self, tmp_path):
+        from adopt_drop import adopt_md
+        drop, local = self._make_drop(tmp_path)
+        (local / "my-note").mkdir(parents=True)
+        md_file = drop / "my-note.md"
+        md_file.write_text("content")
+
+        result = adopt_md(md_file, local)
+
+        assert not result.ok
+        assert "already exists" in result.reason
+        assert md_file.exists()
+
+    def test_dry_run_creates_nothing(self, tmp_path):
+        from adopt_drop import adopt_md
+        drop, local = self._make_drop(tmp_path)
+        md_file = drop / "my-note.md"
+        md_file.write_text("# My Note\ncontent")
+
+        result = adopt_md(md_file, local, dry_run=True)
+
+        assert result.ok
+        assert md_file.exists()
+        assert not (local / "my-note").exists()
+
+    def test_rollback_on_index_write_failure(self, tmp_path, monkeypatch):
+        from adopt_drop import adopt_md
+        drop, local = self._make_drop(tmp_path)
+        md_file = drop / "my-note.md"
+        md_file.write_text("# My Note\ncontent")
+
+        original_write_text = Path.write_text
+
+        def failing_write(self, *args, **kwargs):
+            if self.name == "index.md":
+                raise OSError("simulated disk full")
+            return original_write_text(self, *args, **kwargs)
+
+        monkeypatch.setattr(Path, "write_text", failing_write)
+
+        with pytest.raises(OSError, match="simulated disk full"):
+            adopt_md(md_file, local)
+
+        assert md_file.exists()          # original still in drop zone
+        assert not (local / "my-note").exists()   # partial dir cleaned up
