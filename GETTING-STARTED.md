@@ -227,7 +227,8 @@ should work.
 
 **"Do I need Obsidian?"** No, but it helps. The vault is markdown
 files with `[[wiki-links]]` — Obsidian renders them natively.
-Both `init-vault.sh` and `init_vault.py` create `.obsidian/app.json`
-with `useMarkdownLinks: false`, which keeps Obsidian writing
-`[[wikilinks]]` rather than `[text](path)` links (the linter needs
-wikilink syntax to track links). Other markdown editors work too.
+`init_vault.py` creates `.obsidian/app.json` with `useMarkdownLinks: false`,
+which keeps Obsidian writing `[[wikilinks]]` rather than `[text](path)`
+links (the linter needs wikilink syntax to track links). `init-vault.sh`
+is a thin shim that delegates to `init_vault.py`, so both entry points
+produce identical results. Other markdown editors work too.

@@ -24,7 +24,7 @@ vault-bundle/
 ├── README.md             this file
 ├── skills/
 │   ├── inbox-fetcher/    URL → markdown in raw/ (web + PDFs); raw/drop/ adoption (PDFs and .md)
-│   ├── vault-linter/     deterministic health checks (15 checks)
+│   ├── vault-linter/     deterministic health checks (14 checks)
 │   └── view-builder/     timelines, comparisons, charts, slides, reports, posts
 ├── commands/
 │   ├── save.md               /save
@@ -74,8 +74,8 @@ Re-running the bootstrap script against an existing vault is the
 update path. After `git pull` in this repo, re-run pointing at your vault:
 
 ```bash
-./init-vault.sh ~/knowledge/X          # Unix/macOS/WSL
-python3 init_vault.py ~/knowledge/X    # Windows / cross-platform
+./init-vault.sh ~/knowledge/X          # Unix/macOS/WSL (thin shim — calls init_vault.py)
+python3 init_vault.py ~/knowledge/X    # Windows / cross-platform (canonical path)
 ```
 
 What happens on re-run:
@@ -94,8 +94,9 @@ What happens on re-run:
   `wiki/views/`, `conversations/`, `wiki/compass.md`. Your
   knowledge and ongoing work are safe.
 
-No separate update script exists — both bootstrap scripts already do
-the right thing on re-run.
+The canonical bootstrapper is `init_vault.py`. `init-vault.sh` is a
+thin shim that delegates to it — so there is one implementation to
+maintain and both entry points stay in sync automatically.
 
 ---
 
