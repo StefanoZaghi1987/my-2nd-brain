@@ -207,7 +207,7 @@ or runs `/review [scope]` → run the semantic health pass. Three checks:
 contradictions (pages making conflicting claims about the same entity),
 claim↔source faithfulness (wiki claims traceable to their cited `raw/` sources),
 and summary quality (thin, copied, or unlinked summaries). Report-only —
-proposes fixes, never applies them. See `commands/review.md` for the full
+proposes fixes, never applies them. See `.claude/commands/review.md` for the full
 protocol with scoping options and output format.
 
 Cost note: Check B reads source files and should be scoped to avoid excessive
@@ -219,15 +219,17 @@ invoked explicitly. There is no `fetches_since_last_review` counter.
 
 ### LINT
 User says "lint" or auto-trigger after 5 fetches / 7 days → run
-`vault-linter` skill. Deterministic checks only (dead links, missing
-frontmatter, naming consistency, view staleness). Output to
+`vault-linter` skill. Deterministic checks only (14 checks: dead links, based_on dead links, orphans, duplicates,
+missing metadata, inconsistent naming, stale sources, gaps, view staleness, missing
+cross-references, PDF index, conversations schema, drop zone, index sync). No LLM cost.
+Full check list in `.claude/skills/vault-linter/SKILL.md`. Output to
 `.lint/report.md`. Never auto-fix.
 
 ### PROMOTE
 User says "promote this conversation", "promote insights", or runs
 `/promote [slug] [target-page]` → promote synthesis claims from a saved
 conversation into wiki pages. Creates `wiki/sources/conv-<slug>.md` to
-make the conversation a first-class citable source. See `commands/promote.md`
+make the conversation a first-class citable source. See `.claude/commands/promote.md`
 for the full interactive protocol.
 
 Not available unattended.
@@ -235,7 +237,7 @@ Not available unattended.
 ### REFRESH
 User says "refresh source X", "the article changed", or runs `/refresh <source>` →
 re-fetch a source and re-ingest it, preserving the citation graph. Flags pages
-that cite the source with `needs-review` frontmatter tag. See `commands/refresh.md`
+that cite the source with `needs-review` frontmatter tag. See `.claude/commands/refresh.md`
 for the full protocol.
 
 ### MERGE
@@ -244,8 +246,7 @@ runs `/merge <page-A> <page-B>` or `/split <page> <new-page-A> <new-page-B>` →
 resolve near-duplicate pages by merging them into a canonical page (or splitting
 an overgrown one), with full backlink rewriting. Guards: stops if fanout > 15
 files (Invariant #5); asks before deleting any prose; never silently touches
-`shareable: true` views. See `commands/merge.md` for the full MERGE and SPLIT
-protocols.
+`shareable: true` views. See `.claude/commands/merge.md` for MERGE. For SPLIT, see `.claude/commands/split.md`.
 
 Not available unattended.
 
@@ -311,6 +312,8 @@ interactively.
 
 ## Slash commands
 
+- `/ingest [slug]` — compile raw sources into wiki pages and sources
+- `/lint` — run the 14-check deterministic vault health pass
 - `/save [name]` — save the current conversation to `conversations/`
 - `/view [kind] [topic]` — build a view (see VIEW above)
 - `/reflect` — produce `compass.md` (see REFLECT above)
@@ -318,6 +321,7 @@ interactively.
 - `/promote [slug] [page]` — promote conversation insights to a wiki page
 - `/refresh <source>` — re-fetch and re-ingest a changed source
 - `/fetch` — process the URL queue in inbox.md (see FETCH above)
+- `/retry` — re-attempt only previously-failed (⚠-marked) inbox entries
 - `/review [scope]` — semantic health pass: contradictions, faithfulness, quality (see REVIEW above)
 - `/merge <page-A> <page-B>` — merge two wiki pages into one canonical page
 - `/split <page> <new-page-A> <new-page-B>` — split an overgrown page into two focused ones

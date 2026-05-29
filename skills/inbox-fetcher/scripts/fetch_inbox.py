@@ -79,6 +79,10 @@ USER_AGENT = (
 )
 
 UNCHECKED_PATTERN = re.compile(r"^- \[ \] (https?://\S+)\s*$")
+# Matches an unchecked entry that was previously attempted but failed:
+#   - [ ] https://example.com ⚠ reason text
+# Used by --retry mode to select only failed entries for re-attempt.
+FAILED_PATTERN = re.compile(r"^- \[ \] (https?://\S+) ⚠ .+$")
 IMG_PATTERN = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
 
 PLAYWRIGHT_HINT = "try playwright"
@@ -107,6 +111,45 @@ def find_unchecked_entries(inbox_text: str) -> list[InboxEntry]:
                 raw_line=line,
             )
             # Collect indented sub-bullets immediately following the URL line
+            j = i + 1
+            while j < len(lines):
+                sub = lines[j]
+                if not sub.startswith(" ") and not sub.startswith("\t"):
+                    break
+                sub_stripped = sub.strip()
+                if sub_stripped.startswith("- tags:"):
+                    raw_tags = sub_stripped[len("- tags:"):].strip()
+                    entry.tags = [t.strip() for t in raw_tags.split(",") if t.strip()]
+                elif sub_stripped.startswith("- note:"):
+                    entry.note = sub_stripped[len("- note:"):].strip()
+                j += 1
+            entries.append(entry)
+            i = j
+        else:
+            i += 1
+    return entries
+
+
+def find_failed_entries(inbox_text: str) -> list[InboxEntry]:
+    """Parse inbox.md and return only previously-failed entries (⚠-marked).
+
+    Picks up sub-bullets (tags/note) so retry context is preserved from
+    the original fetch attempt.
+    """
+    stripped = re.sub(r"<!--.*?-->", "", inbox_text, flags=re.DOTALL)
+    lines = stripped.splitlines()
+    entries = []
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        match = FAILED_PATTERN.match(line)
+        if match:
+            entry = InboxEntry(
+                url=match.group(1).strip(),
+                line_index=i,
+                raw_line=line,
+            )
+            # Collect indented sub-bullets (tags/note) that may follow.
             j = i + 1
             while j < len(lines):
                 sub = lines[j]
@@ -391,12 +434,13 @@ def update_inbox(
     while i < len(lines):
         line = lines[i]
         match = UNCHECKED_PATTERN.match(line)
-        if not match:
+        failed_match = FAILED_PATTERN.match(line) if not match else None
+        if not match and not failed_match:
             out_lines.append(line)
             i += 1
             continue
 
-        url = match.group(1).strip()
+        url = (match or failed_match).group(1).strip()
 
         # Determine the span of indented sub-bullets that follow this URL line
         j = i + 1
@@ -439,7 +483,7 @@ def update_inbox(
 
 # --- Orchestration ----------------------------------------------------------
 
-def process_vault(vault: Path, dry_run: bool = False) -> int:
+def process_vault(vault: Path, dry_run: bool = False, retry: bool = False) -> int:
     cfg = load_config(vault)
     processed_section = cfg["inbox"]["processed_section"]
     html_timeout = cfg["fetch"]["html_timeout_seconds"]
@@ -458,10 +502,11 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
     papers_dir = vault / "raw" / "papers"
 
     inbox_text = inbox_path.read_text(encoding="utf-8")
-    entries = find_unchecked_entries(inbox_text)
+    entries = find_failed_entries(inbox_text) if retry else find_unchecked_entries(inbox_text)
 
     if not entries:
-        print("Inbox empty. Nothing to do.")
+        mode_label = "No failed URLs" if retry else "Inbox empty"
+        print(f"{mode_label}. Nothing to do.")
         return 0
 
     print(f"Found {len(entries)} URL(s) to process.")
@@ -558,6 +603,11 @@ def main() -> int:
         action="store_true",
         help="List URLs that would be fetched, don't download.",
     )
+    parser.add_argument(
+        "--retry",
+        action="store_true",
+        help="Re-attempt only previously-failed (⚠-marked) inbox entries.",
+    )
     args = parser.parse_args()
 
     if not args.vault.is_dir():
@@ -565,7 +615,7 @@ def main() -> int:
               file=sys.stderr)
         return 1
 
-    return process_vault(args.vault, dry_run=args.dry_run)
+    return process_vault(args.vault, dry_run=args.dry_run, retry=args.retry)
 
 
 if __name__ == "__main__":

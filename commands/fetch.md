@@ -15,6 +15,8 @@ Always run /fetch before /ingest — ingest needs raw/ files to summarise.
 
 ## How to run
 
+> **Windows:** replace `python3` with `python` in all commands below.
+
 ```bash
 python3 .claude/skills/inbox-fetcher/scripts/fetch_inbox.py
 ```

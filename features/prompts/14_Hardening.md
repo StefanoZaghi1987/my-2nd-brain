@@ -4,7 +4,7 @@
 Fix 11 confirmed defects and doc-vs-code inconsistencies so every documented behavior matches code and CLAUDE.md is an honest, internally-consistent contract.
 
 ## Context
-Read "2026-05-29-vault-review-merge-hardening-design.md" spec and related "D:\my-2nd-brain\features\plans\2026-05-29-vault-hardening-plan.md" implementation plan.
+Read "D:\my-2nd-brain\features\specs\2026-05-29-vault-review-merge-hardening-design.md" spec and related "D:\my-2nd-brain\features\plans\2026-05-29-vault-hardening-plan.md" implementation plan.
 Detailed aspects of the actual implementation must be inferred by analyzing the codebase.
 
 ---

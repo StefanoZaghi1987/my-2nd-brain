@@ -392,3 +392,89 @@ class TestFetchPdfSizeLimit:
         assert "too large" in result.reason.lower()
         # Partial file must be cleaned up
         assert not list(papers_dir.rglob("paper.pdf"))
+
+
+class TestFailedPattern:
+    """FAILED_PATTERN must match ⚠-marked unchecked lines."""
+
+    def test_matches_failed_line(self):
+        from fetch_inbox import FAILED_PATTERN
+        line = "- [ ] https://example.com ⚠ connection timeout"
+        m = FAILED_PATTERN.match(line)
+        assert m is not None
+        assert m.group(1) == "https://example.com"
+
+    def test_does_not_match_checked_line(self):
+        from fetch_inbox import FAILED_PATTERN
+        line = "- [x] https://example.com → `raw/web/foo/` (2026-01-01)"
+        assert FAILED_PATTERN.match(line) is None
+
+    def test_does_not_match_plain_unchecked(self):
+        from fetch_inbox import FAILED_PATTERN
+        line = "- [ ] https://example.com"
+        assert FAILED_PATTERN.match(line) is None
+
+
+class TestFindFailedEntries:
+    """find_failed_entries should parse ⚠-marked lines into InboxEntry objects."""
+
+    def test_finds_one_failed(self):
+        from fetch_inbox import find_failed_entries
+        text = "- [ ] https://example.com ⚠ connection timeout\n"
+        entries = find_failed_entries(text)
+        assert len(entries) == 1
+        assert entries[0].url == "https://example.com"
+
+    def test_ignores_plain_unchecked(self):
+        from fetch_inbox import find_failed_entries
+        text = "- [ ] https://example.com\n"
+        assert find_failed_entries(text) == []
+
+    def test_ignores_checked(self):
+        from fetch_inbox import find_failed_entries
+        text = "- [x] https://example.com → `raw/web/foo/` (2026-01-01)\n"
+        assert find_failed_entries(text) == []
+
+    def test_preserves_sub_bullets(self):
+        from fetch_inbox import find_failed_entries
+        text = (
+            "- [ ] https://example.com ⚠ timeout\n"
+            "  - tags: ai, research\n"
+            "  - note: focus on section 3\n"
+        )
+        entries = find_failed_entries(text)
+        assert entries[0].tags == ["ai", "research"]
+        assert entries[0].note == "focus on section 3"
+
+    def test_empty_inbox(self):
+        from fetch_inbox import find_failed_entries
+        assert find_failed_entries("") == []
+
+
+class TestUpdateInboxRetry:
+    """update_inbox must update ⚠ lines when a retry succeeds or fails."""
+
+    def test_clears_warning_on_success(self, tmp_path):
+        from fetch_inbox import update_inbox, FetchResult
+        inbox = tmp_path / "inbox.md"
+        inbox_text = "- [ ] https://example.com ⚠ connection timeout\n"
+        result = FetchResult(
+            url="https://example.com", ok=True, kind="html",
+            out_path=tmp_path / "raw" / "web" / "example-abc12345",
+        )
+        new_text = update_inbox(inbox, inbox_text, [result])
+        assert "⚠" not in new_text
+        assert "[x]" in new_text
+        assert "https://example.com" in new_text
+
+    def test_updates_warning_reason_on_failure(self, tmp_path):
+        from fetch_inbox import update_inbox, FetchResult
+        inbox = tmp_path / "inbox.md"
+        inbox_text = "- [ ] https://example.com ⚠ old error\n"
+        result = FetchResult(
+            url="https://example.com", ok=False, kind="failed",
+            reason="new error: 503",
+        )
+        new_text = update_inbox(inbox, inbox_text, [result])
+        assert "new error: 503" in new_text
+        assert "old error" not in new_text

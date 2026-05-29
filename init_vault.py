@@ -87,6 +87,7 @@ GITKEEP_DIRS = [
 COMMANDS = [
     "save", "view", "reflect", "forget", "lint",
     "promote", "refresh", "ingest", "fetch", "hot", "playwright-fetch", "review", "merge",
+    "split", "retry",
 ]
 
 
@@ -252,10 +253,13 @@ def write_base_files(vault: Path, script_dir: Path) -> None:
         skip(".obsidian/app.json (exists — keeping user config)")
 
 
-def init_git(vault: Path) -> None:
+def init_git(vault: Path, yes: bool = False) -> None:
     info("Git")
     if (vault / ".git").is_dir():
         skip("git repo already exists")
+        return
+    if yes:
+        skip("git init skipped (--yes mode)")
         return
     ans = input("  Initialize a git repo? [Y/n] ").strip().lower()
     if ans in ("n", "no"):
@@ -358,7 +362,7 @@ def install_skills(vault: Path, script_dir: Path) -> None:
                         shutil.copy2(f, dst_dir / "templates" / f.name)
         ok(f"skill: {skill_name}")
 
-    _SHARED_SCRIPTS = ["vault_state.py", "review_scope.py", "find_backlinks.py"]
+    _SHARED_SCRIPTS = ["vault_state.py", "review_scope.py", "find_backlinks.py", "linkutil.py"]
     for _script in _SHARED_SCRIPTS:
         _shared_src = script_dir / "skills" / "shared" / _script
         if _shared_src.exists():
@@ -371,18 +375,21 @@ def install_skills(vault: Path, script_dir: Path) -> None:
             warn(f"skills/shared/{_script} not found in bundle")
 
 
-def install_claude_md(vault: Path, script_dir: Path) -> None:
+def install_claude_md(vault: Path, script_dir: Path, yes: bool = False) -> None:
     info("Installing CLAUDE.md")
     src = script_dir / "CLAUDE.md"
     dst = vault / "CLAUDE.md"
 
     if dst.exists():
-        ans = input("  CLAUDE.md already exists. Overwrite? [y/N] ").strip().lower()
-        if ans not in ("y", "yes"):
-            skip("keeping existing CLAUDE.md")
+        if yes:
+            skip("keeping existing CLAUDE.md (--yes mode)")
         else:
-            shutil.copy2(src, dst)
-            ok("CLAUDE.md")
+            ans = input("  CLAUDE.md already exists. Overwrite? [y/N] ").strip().lower()
+            if ans not in ("y", "yes"):
+                skip("keeping existing CLAUDE.md")
+            else:
+                shutil.copy2(src, dst)
+                ok("CLAUDE.md")
     else:
         shutil.copy2(src, dst)
         ok("CLAUDE.md")
@@ -399,7 +406,7 @@ def install_claude_md(vault: Path, script_dir: Path) -> None:
 
 # --- Arg parsing -------------------------------------------------------------
 
-def resolve_vault_dir() -> Path:
+def resolve_vault_dir() -> tuple[Path, bool]:
     parser = argparse.ArgumentParser(
         prog="init_vault.py",
         description="Bootstrap a second brain vault.",
@@ -409,6 +416,7 @@ def resolve_vault_dir() -> Path:
             "  python3 init_vault.py                  # ./second-brain-vault\n"
             "  python3 init_vault.py ~/knowledge/X    # explicit path\n"
             "  python3 init_vault.py --here           # current directory\n"
+            "  python3 init_vault.py --yes            # non-interactive (CI)\n"
         ),
     )
     parser.add_argument(
@@ -422,6 +430,11 @@ def resolve_vault_dir() -> Path:
         action="store_true",
         help="Use the current directory as the vault root",
     )
+    parser.add_argument(
+        "--yes", "-y",
+        action="store_true",
+        help="Non-interactive: skip all prompts, take safe defaults",
+    )
     args = parser.parse_args()
 
     if args.here:
@@ -432,7 +445,7 @@ def resolve_vault_dir() -> Path:
         vault_dir = Path("second-brain-vault")
 
     vault_dir.mkdir(parents=True, exist_ok=True)
-    return vault_dir.resolve()
+    return vault_dir.resolve(), args.yes
 
 
 def print_done(vault: Path) -> None:
@@ -462,16 +475,16 @@ def main() -> None:
     print()
     print(_c("1", "Second Brain Vault — init (v4)"))
 
-    vault = resolve_vault_dir()
+    vault, yes = resolve_vault_dir()
     print(_c("2", f"target: {vault}"))
     print()
 
     create_dirs(vault)
-    install_claude_md(vault, script_dir)
+    install_claude_md(vault, script_dir, yes=yes)
     write_base_files(vault, script_dir)
     install_skills(vault, script_dir)
     install_commands(vault, script_dir)
-    init_git(vault)
+    init_git(vault, yes=yes)
     check_deps(vault)
     print_done(vault)
 

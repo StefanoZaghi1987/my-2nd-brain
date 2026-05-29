@@ -34,12 +34,14 @@ vault-bundle/
 │   ├── lint.md               /lint
 │   ├── promote.md            /promote
 │   ├── refresh.md            /refresh
+│   ├── retry.md              /retry
 │   ├── ingest.md             /ingest
 │   ├── fetch.md              /fetch
 │   ├── hot.md                /hot
 │   ├── playwright-fetch.md   /playwright-fetch
 │   ├── review.md             /review
-│   └── merge.md              /merge, /split
+│   ├── merge.md              /merge
+│   └── split.md              /split
 └── docs/examples/
     ├── research-example.md
     └── mealplan-example.md
@@ -59,6 +61,7 @@ python3 init_vault.py              # → ./second-brain-vault
 # or
 python3 init_vault.py ~/knowledge/X      # explicit path
 python3 init_vault.py --here             # current directory
+python3 init_vault.py --yes              # non-interactive (CI / automation)
 ```
 
 Script is idempotent — safe to re-run.
@@ -84,7 +87,7 @@ What happens on re-run:
 
 - **Always refreshed** — `skills/`, `commands/`, and shared utilities
   (`skills/shared/vault_state.py`, `skills/shared/review_scope.py`,
-  `skills/shared/find_backlinks.py`).
+  `skills/shared/find_backlinks.py`, `skills/shared/linkutil.py`).
   This is the whole point of the update: new operations, fixes, and
   slash commands land in the vault.
 - **Prompts you** — `CLAUDE.md`. Default is *keep* (answer `y` to
@@ -162,10 +165,13 @@ pip install matplotlib
 **Inbox fetcher fails on some URLs** → likely paywall, JS-rendered, or
 a walled domain (X/Twitter, LinkedIn, Threads, Facebook, Instagram).
 The fetcher marks these `⚠ ... — try playwright` and leaves them
-unchecked. Run `/playwright-fetch` — the agent will retrieve them
-interactively via the Playwright MCP, one URL at a time, with your
-confirmation per URL. Obsidian Web Clipper remains a manual fallback
-if Playwright MCP is unavailable.
+unchecked. For transient failures (timeouts, temporary outages), run
+`/retry` to re-attempt only the ⚠-marked entries — no need to
+manually delete the markers. For walled/JS-rendered URLs, run
+`/playwright-fetch` — the agent will retrieve them interactively via
+the Playwright MCP, one URL at a time, with your confirmation per URL.
+Obsidian Web Clipper remains a manual fallback if Playwright MCP is
+unavailable.
 
 **Linter flags many orphan pages early on** → expected. Orphan check
 becomes meaningful when the wiki has >50 pages. Views are

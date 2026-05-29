@@ -93,10 +93,14 @@ language or with a slash command.
 
 ---
 
-## Fourteen slash commands
+## Fifteen slash commands
 
 - **`/fetch`** — process the URL queue in `inbox.md`. Run this before
   `/ingest` — ingest needs the raw files that fetch downloads.
+- **`/retry`** — re-attempt only previously-failed (`⚠`-marked) inbox
+  entries. Use after a transient network failure or once a blocked URL
+  becomes accessible. Never touches plain unchecked or already-processed
+  entries.
 - **`/ingest [slug]`** — compile raw sources into the wiki. Without a
   slug, first adopts any PDFs or Markdown files waiting in `raw/drop/` (prompts once for
   tags/notes), then discovers all uningested sources and confirms before starting.

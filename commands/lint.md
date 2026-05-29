@@ -1,7 +1,8 @@
 ---
-description: Run deterministic health checks on the vault. Writes .lint/report.md.
-  Checks dead links, orphans, duplicates, missing metadata, inconsistent naming,
-  stale sources, gaps, view staleness, based_on dead links, and pdf folder structure.
+description: Run 14 deterministic health checks on the vault. Writes .lint/report.md.
+  Checks dead links, based_on dead links, orphans, duplicates, missing metadata,
+  inconsistent naming, stale sources, gaps, view staleness, missing cross-references,
+  PDF index, conversations schema, drop zone, and index sync.
   Auto-triggers based on thresholds in vault.config.yml.
 ---
 
@@ -21,6 +22,8 @@ At session start, check `.lint/state.yaml` for two conditions:
 If either condition is met, run lint before proceeding with the session.
 
 ## How to run
+
+> **Windows:** replace `python3` with `python` in all commands below.
 
 ```bash
 python3 .claude/skills/vault-linter/scripts/lint.py

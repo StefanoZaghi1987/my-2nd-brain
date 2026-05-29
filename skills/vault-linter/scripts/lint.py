@@ -30,11 +30,9 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta
 from pathlib import Path
-from typing import Iterable
-
-import sys as _sys
-_sys.path.insert(0, str(Path(__file__).parent.parent.parent / "shared"))
-from vault_state import load_config, read_state, write_state as _write_state
+sys.path.insert(0, str(Path(__file__).parent.parent.parent / "shared"))
+from vault_state import load_config, write_state as _write_state
+from linkutil import WIKILINK_RE, normalize_link_target
 
 
 # --- Constants --------------------------------------------------------------
@@ -57,7 +55,6 @@ REQUIRED_FRONTMATTER = {
 }
 
 # Patterns
-WIKILINK_RE = re.compile(r"\[\[([^\]|]+?)(?:\|([^\]]+))?\]\]")
 FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 # Heuristic: capitalized multi-word phrases in prose (very rough proper-noun detector)
 PROPER_NOUN_RE = re.compile(r"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\b")
@@ -163,38 +160,6 @@ def parse_frontmatter(text: str) -> tuple[dict[str, str | list], str]:
         i += 1
 
     return fm, body
-
-
-def normalize_link_target(target: str, vault_root: Path, source_file: Path) -> Path | None:
-    """Resolve a [[link]] target into an absolute path, or None if unresolvable.
-
-    Rules:
-    - Try target as-is (vault-relative, then source-relative).
-    - If not found, also try with .md appended — slugs like
-      arxiv-2602.20867 look like they have an extension but don't.
-    - This way both [[wiki/sources/foo]] and [[wiki/sources/foo.md]] work,
-      and slugs containing dots resolve correctly.
-    """
-    target = target.strip()
-    if not target:
-        return None
-
-    base = Path(target)
-    candidates = [base]
-    if base.suffix != ".md":
-        candidates.append(base.with_name(base.name + ".md"))
-
-    # Try each candidate vault-relative, then source-relative.
-    for cand in candidates:
-        abs_vault = vault_root / cand
-        if abs_vault.exists():
-            return abs_vault
-        abs_local = source_file.parent / cand
-        if abs_local.exists():
-            return abs_local.resolve()
-
-    # Fall back to first candidate vault-relative (for error reporting).
-    return vault_root / candidates[0]
 
 
 def slugify(s: str) -> str:
