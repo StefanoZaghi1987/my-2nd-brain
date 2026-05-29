@@ -4,7 +4,7 @@
 Add `/review` — a report-only LLM-judgment health pass that covers contradictions, claim↔source faithfulness, and summary quality; the semantic counterpart to the deterministic LINT operation.
 
 ## Context
-Read "2026-05-29-vault-review-merge-hardening-design.md" spec and related "D:\my-2nd-brain\features\plans\2026-05-29-vault-review-plan.md" implementation plan.
+Read "D:\my-2nd-brain\features\specs\2026-05-29-vault-review-merge-hardening-design.md" spec and related "D:\my-2nd-brain\features\plans\2026-05-29-vault-review-plan.md" implementation plan.
 Detailed aspects of the actual implementation must be inferred by analyzing the codebase.
 
 ---

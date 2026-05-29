@@ -1,9 +1,10 @@
 ---
 id: TASK-0080
 title: 'Phase 4 – LLM Wiki Engine: Hardening & Portability'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-05-29 18:46'
+updated_date: '2026-05-29 20:23'
 labels:
   - hardening
   - portability
@@ -44,3 +45,9 @@ git checkout -b feat/hardening-portability
 
 **Sequential constraint:** Tasks 1 → 2 → 5 → 7 all touch `init_vault.py` and must run in that order. Tasks 3 and 6 are independent.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+Phase 4 hardening pass complete. All 8 subtasks delivered on feat-hotfix branch across 13 commits (b4eb42c..ef1ea41). 165 tests pass (137 baseline → 165, +28 new).\n\n**What changed:**\n- D1/A3: Extracted shared `linkutil.py` — ended copy-paste between lint.py and find_backlinks.py, dropped dead import\n- A2: Wired `review_scope.py` into `/review` Protocol step 2 — script now actually invoked\n- A1: Created standalone `commands/split.md`, trimmed `merge.md` to MERGE-only, fixed installer deployment gap\n- B1: Added Windows `python`/`python3` callout to all 5 affected command docs\n- B2: Added `--yes/-y` non-interactive flag to `init_vault.py` bootstrap\n- B3: Fixed `chart.py` output path from next-to-template to `wiki/views/assets/`\n- E1: Added `/retry` feature — `FAILED_PATTERN`, `find_failed_entries()`, `--retry` CLI mode, `commands/retry.md`\n- C1-C4: Synced CLAUDE.md (14 checks, full slash-command list, `.claude/` path prefixes, MERGE/SPLIT split) and README.md (tree updated, linkutil.py in "Always refreshed" list)\n\n**New test files:** test_linkutil.py, test_bootstrap.py, test_chart.py, test_installer.py + extensions to test_fetch_inbox.py\n\nBranch ready for PR or merge to main.
+<!-- SECTION:FINAL_SUMMARY:END -->
