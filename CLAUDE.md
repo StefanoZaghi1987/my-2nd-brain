@@ -94,7 +94,7 @@ update it. When `shareable: false` (default), the view evolves.
 
 ---
 
-## Nine operations
+## Ten operations
 
 ### FETCH
 User says "process inbox" → run `inbox-fetcher` skill, which pulls
@@ -200,6 +200,22 @@ Include any structural issues in section 2 (duplicates, orphans,
 stale views). If conversations hold insights not yet in the wiki, or
 views that could expand pages, mention them there too.
 
+### REVIEW
+User says "review the vault", "check for contradictions", "review my sources",
+or runs `/review [scope]` → run the semantic health pass. Three checks:
+contradictions (pages making conflicting claims about the same entity),
+claim↔source faithfulness (wiki claims traceable to their cited `raw/` sources),
+and summary quality (thin, copied, or unlinked summaries). Report-only —
+proposes fixes, never applies them. See `commands/review.md` for the full
+protocol with scoping options and output format.
+
+Cost note: Check B reads source files and should be scoped to avoid excessive
+token spend. Default scope covers only pages changed since the last review.
+`/review --all` is available but requires user confirmation.
+
+REVIEW has no auto-trigger. Unlike LINT, it consumes LLM tokens and must be
+invoked explicitly. There is no `fetches_since_last_review` counter.
+
 ### LINT
 User says "lint" or auto-trigger after 5 fetches / 7 days → run
 `vault-linter` skill. Deterministic checks only (dead links, missing
@@ -234,6 +250,7 @@ for the full protocol.
 | PROMOTE   | (LLM only)     | —                              |
 | REFRESH   | (LLM only)     | —                              |
 | FORGET    | (LLM only)     | —                              |
+| REVIEW    | (LLM only)     | —                              |
 
 ---
 
@@ -268,8 +285,9 @@ At the start of every session:
 When invoked with `--unattended`, `VAULT_UNATTENDED=1`, or the word
 "unattended" in the prompt:
 
-You CAN: read anything, run LINT, run REFLECT, update
-`wiki/compass.md`, `hot.md`, `log.md`, `.lint/report.md`.
+You CAN: read anything, run LINT, run REFLECT, run REVIEW, update
+`wiki/compass.md`, `hot.md`, `log.md`, `.lint/report.md`,
+`.review/report.md`, `.review/state.yaml`.
 
 You CANNOT: ingest, forget, create views, modify `wiki/pages/`,
 delete anything from `raw/` or `wiki/sources/`, apply any structural
@@ -287,6 +305,7 @@ interactively.
 - `/promote [slug] [page]` — promote conversation insights to a wiki page
 - `/refresh <source>` — re-fetch and re-ingest a changed source
 - `/fetch` — process the URL queue in inbox.md (see FETCH above)
+- `/review [scope]` — semantic health pass: contradictions, faithfulness, quality (see REVIEW above)
 - `/hot` — flush session state to wiki/hot.md
 - `/playwright-fetch` — retrieve walled URLs via browser
 
