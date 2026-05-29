@@ -70,6 +70,7 @@ DIRS = [
     "wiki/views/assets",
     "conversations",
     ".lint",
+    ".review",
     ".claude/skills/inbox-fetcher/scripts",
     ".claude/skills/vault-linter/scripts",
     ".claude/skills/view-builder/templates",
@@ -80,12 +81,12 @@ DIRS = [
 
 GITKEEP_DIRS = [
     "raw/papers", "raw/web", "raw/local", "raw/drop", "wiki/pages", "wiki/sources",
-    "wiki/views", "wiki/views/assets", "conversations", ".lint",
+    "wiki/views", "wiki/views/assets", "conversations", ".lint", ".review",
 ]
 
 COMMANDS = [
     "save", "view", "reflect", "forget", "lint",
-    "promote", "refresh", "ingest", "fetch", "hot", "playwright-fetch",
+    "promote", "refresh", "ingest", "fetch", "hot", "playwright-fetch", "review",
 ]
 
 
@@ -159,6 +160,13 @@ last_exit_code: null
 last_findings_count: 0
 """
 
+_REVIEW_STATE = """\
+last_review: null
+scope: null           # changed | tag:<tag> | topic:<slug> | all
+findings_count: 0
+last_exit_code: 0     # 0 = clean, 1 = findings, 2 = error
+"""
+
 _LINT_REPORT = """\
 # Lint Report
 
@@ -185,6 +193,10 @@ venv/
 # Obsidian workspace (keep vault files, skip user-specific state)
 .obsidian/workspace*
 .obsidian/cache
+
+# Vault runtime output (lint/review reports)
+.lint/
+.review/
 """
 
 _OBSIDIAN_APP_JSON = """\
@@ -220,6 +232,7 @@ def write_base_files(vault: Path, script_dir: Path) -> None:
     _write_if_absent(vault / "wiki" / "log.md", _LOG_MD, "wiki/log.md")
     _write_if_absent(vault / "wiki" / "hot.md", _HOT_MD, "wiki/hot.md")
     _write_if_absent(vault / ".lint" / "state.yaml", _LINT_STATE, ".lint/state.yaml")
+    _write_if_absent(vault / ".review" / "state.yaml", _REVIEW_STATE, ".review/state.yaml")
     _write_if_absent(vault / ".lint" / "report.md", _LINT_REPORT, ".lint/report.md")
     _write_if_absent(vault / ".gitignore", _GITIGNORE, ".gitignore")
 
@@ -337,15 +350,17 @@ def install_skills(vault: Path, script_dir: Path) -> None:
                         shutil.copy2(f, dst_dir / "templates" / f.name)
         ok(f"skill: {skill_name}")
 
-    shared_src = script_dir / "skills" / "shared" / "vault_state.py"
-    if shared_src.exists():
-        shutil.copy2(
-            shared_src,
-            vault / ".claude" / "skills" / "shared" / "vault_state.py",
-        )
-        ok("shared: vault_state.py")
-    else:
-        warn("skills/shared not found in bundle")
+    _SHARED_SCRIPTS = ["vault_state.py", "review_scope.py"]
+    for _script in _SHARED_SCRIPTS:
+        _shared_src = script_dir / "skills" / "shared" / _script
+        if _shared_src.exists():
+            shutil.copy2(
+                _shared_src,
+                vault / ".claude" / "skills" / "shared" / _script,
+            )
+            ok(f"shared: {_script}")
+        else:
+            warn(f"skills/shared/{_script} not found in bundle")
 
 
 def install_claude_md(vault: Path, script_dir: Path) -> None:
