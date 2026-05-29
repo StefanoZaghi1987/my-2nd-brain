@@ -58,7 +58,6 @@ REQUIRED_FRONTMATTER = {
 }
 
 # Patterns
-FRONTMATTER_RE = re.compile(r"^---\n(.*?)\n---", re.DOTALL)
 # Heuristic: capitalized multi-word phrases in prose (very rough proper-noun detector)
 PROPER_NOUN_RE = re.compile(r"\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+){1,3})\b")
 
@@ -93,9 +92,8 @@ def _parse_frontmatter_with_body(text: str) -> tuple[dict, str]:
     lint.py callers expect (frontmatter_dict, body_text). The shared
     parse_frontmatter only returns the dict; extract the body here.
     """
-    import re as _re
     fm = parse_frontmatter(text)
-    m = _re.match(r"^---\n.*?\n---\n?", text, _re.DOTALL)
+    m = re.match(r"^---\n.*?\n---\n?", text, re.DOTALL)
     body = text[m.end():].lstrip("\n") if m else text
     return fm, body
 

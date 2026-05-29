@@ -4,9 +4,6 @@ Characterization tests for yamlmini.parse_yaml / parse_frontmatter.
 Section A: Reproduce vault_state._parse_config_yaml behaviour exactly.
 Section B: Reproduce lint.parse_frontmatter behaviour exactly.
 Section C: New capability — block lists under a config section (the headline fix).
-Section D: Differential parity — verify yamlmini matches BOTH old parsers exactly
-           over their existing test fixtures. Run BEFORE deleting old parsers.
-           Remove Section D once Tasks 2-3 delete the old functions.
 """
 import sys
 from pathlib import Path
