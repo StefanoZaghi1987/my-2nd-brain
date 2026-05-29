@@ -70,6 +70,16 @@ class TestWriteState:
         state = read_state(tmp_path)
         assert state["last_lint"] == "2026-01-15"
 
+    def test_bool_true_round_trips(self, tmp_path):
+        """Boolean True survives write → read as Python True."""
+        write_state(tmp_path, {"pdf_enabled": True})
+        assert read_state(tmp_path)["pdf_enabled"] is True
+
+    def test_bool_false_round_trips(self, tmp_path):
+        """Boolean False survives write → read as Python False."""
+        write_state(tmp_path, {"pdf_enabled": False})
+        assert read_state(tmp_path)["pdf_enabled"] is False
+
 
 class TestLoadConfig:
     def test_returns_all_default_sections_when_absent(self, tmp_path):

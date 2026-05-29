@@ -33,6 +33,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "shared"))
 from vault_state import load_config, write_state as _write_state
 from linkutil import WIKILINK_RE, normalize_link_target
+from yamlmini import parse_frontmatter
 
 
 # --- Constants --------------------------------------------------------------
@@ -84,81 +85,16 @@ class WikiPage:
 
 # --- Utilities --------------------------------------------------------------
 
-def parse_frontmatter(text: str) -> tuple[dict[str, str | list], str]:
-    """Minimal YAML-like parser: scalars + simple lists.
-    
-    Supports:
-        key: value              → scalar string
-        key: [a, b, c]          → list
-        key:                    → list (if followed by `- item` lines)
-          - a
-          - b
+def _parse_frontmatter_with_body(text: str) -> tuple[dict, str]:
+    """Adapter: wraps yamlmini.parse_frontmatter to also return the body.
+
+    lint.py callers expect (frontmatter_dict, body_text). The shared
+    parse_frontmatter only returns the dict; extract the body here.
     """
-    match = FRONTMATTER_RE.match(text)
-    if not match:
-        return {}, text
-
-    block = match.group(1)
-    body = text[match.end():].lstrip("\n")
-
-    fm: dict[str, str | list] = {}
-    lines = block.splitlines()
-    i = 0
-    while i < len(lines):
-        line = lines[i]
-        if not line.strip() or line.strip().startswith("#"):
-            i += 1
-            continue
-        if ":" not in line:
-            i += 1
-            continue
-
-        key, _, value = line.partition(":")
-        key = key.strip()
-        value = value.strip()
-
-        # Case: inline list
-        if value.startswith("[") and value.endswith("]"):
-            inner = value[1:-1].strip()
-            items = [x.strip().strip("\"'") for x in inner.split(",") if x.strip()]
-            fm[key] = items
-            i += 1
-            continue
-
-        # Case: empty value, expect block list in following indented lines
-        if value == "":
-            items = []
-            j = i + 1
-            while j < len(lines):
-                nxt = lines[j]
-                if not nxt.strip():
-                    j += 1
-                    continue
-                # block list item
-                if re.match(r"^\s+-\s+", nxt):
-                    item = re.sub(r"^\s+-\s+", "", nxt).strip()
-                    # strip quotes
-                    if (item.startswith('"') and item.endswith('"')) or \
-                       (item.startswith("'") and item.endswith("'")):
-                        item = item[1:-1]
-                    items.append(item)
-                    j += 1
-                else:
-                    break
-            if items:
-                fm[key] = items
-            else:
-                fm[key] = ""
-            i = j
-            continue
-
-        # Case: scalar with optional quotes
-        if (value.startswith('"') and value.endswith('"')) or \
-           (value.startswith("'") and value.endswith("'")):
-            value = value[1:-1]
-        fm[key] = value
-        i += 1
-
+    import re as _re
+    fm = parse_frontmatter(text)
+    m = _re.match(r"^---\n.*?\n---\n?", text, _re.DOTALL)
+    body = text[m.end():].lstrip("\n") if m else text
     return fm, body
 
 
@@ -230,7 +166,7 @@ def load_wiki(vault: Path) -> dict[str, WikiPage]:
     for md_file in wiki_root.rglob("*.md"):
         rel = md_file.relative_to(vault).as_posix()
         text = md_file.read_text(encoding="utf-8", errors="replace")
-        fm, body = parse_frontmatter(text)
+        fm, body = _parse_frontmatter_with_body(text)
 
         page = WikiPage(
             path=md_file,
@@ -700,7 +636,7 @@ def check_conversations(vault: Path) -> list[Finding]:
 
     for md_file in sorted(conv_dir.glob("*.md")):
         text = md_file.read_text(encoding="utf-8", errors="replace")
-        fm, _ = parse_frontmatter(text)
+        fm, _ = _parse_frontmatter_with_body(text)
         if fm.get("type") != "conversation":
             findings.append(Finding(
                 severity="advisory",
