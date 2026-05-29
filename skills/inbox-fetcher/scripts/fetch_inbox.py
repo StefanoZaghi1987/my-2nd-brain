@@ -28,6 +28,8 @@ from urllib.parse import urlparse, urljoin
 import sys as _sys
 _sys.path.insert(0, str(Path(__file__).parent.parent.parent / "shared"))
 from vault_state import load_config, read_state, write_state
+from console import ensure_utf8_stdout
+ensure_utf8_stdout()
 
 # --- Dependency check with friendly error -----------------------------------
 

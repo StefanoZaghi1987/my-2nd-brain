@@ -34,6 +34,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent.parent / "shared"))
 from vault_state import load_config, write_state as _write_state
 from linkutil import WIKILINK_RE, normalize_link_target
 from yamlmini import parse_frontmatter
+from console import ensure_utf8_stdout
+ensure_utf8_stdout()
 
 
 # --- Constants --------------------------------------------------------------
