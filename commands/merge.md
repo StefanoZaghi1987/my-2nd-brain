@@ -76,6 +76,12 @@ Run `.claude/skills/shared/find_backlinks.py` against page-A:
 python .claude/skills/shared/find_backlinks.py <vault_root> <path-to-page-A>
 ```
 
+If a new slug C was chosen in Step 3, also run `find_backlinks.py`
+against page-B and take the **union** of both result sets. The union
+is the full set of files that need rewriting (links to either source
+must be updated to point to C). The fanout guard applies to the
+union count.
+
 List every file returned, grouped by type:
 
 ```
@@ -125,6 +131,13 @@ to page-B. All four link forms must be rewritten — not just one:
 - Aliased form: `[[wiki/pages/page-A|Display Text]]` → `[[wiki/pages/page-B|Display Text]]`
   (preserve the display label; swap only the target part)
 
+If a new slug C was chosen in Step 3: rewrite links to page-A → C
+**and** links to page-B → C, working across the full union of
+backlink sets from Step 4. Exclude **both** page-A and page-B
+themselves from the rewrite — they will both be deleted in Step 8
+and must not be touched. Apply the same four-form rewriting rule for
+each source slug.
+
 A file that contains the same target in multiple forms must have all
 forms rewritten in a single pass. After rewriting, confirm each file
 to the user in the final report.
@@ -132,7 +145,10 @@ to the user in the final report.
 ### 8. Delete page-A
 
 Delete `wiki/pages/page-A.md`. This completes the merge by removing
-the now-redundant source page.
+the now-redundant source page. If a new slug C was chosen in Step 3,
+delete **both** `wiki/pages/page-A.md` and `wiki/pages/page-B.md` —
+page-B is also superseded and must not be left as an orphan. If
+writing to page-B's existing slug, delete only page-A.
 
 ### 9. Update bookkeeping
 
@@ -168,18 +184,32 @@ is ambiguous, ask explicitly rather than guessing.
 
 Wait for the user to confirm the full assignment before proceeding.
 
-### 3. Write two new pages
+### 3. Check backlink fanout
+
+Run `.claude/skills/shared/find_backlinks.py` against the original
+page before writing anything:
+
+```
+python .claude/skills/shared/find_backlinks.py <vault_root> <path-to-original-page>
+```
+
+List every file returned. If the fanout exceeds **15 files** — stop
+immediately. Report the complete file list and do not proceed. Let the
+user choose to continue across multiple passes or stop entirely.
+
+See the Guards section for the full fanout protocol.
+
+### 4. Write two new pages
 
 Write `wiki/pages/<new-page-A>.md` and `wiki/pages/<new-page-B>.md`
 with the content assigned in step 2. Apply standard wiki frontmatter
 to each. Set `created` and `updated` to today's date for both new
 pages. Do not copy claims that belong to the other new page.
 
-### 4. Rewrite backlinks
+### 5. Rewrite backlinks
 
-Run `.claude/skills/shared/find_backlinks.py` against the original
-page. For each file in the backlink list, **excluding the original
-page itself** (it will be deleted in step 5):
+For each file in the backlink list from step 3, **excluding the
+original page itself** (it will be deleted in step 6):
 
 - If the context of the link clearly belongs to one of the two new
   pages (e.g., the surrounding text refers to content that went to
@@ -192,15 +222,12 @@ page itself** (it will be deleted in step 5):
 Apply the same four-form rewriting rule as in MERGE step 7 — all link
 variants in a given file must be rewritten in one pass.
 
-See the Guards section for the full fanout protocol. Stop immediately
-and do not proceed if fanout exceeds 15.
-
-### 5. Delete the original page
+### 6. Delete the original page
 
 Delete `wiki/pages/<original-page>.md` once all backlinks have been
 confirmed rewritten.
 
-### 6. Update bookkeeping
+### 7. Update bookkeeping
 
 - `wiki/index.md`: remove the original page entry; add entries for
   both new pages.
@@ -230,7 +257,7 @@ view is now partially unsourced (it still references the deleted
 page-A) and let them decide whether to issue a new dated version.
 
 **Confirm before delete:** Do not delete page-A (MERGE step 8) or the
-original page (SPLIT step 5) until all backlink rewrites have been
+original page (SPLIT step 6) until all backlink rewrites have been
 applied and confirmed. Deletion is irreversible.
 
 ## Unattended mode
