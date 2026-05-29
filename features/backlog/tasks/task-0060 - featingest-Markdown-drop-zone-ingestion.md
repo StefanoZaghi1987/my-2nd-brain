@@ -1,9 +1,10 @@
 ---
 id: TASK-0060
 title: 'feat(ingest): Markdown drop-zone ingestion'
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-29 06:56'
+updated_date: '2026-05-29 08:15'
 labels:
   - ingest
   - drop-zone
