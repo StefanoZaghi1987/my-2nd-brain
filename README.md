@@ -34,12 +34,14 @@ vault-bundle/
 │   ├── lint.md               /lint
 │   ├── promote.md            /promote
 │   ├── refresh.md            /refresh
+│   ├── retry.md              /retry
 │   ├── ingest.md             /ingest
 │   ├── fetch.md              /fetch
 │   ├── hot.md                /hot
 │   ├── playwright-fetch.md   /playwright-fetch
 │   ├── review.md             /review
-│   └── merge.md              /merge, /split
+│   ├── merge.md              /merge
+│   └── split.md              /split
 └── docs/examples/
     ├── research-example.md
     └── mealplan-example.md
