@@ -84,6 +84,11 @@ IMG_PATTERN = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
 PLAYWRIGHT_HINT = "try playwright"
 
 
+def _should_propagate_tags(config: dict) -> bool:
+    """Return True when inbox tag/note propagation is enabled (default: True)."""
+    return bool(config.get("inbox", {}).get("tags_propagation", True))
+
+
 # --- Core operations --------------------------------------------------------
 
 def find_unchecked_entries(inbox_text: str) -> list[InboxEntry]:
@@ -169,7 +174,8 @@ def fetch_pdf(url: str, papers_dir: Path,
               pdf_timeout: int = 60,
               max_pdf_mb: int = 50,
               tags: list | None = None,
-              note: str | None = None) -> FetchResult:
+              note: str | None = None,
+              propagate_tags: bool = True) -> FetchResult:
     """Download a PDF into a raw/papers/<slug>/ folder with a companion index.md."""
     try:
         r = requests.get(
@@ -240,10 +246,11 @@ def fetch_pdf(url: str, papers_dir: Path,
         f"fetched: {date.today().isoformat()}",
         "fetch_method: pdf",
     ]
-    if tags:
-        fm_lines.append(f"tags: [{', '.join(tags)}]")
-    if note:
-        fm_lines.append(f"note: {yaml_escape(note)}")
+    if propagate_tags:
+        if tags:
+            fm_lines.append(f"tags: [{', '.join(tags)}]")
+        if note:
+            fm_lines.append(f"note: {yaml_escape(note)}")
     fm_lines += ["---", "", "PDF: [[paper.pdf]]", ""]
 
     (out_dir / "index.md").write_text("\n".join(fm_lines), encoding="utf-8")
@@ -252,7 +259,8 @@ def fetch_pdf(url: str, papers_dir: Path,
 
 
 def fetch_html(url: str, web_dir: Path, html_timeout: int = 20,
-               tags: list | None = None, note: str | None = None) -> FetchResult:
+               tags: list | None = None, note: str | None = None,
+               propagate_tags: bool = True) -> FetchResult:
     """Fetch an HTML article, extract clean markdown, download images."""
     downloaded = trafilatura.fetch_url(url)
     if not downloaded:
@@ -297,10 +305,11 @@ def fetch_html(url: str, web_dir: Path, html_timeout: int = 20,
         frontmatter_lines.append(f"published: {pub_date}")
     if language:
         frontmatter_lines.append(f"language: {language}")
-    if tags:
-        frontmatter_lines.append(f"tags: [{', '.join(tags)}]")
-    if note:
-        frontmatter_lines.append(f"note: {yaml_escape(note)}")
+    if propagate_tags:
+        if tags:
+            frontmatter_lines.append(f"tags: [{', '.join(tags)}]")
+        if note:
+            frontmatter_lines.append(f"note: {yaml_escape(note)}")
     frontmatter_lines.append(f"fetched: {date.today().isoformat()}")
     frontmatter_lines.append("---")
     frontmatter = "\n".join(frontmatter_lines) + "\n\n"
@@ -438,6 +447,7 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
     max_pdf_mb = cfg["fetch"]["max_pdf_size_mb"]
     pdf_enabled = cfg["fetch"]["pdf_enabled"]
     walled = frozenset(cfg["fetch"]["walled_domains"])
+    propagate_tags = _should_propagate_tags(cfg)
 
     inbox_path = vault / "inbox.md"
     if not inbox_path.exists():
@@ -477,7 +487,8 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
             else:
                 r = fetch_pdf(fetch_url, papers_dir, slug_override=slug_override,
                               pdf_timeout=pdf_timeout, max_pdf_mb=max_pdf_mb,
-                              tags=e.tags, note=e.note)
+                              tags=e.tags, note=e.note,
+                              propagate_tags=propagate_tags)
         elif is_walled(fetch_url, walled):
             host = urlparse(fetch_url).netloc.lower()
             r = FetchResult(
@@ -493,10 +504,12 @@ def process_vault(vault: Path, dry_run: bool = False) -> int:
             else:
                 r = fetch_pdf(fetch_url, papers_dir, slug_override=slug_override,
                               pdf_timeout=pdf_timeout, max_pdf_mb=max_pdf_mb,
-                              tags=e.tags, note=e.note)
+                              tags=e.tags, note=e.note,
+                              propagate_tags=propagate_tags)
         else:
             r = fetch_html(fetch_url, web_dir, html_timeout=html_timeout,
-                           tags=e.tags, note=e.note)
+                           tags=e.tags, note=e.note,
+                           propagate_tags=propagate_tags)
 
         # Track by the original inbox URL, not the rewritten fetch URL,
         # so update_inbox can match the line back.
