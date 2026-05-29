@@ -1,0 +1,122 @@
+#!/usr/bin/env python3
+"""
+find_backlinks.py — Enumerate all wiki pages that link to a given target page.
+
+Used by the MERGE operation to find every page that must be updated when a
+source page is merged into a destination page. Backlink resolution uses the
+same logic as the vault linter (normalize_link_target), so "backlinks found
+here match exactly what the linter tracks" — after a merge, lint.py will
+report zero dead_links if all backlinks returned by this helper are rewritten.
+
+Usage:
+    python find_backlinks.py <vault_root> <target_page_path>
+
+Exit codes:
+    0 — backlinks found (list to stdout, one path per line)
+    1 — no backlinks found
+    2 — error (vault not found, target not found, etc.)
+"""
+from __future__ import annotations
+import re
+import sys
+from pathlib import Path
+
+# Alias-aware wikilink regex — matches [[target]] and [[target|display label]].
+# Copied from skills/vault-linter/scripts/lint.py line 60.
+WIKILINK_RE = re.compile(r"\[\[([^\]|]+?)(?:\|([^\]]+))?\]\]")
+
+
+# Copied verbatim from skills/vault-linter/scripts/lint.py::normalize_link_target().
+# Keep in sync if lint.py's resolution logic changes.
+def normalize_link_target(target: str, vault_root: Path, source_file: Path) -> Path | None:
+    """Resolve a [[link]] target into an absolute path, or None if unresolvable.
+
+    Rules:
+    - Try target as-is (vault-relative, then source-relative).
+    - If not found, also try with .md appended — slugs like
+      arxiv-2602.20867 look like they have an extension but don't.
+    - This way both [[wiki/sources/foo]] and [[wiki/sources/foo.md]] work,
+      and slugs containing dots resolve correctly.
+    """
+    target = target.strip()
+    if not target:
+        return None
+
+    base = Path(target)
+    candidates = [base]
+    if base.suffix != ".md":
+        candidates.append(base.with_name(base.name + ".md"))
+
+    # Try each candidate vault-relative, then source-relative.
+    for cand in candidates:
+        abs_vault = vault_root / cand
+        if abs_vault.exists():
+            return abs_vault
+        abs_local = source_file.parent / cand
+        if abs_local.exists():
+            return abs_local.resolve()
+
+    # Fall back to first candidate vault-relative (for error reporting).
+    return vault_root / candidates[0]
+
+
+def find_backlinks(vault: Path, target: Path) -> list[Path]:
+    """Return all wiki pages that contain a wikilink resolving to target.
+
+    Scans every .md file under wiki/ and checks whether any [[link]] in the
+    file resolves to the same filesystem path as target. Uses the same
+    resolution logic as the vault linter so that the result set matches
+    exactly what lint.py would flag as dead links after a page is removed.
+
+    Args:
+        vault:  Vault root directory (contains wiki/, raw/, etc.).
+        target: The page being searched for — any Path accepted; resolved
+                internally to an absolute path.
+
+    Returns:
+        Sorted list of Path objects for every file that links to target.
+        Empty list if none found or wiki/ does not exist.
+    """
+    target = target.resolve()
+    results: list[Path] = []
+    wiki_dir = vault / "wiki"
+    if not wiki_dir.exists():
+        return []
+    for page in wiki_dir.rglob("*.md"):
+        if page.name.startswith("."):
+            continue
+        try:
+            text = page.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        for m in WIKILINK_RE.finditer(text):
+            raw_target = m.group(1)
+            resolved = normalize_link_target(raw_target, vault, page)
+            if resolved is not None and resolved.resolve() == target:
+                results.append(page)
+                break  # one match per file is enough
+    return sorted(results)
+
+
+def main() -> int:
+    if len(sys.argv) != 3:
+        print("Usage: find_backlinks.py <vault_root> <target_page_path>", file=sys.stderr)
+        return 2
+    vault = Path(sys.argv[1])
+    target = Path(sys.argv[2])
+    if not vault.is_dir():
+        print(f"ERROR: vault not found: {vault}", file=sys.stderr)
+        return 2
+    if not target.exists():
+        print(f"ERROR: target not found: {target}", file=sys.stderr)
+        return 2
+    results = find_backlinks(vault, target)
+    if not results:
+        return 1
+    for r in results:
+        print(r)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
