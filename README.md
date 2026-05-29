@@ -86,8 +86,8 @@ python3 init_vault.py ~/knowledge/X    # Windows / cross-platform (canonical pat
 What happens on re-run:
 
 - **Always refreshed** — `skills/`, `commands/`, and shared utilities
-  (`skills/shared/vault_state.py`, `skills/shared/review_scope.py`,
-  `skills/shared/find_backlinks.py`, `skills/shared/linkutil.py`).
+  (`vault_state.py`, `yamlmini.py`, `console.py`, `review_scope.py`,
+  `find_backlinks.py`, `linkutil.py` under `skills/shared/`).
   This is the whole point of the update: new operations, fixes, and
   slash commands land in the vault.
 - **Prompts you** — `CLAUDE.md`. Default is *keep* (answer `y` to
@@ -96,7 +96,9 @@ What happens on re-run:
 - **Created only if missing** — `vault.config.yml`, `inbox.md`,
   `wiki/index.md`, `wiki/log.md`, `wiki/hot.md`, `.lint/state.yaml`,
   `.review/state.yaml`, `.gitignore`. Edit `vault.config.yml` to
-  customise timeouts, walled domains, and lint thresholds.
+  customise timeouts, walled domains, and lint thresholds. List values
+  support both inline (`[a, b, c]`) and block-list (`- item` per line)
+  syntax.
 - **Never touched** — `raw/`, `wiki/pages/`, `wiki/sources/`,
   `wiki/views/`, `conversations/`, `wiki/compass.md`. Your
   knowledge and ongoing work are safe.
@@ -172,6 +174,14 @@ manually delete the markers. For walled/JS-rendered URLs, run
 the Playwright MCP, one URL at a time, with your confirmation per URL.
 Obsidian Web Clipper remains a manual fallback if Playwright MCP is
 unavailable.
+
+**Inbox entry shows `⚠ skipped: inline text after URL`** → the entry
+has trailing text on the same line as the URL (e.g. `- [ ] https://...
+my note`). Move the note to an indented sub-bullet so the URL is alone:
+```markdown
+- [ ] https://example.com
+  - note: my note here
+```
 
 **Linter flags many orphan pages early on** → expected. Orphan check
 becomes meaningful when the wiki has >50 pages. Views are

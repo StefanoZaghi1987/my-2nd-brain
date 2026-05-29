@@ -17,7 +17,6 @@ from __future__ import annotations
 
 import argparse
 import json
-import re
 import shutil
 import sys
 from collections.abc import Callable
@@ -27,6 +26,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "shared"))
 from vault_state import load_config
+from yamlmini import parse_frontmatter as _parse_frontmatter
 
 MISSING_DEPS = []
 try:
@@ -59,14 +59,9 @@ def extract_title_from_md(path: Path) -> str | None:
     except OSError:
         return None
 
-    fm_match = re.match(r"^---\n(.*?)\n---", text, re.DOTALL)
-    if fm_match:
-        for line in fm_match.group(1).splitlines():
-            if line.startswith("title:"):
-                _, _, value = line.partition(":")
-                value = value.strip().strip("\"'")
-                if value:
-                    return value
+    fm = _parse_frontmatter(text)
+    if fm.get("title"):
+        return str(fm["title"])
 
     for line in text.splitlines():
         stripped = line.strip()
@@ -83,18 +78,11 @@ def extract_source_url_from_md(path: Path) -> str | None:
     except OSError:
         return None
 
-    fm_match = re.match(r"^---\n(.*?)\n---", text, re.DOTALL)
-    if not fm_match:
-        return None
-
-    fm_block = fm_match.group(1)
+    fm = _parse_frontmatter(text)
     for key in ("source_url", "url", "link", "source"):
-        for line in fm_block.splitlines():
-            if line.startswith(f"{key}:"):
-                _, _, value = line.partition(":")
-                value = value.strip().strip("\"'")
-                if value:
-                    return value
+        val = fm.get(key)
+        if val:
+            return str(val)
     return None
 
 
@@ -288,11 +276,12 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    if not args.vault.is_dir():
-        print(f"ERROR: vault path is not a directory: {args.vault}", file=sys.stderr)
+    vault = Path(args.vault).resolve()
+    if not vault.is_dir():
+        print(f"ERROR: vault path is not a directory: {vault}", file=sys.stderr)
         return 1
 
-    return process_drop_zone(args.vault, dry_run=args.dry_run)
+    return process_drop_zone(vault, dry_run=args.dry_run)
 
 
 if __name__ == "__main__":

@@ -146,7 +146,7 @@ For all pages in scope, flag summaries that are:
    `## [YYYY-MM-DD] review | scope: <scope> | findings: N`
    `.review/report.md` is a runtime artifact — do not add it to `wiki/index.md`.
 9. Suggest next actions based on findings:
-   - Contradictions → "consider `/merge` to reconcile (Phase 3, not yet available), or edit the claims manually"
+   - Contradictions → "consider `/merge` to reconcile, or edit the claims manually"
    - Faithfulness failures → "consider `/refresh <source>` or editing the claim"
    - Summary quality → "consider expanding the summary or adding cross-links"
 

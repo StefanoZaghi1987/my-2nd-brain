@@ -265,6 +265,7 @@ Not available unattended.
 | FORGET    | (LLM only)     | —                              |
 | REVIEW    | (LLM only)     | —                              |
 | MERGE     | (LLM only)     | find_backlinks.py              |
+| SPLIT     | (LLM only)     | find_backlinks.py              |
 
 ---
 

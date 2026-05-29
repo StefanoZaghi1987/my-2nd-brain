@@ -55,3 +55,36 @@ def test_returns_empty_when_nothing_changed(tmp_path):
 
     result = get_changed_pages(tmp_path, last_review=date(2026, 6, 1))
     assert result == []
+
+
+def test_body_prose_updated_date_is_ignored(tmp_path):
+    """A page with 'updated: 2026-05-15' ONLY in its body must NOT be mis-dated."""
+    wiki = tmp_path / "wiki" / "pages"
+    wiki.mkdir(parents=True)
+    # Frontmatter has NO updated field; body has a misleading one at line start
+    # This is a RECENT date that WOULD be included if parsed from the body
+    (wiki / "tricky.md").write_text(
+        "---\ntype: page\ncreated: 2026-01-01\ntags: []\n---\n\n"
+        "updated: 2026-05-15\n\nThis is body text with a misleading updated field.\n",
+        encoding="utf-8",
+    )
+    # last_review is 2026-01-01 — if body date were used, page WOULD be in scope
+    # (2026-05-15 > 2026-01-01). But no frontmatter updated → None → page excluded.
+    result = get_changed_pages(tmp_path, last_review=date(2026, 1, 1))
+    assert result == [], (
+        "A page with updated: only in prose should not be mis-dated"
+    )
+
+
+def test_frontmatter_updated_date_is_used(tmp_path):
+    """When frontmatter has 'updated', that date is used correctly."""
+    wiki = tmp_path / "wiki" / "pages"
+    wiki.mkdir(parents=True)
+    (wiki / "normal.md").write_text(
+        "---\ntype: page\ncreated: 2026-01-01\nupdated: 2026-05-01\ntags: []\n---\n\n"
+        "Body text with no dates.\n",
+        encoding="utf-8",
+    )
+    result = get_changed_pages(tmp_path, last_review=date(2026, 1, 1))
+    assert len(result) == 1
+    assert result[0].name == "normal.md"

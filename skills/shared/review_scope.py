@@ -24,8 +24,19 @@ from datetime import date
 
 
 def _parse_updated(text: str) -> date | None:
-    """Extract the `updated: YYYY-MM-DD` field from YAML frontmatter."""
-    m = re.search(r"^updated:\s*(\d{4}-\d{2}-\d{2})", text, re.MULTILINE)
+    """Extract the ``updated: YYYY-MM-DD`` field from YAML frontmatter only.
+
+    The search is scoped to the leading ``---\\n...\\n---`` block so that
+    body text containing ``updated:`` is never mis-parsed.
+    Self-contained: no import of shared/yamlmini (by design).
+    """
+    # Extract frontmatter block; return None if none found
+    parts = text.split("---", 2)
+    # A well-formed frontmatter splits as: ['', ' block text ', ' body...']
+    if len(parts) < 3:
+        return None
+    fm_block = parts[1]
+    m = re.search(r"^updated:\s*(\d{4}-\d{2}-\d{2})", fm_block, re.MULTILINE)
     if not m:
         return None
     try:

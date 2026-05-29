@@ -11,6 +11,29 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from yamlmini import parse_yaml as _parse_yaml
+
+
+# ---------------------------------------------------------------------------
+# Scalar coercion — kept local, NOT replaced with parse_yaml.
+# read_state uses a hand-rolled line parser; parse_yaml would interpret an
+# empty top-level value (e.g. "last_lint:") as a section header and return
+# {"last_lint": {}}, breaking the None round-trip that write_state relies on.
+# ---------------------------------------------------------------------------
+
+def _parse_scalar(val: str) -> Any:
+    if val in ("true", "True"):
+        return True
+    if val in ("false", "False"):
+        return False
+    if val in ("null", "Null", "None", "~", ""):
+        return None
+    try:
+        return int(val)
+    except ValueError:
+        pass
+    return val.strip("\"'")
+
 
 # ---------------------------------------------------------------------------
 # Defaults — mirrors vault.config.yml; used when the file is absent
@@ -52,67 +75,6 @@ _DEFAULTS: dict[str, Any] = {
 }
 
 
-def _parse_scalar(val: str) -> Any:
-    if val in ("true", "True"):
-        return True
-    if val in ("false", "False"):
-        return False
-    if val in ("null", "Null", "None", "~", ""):
-        return None
-    try:
-        return int(val)
-    except ValueError:
-        pass
-    return val.strip("\"'")
-
-
-def _parse_config_yaml(text: str) -> dict:
-    """
-    Two-level YAML parser for vault.config.yml.
-    Supports scalar values and inline lists ([a, b, c]).
-    Block lists (multi-line - item syntax) are not supported.
-    """
-    result: dict = {}
-    current_section: str | None = None
-
-    for raw_line in text.splitlines():
-        stripped = raw_line.strip()
-        if not stripped or stripped.startswith("#"):
-            continue
-        if ":" not in stripped:
-            continue
-
-        key, _, val_raw = stripped.partition(":")
-        key = key.strip()
-        val = val_raw.strip()
-        # Strip trailing inline comment, but only outside a quoted string
-        if not (val.startswith('"') or val.startswith("'")):
-            val = val.partition(" #")[0].strip()
-            val = val.partition("\t#")[0].strip()
-        is_indented = raw_line[:1] in (" ", "\t")
-
-        if not is_indented:
-            if val == "":
-                current_section = key
-                result[key] = {}
-            else:
-                result[key] = _parse_scalar(val)
-                current_section = None
-        elif current_section is not None:
-            if val.startswith("[") and val.endswith("]"):
-                inner = val[1:-1]
-                items = [
-                    _parse_scalar(x.strip().strip("\"'"))
-                    for x in inner.split(",")
-                    if x.strip()
-                ]
-                result[current_section][key] = items
-            else:
-                result[current_section][key] = _parse_scalar(val)
-
-    return result
-
-
 def _deep_merge(base: dict, override: dict) -> dict:
     merged = dict(base)
     for k, v in override.items():
@@ -124,8 +86,8 @@ def _deep_merge(base: dict, override: dict) -> dict:
 
 
 def load_config(vault_root: Path) -> dict:
-    """
-    Load vault.config.yml and deep-merge with built-in defaults.
+    """Load vault.config.yml and deep-merge with built-in defaults.
+
     Returns defaults silently when the file is absent (backward-compatible).
     Raises ValueError when the file exists but cannot be read or parsed.
     """
@@ -134,16 +96,17 @@ def load_config(vault_root: Path) -> dict:
         return _deep_merge(_DEFAULTS, {})
     try:
         text = config_path.read_text(encoding="utf-8")
-        parsed = _parse_config_yaml(text)
+        parsed = _parse_yaml(text)
     except Exception as exc:
         raise ValueError(f"vault.config.yml cannot be loaded: {exc}") from exc
     return _deep_merge(_DEFAULTS, parsed)
 
 
 def read_state(vault_root: Path) -> dict:
-    """
-    Read .lint/state.yaml into a flat string dict.
+    """Read .lint/state.yaml into a flat dict with typed values.
+
     Returns an empty dict when the file is absent.
+    Values are coerced: null/empty → None, true/false → bool, integers → int.
     """
     state_path = vault_root / ".lint" / "state.yaml"
     if not state_path.exists():
@@ -152,19 +115,23 @@ def read_state(vault_root: Path) -> dict:
     for line in state_path.read_text(encoding="utf-8").splitlines():
         if ":" in line and not line.strip().startswith("#"):
             k, _, v = line.partition(":")
-            result[k.strip()] = v.strip()
+            result[k.strip()] = _parse_scalar(v.strip())
     return result
 
 
 def write_state(vault_root: Path, updates: dict) -> None:
-    """
-    Patch .lint/state.yaml with the given key-value pairs.
+    """Patch .lint/state.yaml with the given key-value pairs.
+
     Existing keys not in updates are preserved; new keys are added.
     Creates .lint/ and state.yaml if absent.
+    None values are written as empty strings (so they round-trip back as None).
     """
     lint_dir = vault_root / ".lint"
     lint_dir.mkdir(exist_ok=True)
     current = read_state(vault_root)
-    current.update({str(k): str(v) for k, v in updates.items()})
-    lines = [f"{k}: {v}" for k, v in current.items()]
+    for k, v in updates.items():
+        current[str(k)] = v
+    lines = []
+    for k, v in current.items():
+        lines.append(f"{k}: {'' if v is None else v}")
     (lint_dir / "state.yaml").write_text("\n".join(lines) + "\n", encoding="utf-8")

@@ -7,10 +7,17 @@ lands alongside other view assets, not next to this template file.
 Adapt TITLE, XLABEL, YLABEL, labels, and values for each chart you need.
 """
 import argparse
+import sys
 from pathlib import Path
-import matplotlib
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+
+try:
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+except ImportError:
+    print("chart.py requires matplotlib. Install it with:", file=sys.stderr)
+    print("  pip install matplotlib", file=sys.stderr)
+    sys.exit(1)
 
 
 def build_chart(vault_root: Path, output_name: str = "chart.png") -> Path:
