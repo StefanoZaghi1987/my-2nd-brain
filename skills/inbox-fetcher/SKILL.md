@@ -137,10 +137,10 @@ The agent reports this summary verbatim and asks the user whether to proceed wit
 
 ## Drop zone adoption (`adopt_drop.py`)
 
-Companion script for copy-pasted PDFs that arrive outside a URL.
+Companion script for copy-pasted PDFs and Markdown files that arrive outside a URL.
 
 **When to use:** called automatically by `/ingest` as a pre-flight step
-when `raw/drop/` (or the configured `drop_zone.path`) contains `.pdf` files.
+when `raw/drop/` (or the configured `drop_zone.path`) contains `.pdf` or `.md` files.
 Skips silently when `drop_zone.enabled: false`. Can also be run manually.
 
 **What it does per file:**
@@ -150,6 +150,15 @@ Skips silently when `drop_zone.enabled: false`. Can also be run manually.
 4. Writes a stub `index.md` with `fetch_method: local-pdf`, stub title, and today's date.
 5. Prints `[ok] adopted  raw/local/<slug>/`.
 
+**For `.md` files** (`adopt_md()`):
+1. Derives a slug from the filename stem via `slugify()`.
+2. Checks for collision: if `raw/local/<slug>/` already exists, skips with a warning.
+3. Creates `raw/local/<slug>/`.
+4. Extracts title: checks frontmatter `title:` → first `# H1` heading → filename stem.
+5. Extracts source URL: checks frontmatter keys `source_url`, `url`, `link`, `source` in order.
+6. Writes a stub `index.md` with `fetch_method: local-md`, extracted title, and `source_url` if found.
+7. Renames original file to `content.md` (atomic move; original preserved unchanged).
+
 **Run manually:**
 ```bash
 python3 skills/inbox-fetcher/scripts/adopt_drop.py            # adopt (default: cwd)
@@ -157,19 +166,21 @@ python3 skills/inbox-fetcher/scripts/adopt_drop.py --vault /path/to/vault
 python3 skills/inbox-fetcher/scripts/adopt_drop.py --dry-run  # preview only; no files moved
 ```
 
-**Output contract (live run):**
+**Output contract (live run, mixed types):**
 ```
-Found 2 PDF(s) in drop zone.
+Found 2 PDF(s) and 1 Markdown file(s) in drop zone.
   [ok] adopted  raw/local/attention-is-all-you-need/
   [ok] adopted  raw/local/lecun-path-to-autonomy/
-Adopted 2, skipped 0.
+  [ok] adopted  raw/local/my-obsidian-note/
+Adopted 3, skipped 0.
 ```
 
 **Output contract (dry run):**
 ```
-Found 2 PDF(s) in drop zone.
+Found 2 PDF(s) and 1 Markdown file(s) in drop zone.
   would adopt: attention-is-all-you-need.pdf -> raw/local/attention-is-all-you-need/
   would adopt: lecun-path-to-autonomy.pdf -> raw/local/lecun-path-to-autonomy/
+  would adopt: my-obsidian-note.md -> raw/local/my-obsidian-note/
 ```
 
 Exit codes: `0` = all adopted (or nothing to do); `1` = bad `--vault` path; `2` = partial (≥1 skipped due to slug collision).

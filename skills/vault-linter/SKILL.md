@@ -41,7 +41,7 @@ Fifteen deterministic checks. Each produces findings with concrete paths.
 | 12 | **Conversation schema** | `conversations/` files missing `type: conversation` frontmatter field |
 | 13 | **Source index sync** | `wiki/sources/` entry not mentioned in `wiki/index.md` |
 | 14 | **Local PDF index integrity** | `raw/local/` subdir missing `index.md`, or legacy flat `.pdf` in `raw/local/` |
-| 15 | **Drop zone not empty** | PDFs waiting in the configured drop zone (default: `raw/drop/`) that haven't been adopted by `/ingest` (skipped when `drop_zone.enabled: false`) |
+| 15 | **Drop zone not empty** | PDFs or Markdown files waiting in the configured drop zone (default: `raw/drop/`) that haven't been adopted by `/ingest` (skipped when `drop_zone.enabled: false`) |
 
 Checks 3, 5, 7, 9 are heuristic — they can produce false positives and
 are marked as advisory.
