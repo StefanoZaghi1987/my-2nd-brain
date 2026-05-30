@@ -69,11 +69,18 @@ to avoid proposing duplicates mid-session.
 Source: `raw/web/<slug>/index.md` (no `fetch_method` field, or `fetch_method: html`).
 
 1. Read `index.md` — get `source_url`, `title`, `tags`, `note`.
-2. Read the article body.
-3. Write `wiki/sources/<slug>.md` with a summary in your own words.
-4. Propagate `tags` into the source frontmatter.
-   If `note` is present, address that topic explicitly in the summary — not just
-   acknowledge it.
+2. **Map (cheap skim):** Read the article body and extract all section headings
+   (H2–H4) plus the opening and closing paragraphs.
+3. **Propose concept list:** Present the proposed `wiki/pages/` entries to the
+   user: "These N concepts → pages? [list]." Wait for the user to approve, add,
+   or remove concepts before proceeding.
+4. **Read backing sections:** For each approved concept, read the specific
+   section(s) of the article that support it.
+5. Write `wiki/sources/<slug>.md` and the concept pages following the page &
+   source structure schema (see "Page & source structure" in CLAUDE.md).
+6. Propagate `tags` into the source frontmatter.
+   If `note` is present, address that topic explicitly in the `## Summary` —
+   not just acknowledge it.
 
 ### PDFs
 
@@ -83,17 +90,26 @@ Source: `raw/papers/<slug>/index.md` with `fetch_method: pdf`, **or**
 1. Read `index.md` — get `title`, `tags`, `note`.
    - For `fetch_method: pdf`: also read `source_url`.
    - For `fetch_method: local-pdf`: no `source_url` field; omit it everywhere.
-2. Read `paper.pdf` using the Read tool — pages 1–5. If the paper has more than
-   10 pages, also read the last 2 pages.
+2. **Map (cheap skim):** Read `paper.pdf` scanning all pages for section and
+   subsection headings (H-level titles throughout the entire document — not limited
+   to pages 1–5). Also read the abstract (typically page 1) and the conclusions
+   section (typically the last 1–2 pages). This reveals the paper's full concept
+   architecture without reading all body text.
 3. Infer the title from the first visible heading; fall back to the `title` in
    `index.md` frontmatter.
-4. Write `wiki/sources/<slug>.md` with the same schema as web sources.
+4. **Propose concept list:** Present the proposed `wiki/pages/` entries to the
+   user: "These N concepts → pages? [list]." Wait for the user to approve, add,
+   or remove concepts before proceeding.
+5. **Read backing sections:** For each approved concept, read the specific pages
+   or sections from `paper.pdf` that support it.
+6. Write `wiki/sources/<slug>.md` and the concept pages following the page &
+   source structure schema.
    - For `fetch_method: pdf`: include `source_path: raw/papers/<slug>/` and
      `fetch_method: pdf` in the wiki source frontmatter.
    - For `fetch_method: local-pdf`: include `source_path: raw/local/<slug>/` and
      `fetch_method: local-pdf` in the wiki source frontmatter.
      Do **not** include a `source_url` field.
-5. Propagate `tags` and `note` as with other source types.
+7. Propagate `tags` and `note` as with other source types.
 
 ### Local Markdown files
 
@@ -103,17 +119,27 @@ Source: `raw/local/<slug>/index.md` with `fetch_method: local-md`.
 2. Read `content.md` in full (plain text; no page limit).
 3. Infer real title from content if better than `index.md` title
    (first H1 heading takes precedence over the filename-derived title).
-4. Write `wiki/sources/<slug>.md`:
+4. **Map:** Extract all section headings (H2–H4) from `content.md` (already
+   in context from step 2 — no additional reads needed).
+5. **Propose concept list:** Present the proposed `wiki/pages/` entries to the
+   user: "These N concepts → pages? [list]." Wait for the user to approve, add,
+   or remove concepts before proceeding.
+6. **Read backing sections:** For each approved concept, identify the specific
+   sections in `content.md` that support it (file is already in context —
+   no additional reads).
+7. Write `wiki/sources/<slug>.md` and the concept pages following the page &
+   source structure schema:
    - Include `source_url` only if present in `index.md`.
    - `source_path: raw/local/<slug>/`
    - `fetch_method: local-md`
-5. Propagate `tags` and `note` as with other source types.
+8. Propagate `tags` and `note` as with other source types.
 
 ## Guards
 
-- **≤3 new pages before confirm.** If ingesting a source would require creating more
-  than 3 new `wiki/pages/` entries for emerging concepts, stop and list the proposed
-  pages. Ask: "Create all three?" before writing any.
+- **Concept-list confirmation.** The map-then-read protocol (steps 2–4 above) presents
+  the full proposed concept list to the user before any writes. The user's approval of
+  that list is the gate — there is no hard cap on the number of concepts created per
+  ingest, provided the user explicitly approves the list.
 - **≤15 files per operation (invariant #6).** If a single ingest would touch more
   than 15 files, split across sessions. Report the count and ask which sources to
   prioritise.
