@@ -72,9 +72,9 @@ Views come in two flavors:
 
 ---
 
-## Eleven operations
+## Twelve operations
 
-The agent knows how to do eleven things. You trigger them in plain
+The agent knows how to do twelve things. You trigger them in plain
 language or with a slash command.
 
 | # | Operation | How to trigger | What happens |
@@ -94,7 +94,7 @@ language or with a slash command.
 
 ---
 
-## Fifteen slash commands
+## Sixteen slash commands
 
 - **`/fetch`** — process the URL queue in `inbox.md`. Run this before
   `/ingest` — ingest needs the raw files that fetch downloads.
