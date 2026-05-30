@@ -24,8 +24,6 @@ section.
 
 ## Protocol
 
-> **Windows:** replace `python3` with `python` in all commands below.
-
 ### 1. Resolve page
 
 Read `wiki/pages/<slug>.md`. Confirm with the user: show the page title and the
@@ -36,9 +34,10 @@ sources listed in its `## Sources` section.
 For each source cited in `## Sources`:
 
 1. Read `wiki/sources/<slug>.md` to find `source_path` and `fetch_method`.
-2. Count files this operation will touch: the page file + each source file read.
-   If the total exceeds **15 files** — stop and report the fanout. Let the user
-   pick which sources to expand from in this pass.
+2. Count files this operation will touch: the page file + each source file read
+   + `wiki/index.md` + `wiki/log.md` (always written in step 6). If the total
+   exceeds **15 files** — stop and report the fanout. Let the user pick which
+   sources to expand from in this pass.
 
 ### 3. Read sources in full
 
@@ -64,7 +63,8 @@ sections must remain exactly as they are.
 
 If `## Deep dive` does not exist in the page, append it below `## Sources`.
 If `## Deep dive` already exists (from a previous `/expand` run), replace its
-content in place — do not create a duplicate section.
+content in place — do not create a duplicate section. Treat any existing
+`## Deep dive` as the full content to replace, regardless of its current state.
 
 Add or update the `expanded` frontmatter key and bump `updated` to today:
 
@@ -75,8 +75,8 @@ updated: YYYY-MM-DD
 
 ### 6. Bookkeeping
 
-- `wiki/index.md`: update the page's entry — append ` (expanded)` after the page
-  title to mark it as having a Deep dive section.
+- `wiki/index.md`: update the page's entry — if ` (expanded)` is not already
+  present after the page title, append it to mark it as having a Deep dive section.
 - `wiki/log.md`: append one line:
   `## [YYYY-MM-DD] expand | <slug>`
 
@@ -99,8 +99,10 @@ views. No shareable-view interaction.
 
 `/expand` is **not available unattended**. The operation involves a full-source read
 (potentially high token cost) and a prose rewrite that requires user review of the
-draft. If invoked unattended, refuse with a clear message and suggest running the
-command interactively.
+draft. If invoked unattended, refuse immediately with this message:
+
+> `/expand` requires interactive mode — the draft review (step 4) cannot proceed
+> unattended. Run it in an active session.
 
 ## What /expand does NOT do
 
