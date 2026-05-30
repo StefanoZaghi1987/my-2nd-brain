@@ -4,11 +4,16 @@ title: Correctness fixes + documentation restructure (single-source-of-truth)
 status: To Do
 assignee: []
 created_date: '2026-05-30 23:33'
+updated_date: '2026-05-30 23:41'
 labels:
   - documentation
   - correctness
   - installer
+milestone: m-6
 dependencies: []
+references:
+  - features/specs/2026-05-31-llm-wiki-correctness-docs-design.md
+  - features/plans/2026-05-31-llm-wiki-correctness-docs-plan.md
 documentation:
   - features/specs/2026-05-31-llm-wiki-correctness-docs-design.md
   - features/plans/2026-05-31-llm-wiki-correctness-docs-plan.md

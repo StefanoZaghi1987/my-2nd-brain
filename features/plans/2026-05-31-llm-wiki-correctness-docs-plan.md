@@ -10,6 +10,43 @@
 
 ---
 
+## Start here (fresh-conversation setup)
+
+```bash
+# 1. Navigate to the repo (Windows path)
+cd D:\my-2nd-brain
+
+# 2. Confirm you're on the correct branch
+git checkout feat-hotfix
+git status   # should be clean; recent commits include the spec + plan
+```
+
+**How to execute doc edits:** All markdown edits use the `Edit` tool with `old_string` / `new_string`. **You must read the file with the `Read` tool before calling `Edit`** — Edit fails without a prior read. Line numbers in this plan are hints to help you find the section; the `old_string` is what you match exactly. If an old_string doesn't match (e.g. a prior task in the same file already changed something nearby), re-read the file and adjust the surrounding context in your `old_string`.
+
+**Task ordering is important.** Tasks 3a and 3b both edit `CLAUDE.md`; run 3a first. Tasks 4a and 4b both edit `GETTING-STARTED.md`; run 4a first. Do not skip tasks or run them out of order.
+
+---
+
+## Backlog task execution map
+
+Each Backlog subtask maps to specific plan steps. Execute subtasks **in ordinal order**; each produces one commit.
+
+| Backlog task | Plan section(s) to execute | Commit covers |
+|---|---|---|
+| **task-0099.01** | Task 1 (all steps) | vault.config.yml + vault_state.py _DEFAULTS |
+| **task-0099.02a** | Task 2 Steps 1–2 (write failing tests only) | tests/test_installer.py (TestAutoDiscover class) |
+| **task-0099.02b** | Task 2 Steps 3–7 (implement + verify) | init_vault.py (_discover_scripts + install_skills rewrite) |
+| **task-0099.03a** | Task 3a Steps **2, 4, 5** (B1 invariants + FORGET/MERGE cross-ref fixes) | CLAUDE.md invariants section |
+| **task-0099.03b** | Task 3a Steps **1, 3, 6, 7, 8, 9, 10** (all mechanical CLAUDE.md fixes) | CLAUDE.md mechanical fixes |
+| **task-0099.04a** | Task 4 Steps 1–3 (heading renames + reconciliation) | GETTING-STARTED.md heading restructure |
+| **task-0099.04b** | Task 4 Steps 4–8 (command list + rules narrative) | GETTING-STARTED.md content restructure |
+| **task-0099.05** | Task 5 (all steps) | README.md restructure |
+| **task-0099.06** | Tasks 6 + 7 (banner fix + final verification) | init_vault.py banner + all tests green |
+
+**Step labels in Task 3a below refer to the original numbered steps.** Steps 2, 4, 5 belong to Backlog task 0099.03a. Steps 1, 3, 6, 7, 8, 9, 10 belong to Backlog task 0099.03b.
+
+---
+
 ## Repo orientation (read before starting)
 
 This repo is the **template/installer** — NOT a live vault. `init_vault.py` mints deployed vaults into `./second-brain-vault/` (gitignored). The source tree has no `raw/`, `wiki/`, or `inbox.md`.
@@ -300,14 +337,14 @@ Run all tests with: `python -m pytest tests/ -v` (from repo root `D:\my-2nd-brai
 
 ---
 
-## Task 3: All CLAUDE.md changes
+## Task 3a: CLAUDE.md — Tiered invariants + consequences (B1)
 
 **Files:**
 - Modify: `CLAUDE.md`
 
-**Covers:** A1 (session-start compass conditional), A4 (heading rename), B1 (tiered invariants), B3 (template note), B4 (dispatch table paths + tooling separator).
+**Covers:** B1 only — replace the invariants section with a tiered structure, then fix the two cross-references in FORGET and MERGE that cite the old numbered invariants.
 
-Do all edits in one pass on this file. Each step is one Edit call.
+**Read CLAUDE.md first** before any edits. Then apply Steps 1–4 in order.
 
 - [ ] **Step 1: Add template-vs-vault note at top of Vault structure section (B3)**
 
