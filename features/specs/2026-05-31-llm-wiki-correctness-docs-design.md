@@ -6,6 +6,47 @@
 
 ---
 
+## Codebase orientation (for fresh-conversation start)
+
+**Repo type:** Template/installer, NOT a live vault. `init_vault.py` mints deployed
+vaults into `./second-brain-vault/` (gitignored). This repo has no `raw/`, `wiki/`,
+or `inbox.md` — those appear only in deployed vaults.
+
+**Key files and exact locations:**
+
+| File | Purpose | Key section for this work |
+|---|---|---|
+| `init_vault.py` | Cross-platform vault bootstrapper | `install_skills()` lines 338–382; `print_done()` line 472 |
+| `skills/shared/vault_state.py` | Config loader + `_DEFAULTS` | `_DEFAULTS` dict lines 42–75 |
+| `vault.config.yml` | Per-vault config template | `ingest:` block lines 38–40 (end of file) |
+| `tests/test_installer.py` | Installer tests (currently 4 simple path assertions) | — |
+| `CLAUDE.md` | Agent contract (442 lines) | `## Six invariants` line 42; `## Twelve operations` line 144; `## Session start` line 350; `## Skill dispatch` table line 317; Backlog block line 414 |
+| `GETTING-STARTED.md` | Human onboarding (260 lines) | `## Twelve operations` line 75; `## Sixteen slash commands` line 97; `## Six rules` line 206 |
+| `README.md` | GitHub landing / install (212 lines) | `## Design principles` line 127; Quick start ends line 110 |
+
+**Convention check — `_DEFAULTS` vs LLM-layer-only keys:**
+`vault_state.py::_DEFAULTS` includes ALL config sections including `ingest:` and
+lint's LLM-layer-only keys. This confirms: `review:` must be added to `_DEFAULTS`
+(not config-only) to match the existing convention.
+
+**`install_skills` current structure (lines 338–382 verbatim sketch):**
+```python
+for skill_name, py_scripts in [
+    ("inbox-fetcher", ["scripts/fetch_inbox.py", "scripts/adopt_drop.py"]),
+    ("vault-linter",  ["scripts/lint.py"]),
+    ("view-builder",  []),
+]:
+    ...copy SKILL.md + iterate py_scripts...
+
+_SHARED_SCRIPTS = ["vault_state.py", "yamlmini.py", "console.py",
+                   "review_scope.py", "find_backlinks.py", "linkutil.py"]
+for _script in _SHARED_SCRIPTS:
+    ...copy each to shared/...
+```
+The hardcoded lists are what must be replaced with auto-discovery.
+
+---
+
 ## Background
 
 A full audit of the engine (3 parallel exploration passes) confirmed: 98 completed
