@@ -95,6 +95,52 @@ update it. When `shareable: false` (default), the view evolves.
 
 ---
 
+## Page & source structure
+
+Every `wiki/sources/<slug>.md` and `wiki/pages/<slug>.md` body follows an adaptive
+structure — cover a section only when the source actually supports it; skip rather
+than pad with "none discussed."
+
+**`wiki/sources/<slug>.md`** body (after frontmatter):
+
+    <One-line capsule: author, venue, type, date.>
+
+    ## Summary
+    2–5 paragraphs covering the core argument or contribution, in your own words.
+    If a `note` directive was supplied, address it explicitly here — not just
+    acknowledge it.
+
+    ## Key points
+    - <Substantive claim — must be traceable to the raw source>
+    - <…>
+
+    ## Connections
+    - [[wiki/pages/<concept>]] — <one phrase: how this source relates>
+
+**`wiki/pages/<slug>.md`** body (after frontmatter):
+
+    <One-line definition of the concept.>
+
+    ## Overview
+    3–6 sentences: what it is, why it matters, key variants.
+    This section is what incoming links resolve to — keep it scannable.
+
+    ## Key dimensions
+    One H3 (###) subsection per facet the available sources support.
+    Each facet: 1–3 sentences + inline citation to [[wiki/sources/slug]].
+
+    ## Connections
+    - [[wiki/pages/<related>]] — <relationship in one phrase>
+
+    ## Sources
+    - [[wiki/sources/<slug>]] — <one phrase: what this source contributes>
+
+    ## Deep dive
+    Added only by /expand. Absent on standard ingested pages.
+    Full treatment: methodology, evidence, nuance, limitations.
+
+---
+
 ## Eleven operations
 
 ### FETCH
