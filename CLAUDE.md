@@ -127,7 +127,7 @@ than pad with "none discussed."
 
     ## Key dimensions
     One H3 (###) subsection per facet the available sources support.
-    Each facet: 1–3 sentences + inline citation to [[wiki/sources/slug]].
+    Each facet: 1–3 sentences + inline citation to [[wiki/sources/<slug>]].
 
     ## Connections
     - [[wiki/pages/<related>]] — <relationship in one phrase>
