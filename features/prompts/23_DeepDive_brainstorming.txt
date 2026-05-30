@@ -1,0 +1,6 @@
+/brainstorming
+You are an expert about knowledge base organization and maintenance.
+Deep dive, analyze and understand this LLM Wiki implementation, based on Andrej Karpathy's LLM Wiki (https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) idea.
+Identify, group and explain me any single feature and implemented workflow. Identify (if existing) broken or missing implementations and missing features.
+Analyze CLAUDE.md, README.md and GETTING-STARTED.md documentation files: verify if their structure is complete, clear and understandable. Evaluate, if needed, how to improve their structure and content.
+After that, let's talk about this to define specifications needed to improve the actual implementation.
