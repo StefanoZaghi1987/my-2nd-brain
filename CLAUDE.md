@@ -141,7 +141,7 @@ than pad with "none discussed."
 
 ---
 
-## Eleven operations
+## Twelve operations
 
 ### FETCH
 User says "process inbox" → run `inbox-fetcher` skill, which pulls
@@ -286,6 +286,14 @@ re-fetch a source and re-ingest it, preserving the citation graph. Flags pages
 that cite the source with `needs-review` frontmatter tag. See `.claude/commands/refresh.md`
 for the full protocol.
 
+### EXPAND
+User says "expand this page", "deepen page X", or runs `/expand <page>` →
+read the cited source(s) in full and append a `## Deep dive` section for
+comprehensive treatment. Leaves `## Overview` and `## Key dimensions` intact —
+they remain the link target. See `.claude/commands/expand.md` for the full protocol.
+
+Not available unattended.
+
 ### MERGE
 User says "merge these pages", "these are duplicates", "split this page", or
 runs `/merge <page-A> <page-B>` or `/split <page> <new-page-A> <new-page-B>` →
@@ -308,6 +316,7 @@ Not available unattended.
 | REFLECT   | (LLM only)     | —                              |
 | PROMOTE   | (LLM only)     | —                              |
 | REFRESH   | (LLM only)     | —                              |
+| EXPAND    | (LLM only)     | —                              |
 | FORGET    | (LLM only)     | —                              |
 | REVIEW    | (LLM only)     | —                              |
 | MERGE     | (LLM only)     | find_backlinks.py              |
@@ -319,7 +328,7 @@ Not available unattended.
 
 After any session in which `wiki/` was written to, run `/hot` before the
 final response. "Written to" means any ingest, promote, view, reflect, review,
-forget, refresh, or merge that produced file changes — not queries.
+forget, refresh, expand, or merge that produced file changes — not queries.
 
 `/hot` replaces the entire file. `wiki/log.md` is the append-only record;
 `wiki/hot.md` is the current snapshot.
@@ -350,7 +359,7 @@ You CAN: read anything, run LINT, run REFLECT, run REVIEW, update
 `wiki/compass.md`, `hot.md`, `log.md`, `.lint/report.md`,
 `.review/report.md`, `.review/state.yaml`.
 
-You CANNOT: merge or split pages, ingest, forget, create views, modify `wiki/pages/`,
+You CANNOT: merge or split pages, expand, ingest, forget, create views, modify `wiki/pages/`,
 delete anything from `raw/` or `wiki/sources/`, apply any structural
 change. Proposals stay as proposals until the user confirms
 interactively.
@@ -367,6 +376,7 @@ interactively.
 - `/forget <source>` — cascade-remove a source (see FORGET above)
 - `/promote [slug] [page]` — promote conversation insights to a wiki page
 - `/refresh <source>` — re-fetch and re-ingest a changed source
+- `/expand <page>` — deepen an existing page from the full source (see EXPAND above)
 - `/fetch` — process the URL queue in inbox.md (see FETCH above)
 - `/retry` — re-attempt only previously-failed (⚠-marked) inbox entries
 - `/review [scope]` — semantic health pass: contradictions, faithfulness, quality (see REVIEW above)
