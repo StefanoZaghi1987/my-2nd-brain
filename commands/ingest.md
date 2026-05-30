@@ -69,8 +69,9 @@ to avoid proposing duplicates mid-session.
 Source: `raw/web/<slug>/index.md` (no `fetch_method` field, or `fetch_method: html`).
 
 1. Read `index.md` — get `source_url`, `title`, `tags`, `note`.
-2. **Map (cheap skim):** Read the article body and extract all section headings
-   (H2–H4) plus the opening and closing paragraphs.
+2. **Map:** Read the article body. Extract all section headings (H2–H4) and the
+   opening and closing paragraphs to identify candidate concepts — the full body
+   is already in context for step 4.
 3. **Propose concept list:** Present the proposed `wiki/pages/` entries to the
    user: "These N concepts → pages? [list]." Wait for the user to approve, add,
    or remove concepts before proceeding.
@@ -103,7 +104,7 @@ Source: `raw/papers/<slug>/index.md` with `fetch_method: pdf`, **or**
 5. **Read backing sections:** For each approved concept, read the specific pages
    or sections from `paper.pdf` that support it.
 6. Write `wiki/sources/<slug>.md` and the concept pages following the page &
-   source structure schema.
+   source structure schema (see "Page & source structure" in CLAUDE.md).
    - For `fetch_method: pdf`: include `source_path: raw/papers/<slug>/` and
      `fetch_method: pdf` in the wiki source frontmatter.
    - For `fetch_method: local-pdf`: include `source_path: raw/local/<slug>/` and
@@ -128,7 +129,7 @@ Source: `raw/local/<slug>/index.md` with `fetch_method: local-md`.
    sections in `content.md` that support it (file is already in context —
    no additional reads).
 7. Write `wiki/sources/<slug>.md` and the concept pages following the page &
-   source structure schema:
+   source structure schema (see "Page & source structure" in CLAUDE.md):
    - Include `source_url` only if present in `index.md`.
    - `source_path: raw/local/<slug>/`
    - `fetch_method: local-md`
@@ -136,7 +137,7 @@ Source: `raw/local/<slug>/index.md` with `fetch_method: local-md`.
 
 ## Guards
 
-- **Concept-list confirmation.** The map-then-read protocol (steps 2–4 above) presents
+- **Concept-list confirmation.** The map-then-read protocol (map → propose → backing-read) presents
   the full proposed concept list to the user before any writes. The user's approval of
   that list is the gate — there is no hard cap on the number of concepts created per
   ingest, provided the user explicitly approves the list.
