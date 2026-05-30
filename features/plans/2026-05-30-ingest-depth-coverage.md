@@ -8,6 +8,8 @@
 
 **Tech Stack:** Markdown prose. Verification via `skills/vault-linter/scripts/lint.py` on a scratch vault.
 
+**Status:** ✅ COMPLETE — branch `feat-deepdive`, 2026-05-31. All tasks implemented and reviewed. Awaiting squash-merge to `main`.
+
 **Spec:** `features/specs/2026-05-30-ingest-depth-coverage-design.md`
 
 ---
