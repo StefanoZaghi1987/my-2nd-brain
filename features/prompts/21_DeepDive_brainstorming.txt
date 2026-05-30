@@ -1,0 +1,45 @@
+/brainstorming
+You are an expert about knowledge base organization and maintenance.
+Deep dive, analyze and understand this LLM Wiki implementation, based on Andrej Karpathy's LLM Wiki (https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) idea.
+
+When documents are ingested, a summary is generated for each one, which becomes part of the wiki. The summarized concepts are connected to each other via Markdown links and wiki-links.
+The resulting summary often seems too much concise, and not all relevant concepts seem to be covered.
+How can I make the explanation and the analysis of relevant concepts and relevant documents more comprehensive and in-depth?
+Besides running a query and listing "best practices queries" and "best query results" inside the wiki, what are the possible solutions? What approaches do you recommend?
+
+Here are some of mine ideas and evaluated approachs.
+Analyze all the followings, identify and evaluate other alternative solutions, if existing, and give me some advices.
+Then help me to identify and implement the best and more general solution(s).
+
+1. Improve documents ingest prompt
+Improve CLAUDE.md and / or the /ingest command in order to increase generated wiki pages level of depth.
+
+2. Add new ingest commands
+Add new ingest commands, each of which implies the generation of wiki pages with a specific level of depth and detail.
+
+3. Define wiki pages structure and format
+Instead of asking for "summarize", require to generate wiki pages adopting a specific structure and a specific format.
+
+4. Introduce a new command to increase the level of depth of already existing wiki pages
+Introduce a new command, something like /expand <page>, which takes an existing wiki page + the original raw document and rewrites it in depth.
+
+5. Multi-pass ingestion workflow (shallow → deep) and two-tier wiki pages (summary + deep dive)
+Create an advanced ingestion flow with two distinct phases:
+Pass 1 — /ingest standard (required step): generates the summary page as it is now, quickly.
+Pass 2 — /expand <page> (optional step): a dedicated command that takes the existing page + the original raw document and rewrites it in depth.
+This logic can be used to generate, when necessary, both a summarized version of each document, plus a more detailed explanation.
+Wiki pages can be organized by adopting the following structural convention:
+wiki/pages/
+	rag-retrieval.md 		← overview, ~300 words, links to ↓
+	rag-retrieval.deep.md 	← in-depth treatment
+Adopting this logic, .deep.md pages are generated only upon explicit request (/expand), but become the destination of links when you want depth.
+This approach would allow to maintain the navigability of the overview without sacrificing detail.
+
+6. Enrichment from multiple sources on the same concept
+A single document on a concept will always provide a partial view.
+The most powerful approach in an LLM Wiki is cross-source synthesis with /merge command: when you add a second or third source on the same topic, you create a summary page.
+The summary page is the densest because it compares different perspectives, highlights convergences and divergences, and produces insights that no single source contains.
+This approach could be formalized inside /merge command.
+
+7. Use the /review command as a tool for further analysis
+Use /review systematically not only to correct errors but also as a refinement cycle.

@@ -148,7 +148,7 @@ For all pages in scope, flag summaries that are:
 9. Suggest next actions based on findings:
    - Contradictions → "consider `/merge` to reconcile, or edit the claims manually"
    - Faithfulness failures → "consider `/refresh <source>` or editing the claim"
-   - Summary quality → "consider expanding the summary or adding cross-links"
+   - Summary quality (thin) → "consider `/expand <page>` to deepen from the full source, or add cross-links"
 
 ## Unattended mode
 

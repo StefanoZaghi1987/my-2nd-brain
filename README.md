@@ -34,6 +34,7 @@ vault-bundle/
 │   ├── lint.md               /lint
 │   ├── promote.md            /promote
 │   ├── refresh.md            /refresh
+│   ├── expand.md             /expand
 │   ├── retry.md              /retry
 │   ├── ingest.md             /ingest
 │   ├── fetch.md              /fetch

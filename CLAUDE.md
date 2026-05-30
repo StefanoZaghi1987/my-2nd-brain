@@ -95,7 +95,53 @@ update it. When `shareable: false` (default), the view evolves.
 
 ---
 
-## Eleven operations
+## Page & source structure
+
+Every `wiki/sources/<slug>.md` and `wiki/pages/<slug>.md` body follows an adaptive
+structure — cover a section only when the source actually supports it; skip rather
+than pad with "none discussed."
+
+**`wiki/sources/<slug>.md`** body (after frontmatter):
+
+    <One-line capsule: author, venue, type, date.>
+
+    ## Summary
+    2–5 paragraphs covering the core argument or contribution, in your own words.
+    If a `note` directive was supplied, address it explicitly here — not just
+    acknowledge it.
+
+    ## Key points
+    - <Substantive claim — must be traceable to the raw source>
+    - <…>
+
+    ## Connections
+    - [[wiki/pages/<concept>]] — <one phrase: how this source relates>
+
+**`wiki/pages/<slug>.md`** body (after frontmatter):
+
+    <One-line definition of the concept.>
+
+    ## Overview
+    3–6 sentences: what it is, why it matters, key variants.
+    This section is what incoming links resolve to — keep it scannable.
+
+    ## Key dimensions
+    One H3 (###) subsection per facet the available sources support.
+    Each facet: 1–3 sentences + inline citation to [[wiki/sources/<slug>]].
+
+    ## Connections
+    - [[wiki/pages/<related>]] — <relationship in one phrase>
+
+    ## Sources
+    - [[wiki/sources/<slug>]] — <one phrase: what this source contributes>
+
+    ## Deep dive
+    Added only by /expand. Absent on standard ingested pages.
+    Full treatment: methodology, evidence, nuance, limitations.
+
+---
+
+## Twelve operations
 
 ### FETCH
 User says "process inbox" → run `inbox-fetcher` skill, which pulls
@@ -105,36 +151,46 @@ URLs from `inbox.md` and writes to `raw/web/<slug>/`. Mark URLs done.
 User says "ingest X" → read the new `raw/` content, write or update:
 - `wiki/sources/<slug>.md` with summary and links
 - any `wiki/pages/...` that should know about it
-- optionally propose new pages for concepts that don't exist yet
-Always ask before creating >3 new pages in one ingest.
+- propose new pages for concepts found during the map step
+
+Use the map-then-read protocol: skim the full structure first, present
+the complete concept list, wait for user approval, then read only the
+backing sections. Full protocol in `.claude/commands/ingest.md`.
 
 ### INGEST — source type branches
 
 **Web articles** (`raw/web/<slug>/index.md`, no `fetch_method` field or `fetch_method: html`):
-Read `index.md`. Write `wiki/sources/<slug>.md` with the full summary.
+Read `index.md`. **Map** (read body, extract H2–H4 headings + opening/closing paragraphs) →
+**propose concept list** (wait for user approval) → **read backing sections** per approved
+concept → write source and pages using the page & source structure schema.
 
 **PDFs** (`raw/papers/<slug>/index.md` with `fetch_method: pdf`):
 1. Read `index.md` to get `source_url`, `title`, `tags`, `note`.
-2. Read `paper.pdf` using the Read tool — pages 1–5 (abstract and introduction).
-   If the paper has more than 10 pages, also read the last 2 pages (conclusion).
-3. Infer the title from the first visible heading; fall back to the slug.
-4. Write `wiki/sources/<slug>.md` with the same schema as web sources,
-   plus `fetch_method: pdf` in the frontmatter.
+2. **Map:** scan `paper.pdf` for all H-level headings throughout the entire document
+   (no page cap), plus abstract and conclusions. Infer title from first heading.
+3. **Propose concept list** (wait for user approval).
+4. **Read backing sections** per approved concept.
+5. Write `wiki/sources/<slug>.md` and concept pages using the page & source structure schema,
+   plus `fetch_method: pdf` and `source_path: raw/papers/<slug>/` in the frontmatter.
 
 **Local PDFs** (`raw/local/<slug>/index.md` with `fetch_method: local-pdf`):
 1. Read `index.md` — get `title`, `tags`, `note`. There is no `source_url`.
-2. Read `paper.pdf` pages 1–5 (same as URL-fetched PDFs).
-3. Write `wiki/sources/<slug>.md` — omit the `source_url` field entirely.
+2. **Map:** same as URL-fetched PDFs — full heading scan (no page cap) + abstract + conclusions.
+3. **Propose concept list** (wait for user approval).
+4. **Read backing sections** per approved concept.
+5. Write `wiki/sources/<slug>.md` — omit `source_url` entirely.
    Use `source_path: raw/local/<slug>/` and `fetch_method: local-pdf` in frontmatter.
-4. Carry `tags` and `note` as with other source types.
+6. Carry `tags` and `note` as with other source types.
 
 **Local Markdown files** (`raw/local/<slug>/index.md` with `fetch_method: local-md`):
 1. Read `index.md` — get `title`, `source_url` (if present), `tags`, `note`. There is no `source_url` if none was found at adoption time.
-2. Read `content.md` in full (plain text; no page limit).
-3. Infer real title from content if better than index.md title.
-4. Write `wiki/sources/<slug>.md` — omit `source_url` field if not present.
-   Use `source_path: raw/local/<slug>/` and `fetch_method: local-md` in frontmatter.
-5. Carry `tags` and `note` as with other source types.
+2. Read `content.md` in full (plain text; no page limit). Infer real title from content if better.
+3. **Map:** extract H2–H4 headings (already in context from step 2 — no extra reads).
+4. **Propose concept list** (wait for user approval).
+5. **Read backing sections** per approved concept (already in context — no extra reads).
+6. Write `wiki/sources/<slug>.md` and concept pages using the page & source structure schema.
+   Omit `source_url` if not present. Use `source_path: raw/local/<slug>/` and `fetch_method: local-md`.
+7. Carry `tags` and `note` as with other source types.
 
 **Tags and note propagation** (applies to all source types):
 After reading any raw source `index.md`:
@@ -240,6 +296,14 @@ re-fetch a source and re-ingest it, preserving the citation graph. Flags pages
 that cite the source with `needs-review` frontmatter tag. See `.claude/commands/refresh.md`
 for the full protocol.
 
+### EXPAND
+User says "expand this page", "deepen page X", or runs `/expand <page>` →
+read the cited source(s) in full and append a `## Deep dive` section for
+comprehensive treatment. Leaves `## Overview` and `## Key dimensions` intact —
+they remain the link target. See `.claude/commands/expand.md` for the full protocol.
+
+Not available unattended.
+
 ### MERGE
 User says "merge these pages", "these are duplicates", "split this page", or
 runs `/merge <page-A> <page-B>` or `/split <page> <new-page-A> <new-page-B>` →
@@ -262,6 +326,7 @@ Not available unattended.
 | REFLECT   | (LLM only)     | —                              |
 | PROMOTE   | (LLM only)     | —                              |
 | REFRESH   | (LLM only)     | —                              |
+| EXPAND    | (LLM only)     | —                              |
 | FORGET    | (LLM only)     | —                              |
 | REVIEW    | (LLM only)     | —                              |
 | MERGE     | (LLM only)     | find_backlinks.py              |
@@ -273,7 +338,7 @@ Not available unattended.
 
 After any session in which `wiki/` was written to, run `/hot` before the
 final response. "Written to" means any ingest, promote, view, reflect, review,
-forget, refresh, or merge that produced file changes — not queries.
+forget, refresh, expand, or merge that produced file changes — not queries.
 
 `/hot` replaces the entire file. `wiki/log.md` is the append-only record;
 `wiki/hot.md` is the current snapshot.
@@ -304,7 +369,7 @@ You CAN: read anything, run LINT, run REFLECT, run REVIEW, update
 `wiki/compass.md`, `hot.md`, `log.md`, `.lint/report.md`,
 `.review/report.md`, `.review/state.yaml`.
 
-You CANNOT: merge or split pages, ingest, forget, create views, modify `wiki/pages/`,
+You CANNOT: merge or split pages, expand, ingest, forget, create views, modify `wiki/pages/`,
 delete anything from `raw/` or `wiki/sources/`, apply any structural
 change. Proposals stay as proposals until the user confirms
 interactively.
@@ -321,6 +386,7 @@ interactively.
 - `/forget <source>` — cascade-remove a source (see FORGET above)
 - `/promote [slug] [page]` — promote conversation insights to a wiki page
 - `/refresh <source>` — re-fetch and re-ingest a changed source
+- `/expand <page>` — deepen an existing page from the full source (see EXPAND above)
 - `/fetch` — process the URL queue in inbox.md (see FETCH above)
 - `/retry` — re-attempt only previously-failed (⚠-marked) inbox entries
 - `/review [scope]` — semantic health pass: contradictions, faithfulness, quality (see REVIEW above)

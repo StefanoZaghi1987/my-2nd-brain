@@ -72,9 +72,9 @@ Views come in two flavors:
 
 ---
 
-## Eleven operations
+## Twelve operations
 
-The agent knows how to do eleven things. You trigger them in plain
+The agent knows how to do twelve things. You trigger them in plain
 language or with a slash command.
 
 | # | Operation | How to trigger | What happens |
@@ -90,10 +90,11 @@ language or with a slash command.
 | 9 | **PROMOTE** | `/promote [slug] [page]` or *"promote this conversation"* | Synthesis claims from a saved conversation → wiki pages |
 | 10 | **REFRESH** | `/refresh <source>` or *"the article changed"* | Re-fetch a changed source, re-ingest, flag affected pages |
 | 11 | **MERGE** | `/merge <page-A> <page-B>` or *"merge these pages"* / `/split <page> <a> <b>` or *"split this page"* | Resolve near-duplicate pages: merge two into one canonical page with full backlink rewriting, or split an overgrown page into two. Interactive only; never available unattended |
+| 12 | **EXPAND** | `/expand <page>` or *"expand this page"* | Read cited source(s) in full and append a `## Deep dive` section to the page for in-depth treatment. Overview sections remain unchanged. Interactive only; never available unattended |
 
 ---
 
-## Fifteen slash commands
+## Sixteen slash commands
 
 - **`/fetch`** — process the URL queue in `inbox.md`. Run this before
   `/ingest` — ingest needs the raw files that fetch downloads.
@@ -121,6 +122,10 @@ language or with a slash command.
   conversation into a wiki page, with full citation. Interactive only.
 - **`/refresh <source>`** — re-fetch a source whose content has
   changed, re-ingest it, and flag pages that may need review.
+- **`/expand <page>`** — deepen an existing page by reading its cited
+  source(s) in full and appending a `## Deep dive` section. Leaves
+  the overview sections intact. Interactive only. Use `/review` to
+  discover which pages are thin enough to benefit.
 - **`/review [scope]`** — semantic health pass: checks for
   contradictions between pages, claims that don't trace to their
   source, and thin/copied summaries. Report-only (proposes fixes,
