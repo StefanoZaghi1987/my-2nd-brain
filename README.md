@@ -110,6 +110,22 @@ maintain and both entry points stay in sync automatically.
 
 ---
 
+## This repo is the template, not a vault
+
+Cloning this repo gives you the **engine**. Live content — `raw/`, `wiki/`,
+`inbox.md` — exists only in a *deployed vault* created by `init_vault.py`
+(default target: `./second-brain-vault/`, gitignored).
+
+The `.claude/...` paths that appear throughout `CLAUDE.md` (e.g.
+`.claude/commands/ingest.md`, `.claude/skills/vault-linter/`) refer to the
+deployed vault layout after `init_vault.py` installs commands and skills
+there — not to this template repository.
+
+`AGENTS.md` is generated at bootstrap as a copy of (or symlink to) `CLAUDE.md`.
+It is not committed to this repo.
+
+---
+
 ## The core idea, in one paragraph
 
 A directory `raw/` with immutable sources. An agent that compiles
@@ -125,17 +141,14 @@ question can draw on.
 
 ## Design principles
 
-Six invariants:
+The vault is governed by a small set of rules the agent follows strictly.
+Hard invariants are integrity guarantees (raw is immutable, every claim
+cites a source, summaries are paraphrased). Operating rules cover how the
+agent works (you curate, it maintains; ≤15 files per operation; `wiki/index.md`
+and `wiki/log.md` updated after every write; `shareable: true` views are frozen).
 
-1. **Raw is immutable.** If the wiki is corrupted, it's recompilable
-   from `raw/` alone. Scripts (`fetch_inbox.py`, `adopt_drop.py`) write
-   to `raw/` — the agent doesn't.
-2. **Every claim cites a source.** No orphan claims in the wiki.
-3. **Paraphrase, don't copy.** Summaries are in the agent's words.
-4. **You curate, the agent maintains.** No auto-fetching, no
-   auto-structural changes, no views without your request.
-5. **`shareable: true` views are frozen.** Anything else evolves.
-6. **Touch ≤15 files per operation.** If more are needed, stop and ask — split the work across sessions.
+The authoritative set — with operating rules distinguished from hard invariants —
+is in [CLAUDE.md — Invariants and operating rules](CLAUDE.md#invariants-and-operating-rules).
 
 ---
 
