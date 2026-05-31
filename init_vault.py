@@ -481,7 +481,7 @@ def print_done(vault: Path) -> None:
     print( "  4. Ask: \"process the inbox\", then \"ingest the new content\"")
     print( "  5. Use /view to build timelines/comparisons/slides")
     print( "  6. Use /save for important conversations")
-    print( "  7. Periodically: /reflect → read wiki/compass.md")
+    print( "  7. Periodically: run /reflect to track your thinking and write wiki/compass.md")
     print(f"  (Manual scripts: {py_cmd} .claude/skills/<skill>/scripts/<script>.py)")
     print()
 
