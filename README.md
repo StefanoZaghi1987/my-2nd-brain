@@ -18,7 +18,7 @@ agent that reads `CLAUDE.md` or `AGENTS.md`.
 vault-bundle/
 ├── init-vault.sh         bootstrap script — Unix/macOS/WSL
 ├── init_vault.py         bootstrap script — cross-platform (Linux, WSL, Windows)
-├── vault.config.yml      per-vault tunable settings (timeouts, walled domains, lint thresholds)
+├── vault.config.yml      per-vault tunable settings (timeouts, walled domains, lint/review thresholds)
 ├── CLAUDE.md             the contract between you and the agent
 ├── GETTING-STARTED.md    10-minute walkthrough for newcomers
 ├── README.md             this file
@@ -86,9 +86,8 @@ python3 init_vault.py ~/knowledge/X    # Windows / cross-platform (canonical pat
 
 What happens on re-run:
 
-- **Always refreshed** — `skills/`, `commands/`, and shared utilities
-  (`vault_state.py`, `yamlmini.py`, `console.py`, `review_scope.py`,
-  `find_backlinks.py`, `linkutil.py` under `skills/shared/`).
+- **Always refreshed** — `skills/`, `commands/`, and all shared utilities
+  under `skills/shared/` (auto-discovered — any `.py` or `.sh` there is installed).
   This is the whole point of the update: new operations, fixes, and
   slash commands land in the vault.
 - **Prompts you** — `CLAUDE.md`. Default is *keep* (answer `y` to
@@ -97,7 +96,8 @@ What happens on re-run:
 - **Created only if missing** — `vault.config.yml`, `inbox.md`,
   `wiki/index.md`, `wiki/log.md`, `wiki/hot.md`, `.lint/state.yaml`,
   `.review/state.yaml`, `.gitignore`. Edit `vault.config.yml` to
-  customise timeouts, walled domains, and lint thresholds. List values
+  customise timeouts, walled domains, lint thresholds, and review depth
+  (`review.max_faithfulness_pages`). List values
   support both inline (`[a, b, c]`) and block-list (`- item` per line)
   syntax.
 - **Never touched** — `raw/`, `wiki/pages/`, `wiki/sources/`,

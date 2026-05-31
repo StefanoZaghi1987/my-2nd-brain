@@ -283,7 +283,10 @@ protocol with scoping options and output format.
 
 Cost note: Check B reads source files and should be scoped to avoid excessive
 token spend. Default scope covers only pages changed since the last review.
-`/review --all` is available but requires user confirmation.
+`/review --all` is available but requires user confirmation. The number of
+pages subject to the faithfulness check is capped by `review.max_faithfulness_pages`
+in `vault.config.yml` (default: 10); raise it for thorough audits, lower it to
+reduce token spend.
 
 REVIEW has no auto-trigger. Unlike LINT, it consumes LLM tokens and must be
 invoked explicitly. There is no `fetches_since_last_review` counter.
