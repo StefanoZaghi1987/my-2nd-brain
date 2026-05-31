@@ -39,7 +39,11 @@ them, plus `compass.md`, `hot.md`, `index.md`, `log.md`.
 
 ---
 
-## Six invariants — never break these
+## Invariants and operating rules
+
+### Hard invariants — never break these
+
+These are integrity guarantees. Violating them corrupts the vault's truthfulness.
 
 1. **Never write to `raw/`.** Only scripts add files there: `fetch_inbox.py`
    writes to `raw/papers/` and `raw/web/`; `adopt_drop.py` writes to
@@ -49,13 +53,21 @@ them, plus `compass.md`, `hot.md`, `index.md`, `log.md`.
 2. **Every claim cites a source.** Either a wiki page link `[[wiki/...]]`
    or a `raw/` path. No orphan claims.
 3. **Paraphrase, don't copy.** Summaries must be in your own words.
-4. **User curates, you maintain.** No auto-ingesting new sources, no
-   auto-applying structural changes, no creating views without asking.
-5. **Touch ≤15 files per operation.** If more are needed, tell the user
-   and let them choose what matters.
-6. **Update `wiki/index.md` and `wiki/log.md`** after any writing operation —
-   add new source/page/view entries to `wiki/index.md`; append an operation line
-   to `wiki/log.md`.
+
+### Operating rules
+
+These govern how the agent works. They are firm defaults, not absolute
+constraints — deviating requires an explicit user instruction.
+
+- **User curates, agent maintains.** No auto-ingesting new sources, no
+  auto-applying structural changes, no creating views without asking.
+- **Touch ≤15 files per operation.** If more are needed, tell the user
+  and let them choose what matters.
+- **Update `wiki/index.md` and `wiki/log.md`** after any writing operation —
+  add new source/page/view entries to `wiki/index.md`; append an operation line
+  to `wiki/log.md`.
+- **`shareable: true` views are frozen.** Don't silently update a frozen view.
+  When `shareable: false` (default), the view evolves in place.
 
 ---
 
@@ -222,10 +234,10 @@ cascade-remove a source and everything that depended only on it.
 
    This is the one case where writing to `raw/` (as deletion) is allowed —
    invariant #1 covers creation, not user-directed removal.
-6. Update `wiki/index.md` and `wiki/log.md` (invariant #6).
+6. Update `wiki/index.md` and `wiki/log.md` (operating rule: update after writes).
 7. Run `vault-linter` to confirm zero dead links remain.
 
-If the source is cited by >15 files, the cascade exceeds invariant #5
+If the source is cited by >15 files, the cascade exceeds the 15-file operating rule
 — stop, report the fanout, let the user pick scope (full cascade over
 multiple passes, or leave citations dangling for the linter).
 
@@ -309,8 +321,8 @@ User says "merge these pages", "these are duplicates", "split this page", or
 runs `/merge <page-A> <page-B>` or `/split <page> <new-page-A> <new-page-B>` →
 resolve near-duplicate pages by merging them into a canonical page (or splitting
 an overgrown one), with full backlink rewriting. Guards: stops if fanout > 15
-files (Invariant #5); asks before deleting any prose; never silently touches
-`shareable: true` views. See `.claude/commands/merge.md` for MERGE. For SPLIT, see `.claude/commands/split.md`.
+files (15-file operating rule); asks before deleting any prose; never silently
+touches `shareable: true` views. See `.claude/commands/merge.md` for MERGE. For SPLIT, see `.claude/commands/split.md`.
 
 Not available unattended.
 
