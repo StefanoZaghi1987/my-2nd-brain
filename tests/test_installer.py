@@ -107,3 +107,13 @@ class TestAutoDiscover:
 
         excluded = target / ".claude" / "skills" / "inbox-fetcher" / "scripts" / "test_probe.py"
         assert not excluded.exists(), "test_probe.py was incorrectly installed"
+
+    def test_auto_discovers_sh_script(self, tmp_path):
+        """A new .sh file in scripts/ is installed (not just .py files)."""
+        bundle = self._minimal_bundle(tmp_path, extra_scripts=["_helper.sh"])
+        target = self._minimal_target(tmp_path)
+
+        init_vault.install_skills(target, bundle)
+
+        installed = target / ".claude" / "skills" / "inbox-fetcher" / "scripts" / "_helper.sh"
+        assert installed.exists(), "_helper.sh was not installed"
