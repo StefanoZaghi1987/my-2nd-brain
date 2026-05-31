@@ -114,17 +114,20 @@ Add a new `.py` under `skills/` without updating the list → silently omitted (
 only). This is the most likely future breakage point.
 
 **Fix:** Replace the hardcoded filename list with auto-discovery:
-- For each skill's `scripts/` dir and `skills/shared/`: copy every `.py` found.
-- **Defensive exclusions:** skip `__pycache__/`, `test_*.py`, `*_test.py`, and any
-  `.py` not directly under `scripts/` (i.e., no recursive sub-dir sweeping).
+- For each skill's `scripts/` dir and `skills/shared/`: copy every `.py` **or `.sh`** found.
+- **Defensive exclusions:** skip `__pycache__/`, `test_*.py`, `*_test.py`, `test_*.sh`,
+  `*_test.sh`, and any script not directly under `scripts/` (i.e., no recursive sub-dir sweeping).
 - Keep a `warn` if a skill has a `scripts/` dir but it's unexpectedly empty.
 - Preserve the existing target layout exactly.
+- Note: `init-vault.sh` is a thin shim that delegates to `init_vault.py "$@"` — it has
+  no install logic of its own and is automatically covered by this fix.
 
-**Test:** Add a fixture-based case in `tests/test_installer.py` that:
+**Test:** Add fixture-based cases in `tests/test_installer.py` that:
 1. Writes a dummy `skills/<skill>/scripts/_probe.py` into a temp skill dir.
 2. Runs `install_skills` against a temp target.
 3. Asserts `_probe.py` was installed at `.claude/skills/<skill>/scripts/_probe.py`.
 4. Also asserts a `test_something.py` sibling was NOT installed.
+5. Writes a dummy `_helper.sh` and asserts it IS installed (`.sh` coverage).
 
 **Files:** `init_vault.py` (`install_skills`), `tests/test_installer.py`
 

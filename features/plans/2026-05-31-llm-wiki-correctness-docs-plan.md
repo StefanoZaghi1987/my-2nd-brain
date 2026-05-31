@@ -156,7 +156,7 @@ Run all tests with: `python -m pytest tests/ -v` (from repo root `D:\my-2nd-brai
 - Modify: `init_vault.py`
 - Modify: `tests/test_installer.py`
 
-**Why:** `install_skills()` enumerates exact script filenames. Add a new `.py` under `skills/` without updating the list → silently omitted. Replace with auto-discovery that copies every `.py` directly under each skill's `scripts/` dir (excluding `test_*.py` and `*_test.py`).
+**Why:** `install_skills()` enumerates exact script filenames. Add a new `.py` or `.sh` under `skills/` without updating the list → silently omitted. Replace with auto-discovery that copies every `.py` and `.sh` directly under each skill's `scripts/` dir (excluding `test_*.py`, `*_test.py`, `test_*.sh`, `*_test.sh`). Note: `init-vault.sh` is a thin shim that delegates entirely to `init_vault.py "$@"` and is automatically covered.
 
 - [ ] **Step 1: Write the failing test (auto-discovery picks up new script)**
 
@@ -247,19 +247,19 @@ Run all tests with: `python -m pytest tests/ -v` (from repo root `D:\my-2nd-brai
   Insert the new helper function BEFORE `install_commands`:
   ```python
   def _discover_scripts(scripts_dir: Path) -> list[Path]:
-      """Return .py files directly in scripts_dir, excluding test files.
+      """Return .py and .sh files directly in scripts_dir, excluding test files.
   
       Only files at the top level of scripts_dir are included (no subdirs).
-      Excluded: test_*.py and *_test.py patterns.
+      Excluded: test_*.py, *_test.py, test_*.sh, *_test.sh patterns.
       """
       if not scripts_dir.is_dir():
           return []
       return sorted(
           f for f in scripts_dir.iterdir()
           if f.is_file()
-          and f.suffix == ".py"
+          and f.suffix in (".py", ".sh")
           and not f.name.startswith("test_")
-          and not f.name.endswith("_test.py")
+          and not (f.name.endswith("_test.py") or f.name.endswith("_test.sh"))
       )
   
   
@@ -285,7 +285,7 @@ Run all tests with: `python -m pytest tests/ -v` (from repo root `D:\my-2nd-brai
           if scripts_src.is_dir():
               py_files = _discover_scripts(scripts_src)
               if not py_files:
-                  warn(f"{skill_name}/scripts/ exists but has no installable .py files")
+                  warn(f"{skill_name}/scripts/ exists but has no installable scripts (.py/.sh)")
               for src_py in py_files:
                   dst_py = dst_dir / "scripts" / src_py.name
                   shutil.copy2(src_py, dst_py)
@@ -306,10 +306,26 @@ Run all tests with: `python -m pytest tests/ -v` (from repo root `D:\my-2nd-brai
       shared_dst = vault / ".claude" / "skills" / "shared"
       py_files = _discover_scripts(shared_src)
       if not py_files:
-          warn("skills/shared/ has no installable .py files")
+          warn("skills/shared/ has no installable scripts (.py/.sh)")
       for src_py in py_files:
           shutil.copy2(src_py, shared_dst / src_py.name)
           ok(f"shared: {src_py.name}")
+  ```
+
+- [ ] **Step 4b: Add `.sh` discovery test to `TestAutoDiscover` in `tests/test_installer.py`**
+
+  Add this test method to the existing `TestAutoDiscover` class (after `test_test_files_excluded`):
+
+  ```python
+      def test_auto_discovers_sh_script(self, tmp_path):
+          """A new .sh file in scripts/ is installed (not just .py files)."""
+          bundle = self._minimal_bundle(tmp_path, extra_scripts=["_helper.sh"])
+          target = self._minimal_target(tmp_path)
+
+          init_vault.install_skills(target, bundle)
+
+          installed = target / ".claude" / "skills" / "inbox-fetcher" / "scripts" / "_helper.sh"
+          assert installed.exists(), "_helper.sh was not installed"
   ```
 
 - [ ] **Step 5: Run all installer tests**
@@ -318,7 +334,7 @@ Run all tests with: `python -m pytest tests/ -v` (from repo root `D:\my-2nd-brai
   python -m pytest tests/test_installer.py -v
   ```
   
-  Expected: ALL 7 tests pass (4 original + 3 new). If any original test fails, investigate — the existing tests are `test_split_in_commands`, `test_split_md_exists`, `test_retry_in_commands`, `test_retry_md_exists` which test the `COMMANDS` list and source files, not `install_skills` — they should be unaffected.
+  Expected: ALL 8 tests pass (4 original + 3 from task .07 + 1 new `.sh` test). If any original test fails, investigate — the existing tests are `test_split_in_commands`, `test_split_md_exists`, `test_retry_in_commands`, `test_retry_md_exists` which test the `COMMANDS` list and source files, not `install_skills` — they should be unaffected.
 
 - [ ] **Step 6: Run the full test suite**
 
