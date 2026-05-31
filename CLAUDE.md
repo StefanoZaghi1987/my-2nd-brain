@@ -13,6 +13,9 @@ need to edit the wiki directly — that's your job.
 
 ## Vault structure
 
+> *Note: paths beginning with `.claude/` refer to the deployed vault layout after
+> `init_vault.py` installs commands and skills there — not to this template repository.*
+
 ```
 inbox.md              URL queue — user adds URLs, you fetch them
 raw/                  Immutable sources. Never write here.
@@ -39,7 +42,11 @@ them, plus `compass.md`, `hot.md`, `index.md`, `log.md`.
 
 ---
 
-## Six invariants — never break these
+## Invariants and operating rules
+
+### Hard invariants — never break these
+
+These are integrity guarantees. Violating them corrupts the vault's truthfulness.
 
 1. **Never write to `raw/`.** Only scripts add files there: `fetch_inbox.py`
    writes to `raw/papers/` and `raw/web/`; `adopt_drop.py` writes to
@@ -49,13 +56,21 @@ them, plus `compass.md`, `hot.md`, `index.md`, `log.md`.
 2. **Every claim cites a source.** Either a wiki page link `[[wiki/...]]`
    or a `raw/` path. No orphan claims.
 3. **Paraphrase, don't copy.** Summaries must be in your own words.
-4. **User curates, you maintain.** No auto-ingesting new sources, no
-   auto-applying structural changes, no creating views without asking.
-5. **Touch ≤15 files per operation.** If more are needed, tell the user
-   and let them choose what matters.
-6. **Update `wiki/index.md` and `wiki/log.md`** after any writing operation —
-   add new source/page/view entries to `wiki/index.md`; append an operation line
-   to `wiki/log.md`.
+
+### Operating rules
+
+These govern how the agent works. They are firm defaults, not absolute
+constraints — deviating requires an explicit user instruction.
+
+- **User curates, agent maintains.** No auto-ingesting new sources, no
+  auto-applying structural changes, no creating views without asking.
+- **Touch ≤15 files per operation.** If more are needed, tell the user
+  and let them choose what matters.
+- **Update `wiki/index.md` and `wiki/log.md`** after any writing operation —
+  add new source/page/view entries to `wiki/index.md`; append an operation line
+  to `wiki/log.md`.
+- **`shareable: true` views are frozen.** Don't silently update a frozen view.
+  When `shareable: false` (default), the view evolves in place.
 
 ---
 
@@ -141,7 +156,7 @@ than pad with "none discussed."
 
 ---
 
-## Twelve operations
+## Operations
 
 ### FETCH
 User says "process inbox" → run `inbox-fetcher` skill, which pulls
@@ -222,10 +237,10 @@ cascade-remove a source and everything that depended only on it.
 
    This is the one case where writing to `raw/` (as deletion) is allowed —
    invariant #1 covers creation, not user-directed removal.
-6. Update `wiki/index.md` and `wiki/log.md` (invariant #6).
+6. Update `wiki/index.md` and `wiki/log.md` (operating rule: update after writes).
 7. Run `vault-linter` to confirm zero dead links remain.
 
-If the source is cited by >15 files, the cascade exceeds invariant #5
+If the source is cited by >15 files, the cascade exceeds the 15-file operating rule
 — stop, report the fanout, let the user pick scope (full cascade over
 multiple passes, or leave citations dangling for the linter).
 
@@ -268,7 +283,10 @@ protocol with scoping options and output format.
 
 Cost note: Check B reads source files and should be scoped to avoid excessive
 token spend. Default scope covers only pages changed since the last review.
-`/review --all` is available but requires user confirmation.
+`/review --all` is available but requires user confirmation. The number of
+pages subject to the faithfulness check is capped by `review.max_faithfulness_pages`
+in `vault.config.yml` (default: 10); raise it for thorough audits, lower it to
+reduce token spend.
 
 REVIEW has no auto-trigger. Unlike LINT, it consumes LLM tokens and must be
 invoked explicitly. There is no `fetches_since_last_review` counter.
@@ -309,28 +327,28 @@ User says "merge these pages", "these are duplicates", "split this page", or
 runs `/merge <page-A> <page-B>` or `/split <page> <new-page-A> <new-page-B>` →
 resolve near-duplicate pages by merging them into a canonical page (or splitting
 an overgrown one), with full backlink rewriting. Guards: stops if fanout > 15
-files (Invariant #5); asks before deleting any prose; never silently touches
-`shareable: true` views. See `.claude/commands/merge.md` for MERGE. For SPLIT, see `.claude/commands/split.md`.
+files (15-file operating rule); asks before deleting any prose; never silently
+touches `shareable: true` views. See `.claude/commands/merge.md` for MERGE. For SPLIT, see `.claude/commands/split.md`.
 
 Not available unattended.
 
 ## Skill dispatch
 
-| Operation | Skill          | Backed by                      |
-|-----------|----------------|--------------------------------|
-| FETCH     | inbox-fetcher  | scripts/fetch_inbox.py         |
-| LINT      | vault-linter   | scripts/lint.py                |
-| VIEW      | view-builder   | templates/ + LLM               |
-| INGEST    | (LLM only)     | adopt_drop.py (pre-flight)     |
-| QUERY     | (LLM only)     | —                              |
-| REFLECT   | (LLM only)     | —                              |
-| PROMOTE   | (LLM only)     | —                              |
-| REFRESH   | (LLM only)     | —                              |
-| EXPAND    | (LLM only)     | —                              |
-| FORGET    | (LLM only)     | —                              |
-| REVIEW    | (LLM only)     | —                              |
-| MERGE     | (LLM only)     | find_backlinks.py              |
-| SPLIT     | (LLM only)     | find_backlinks.py              |
+| Operation | Skill          | Backed by                                               |
+|-----------|----------------|---------------------------------------------------------|
+| FETCH     | inbox-fetcher  | skills/inbox-fetcher/scripts/fetch_inbox.py             |
+| LINT      | vault-linter   | skills/vault-linter/scripts/lint.py                     |
+| VIEW      | view-builder   | skills/view-builder/templates/ + LLM                    |
+| INGEST    | (LLM only)     | skills/inbox-fetcher/scripts/adopt_drop.py (pre-flight) |
+| QUERY     | (LLM only)     | —                                                       |
+| REFLECT   | (LLM only)     | —                                                       |
+| PROMOTE   | (LLM only)     | —                                                       |
+| REFRESH   | (LLM only)     | —                                                       |
+| EXPAND    | (LLM only)     | —                                                       |
+| FORGET    | (LLM only)     | —                                                       |
+| REVIEW    | (LLM only)     | —                                                       |
+| MERGE     | (LLM only)     | skills/shared/find_backlinks.py                         |
+| SPLIT     | (LLM only)     | skills/shared/find_backlinks.py                         |
 
 ---
 
@@ -354,9 +372,11 @@ At the start of every session:
    - `fetches_since_last_lint` ≥ `lint.auto_trigger_after_fetches` (from `vault.config.yml`)
    - Days since `last_lint` ≥ `lint.auto_trigger_after_days`
    If either condition is met, run `/lint` before proceeding with the session.
-3. Read the `updated` field from `wiki/compass.md` frontmatter. If the file is
-   absent or its `updated` date is more than `lint.reflect_reminder_days` days
-   ago, suggest running `/reflect`.
+3. Check whether `wiki/compass.md` exists.
+   - **If absent** (e.g. fresh vault, `/reflect` not yet run): suggest running
+     `/reflect` to create it. No further action needed this step.
+   - **If present**: read its `updated` frontmatter field. If `updated` is more
+     than `lint.reflect_reminder_days` days ago, suggest running `/reflect`.
 
 ---
 
@@ -411,6 +431,7 @@ URLs on topic X" — just ask.
 
 Keep the vault honest. Keep it small. Keep it useful.
 
+<!-- ───── Tooling config below — not part of the vault contract ───── -->
 <!-- BACKLOG.MD MCP GUIDELINES START -->
 
 <CRITICAL_INSTRUCTION>

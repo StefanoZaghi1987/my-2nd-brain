@@ -323,6 +323,23 @@ def check_deps(vault: Path) -> None:
         ok("all Python dependencies installed")
 
 
+def _discover_scripts(scripts_dir: Path) -> list[Path]:
+    """Return .py and .sh files directly in scripts_dir, excluding test files.
+
+    Only files at the top level of scripts_dir are included (no subdirs).
+    Excluded: test_*.py, *_test.py, test_*.sh, *_test.sh patterns.
+    """
+    if not scripts_dir.is_dir():
+        return []
+    return sorted(
+        f for f in scripts_dir.iterdir()
+        if f.is_file()
+        and f.suffix in (".py", ".sh")
+        and not f.name.startswith("test_")
+        and not (f.name.endswith("_test.py") or f.name.endswith("_test.sh"))
+    )
+
+
 def install_commands(vault: Path, script_dir: Path) -> None:
     info("Installing slash commands")
     for cmd in COMMANDS:
@@ -338,48 +355,43 @@ def install_commands(vault: Path, script_dir: Path) -> None:
 def install_skills(vault: Path, script_dir: Path) -> None:
     info("Installing skills")
 
-    for skill_name, py_scripts in [
-        ("inbox-fetcher", ["scripts/fetch_inbox.py", "scripts/adopt_drop.py"]),
-        ("vault-linter", ["scripts/lint.py"]),
-        ("view-builder", []),
-    ]:
+    for skill_name in ["inbox-fetcher", "vault-linter", "view-builder"]:
         src_dir = script_dir / "skills" / skill_name
         dst_dir = vault / ".claude" / "skills" / skill_name
         if not src_dir.is_dir():
             warn(f"{skill_name} skill not found in bundle")
             continue
         shutil.copy2(src_dir / "SKILL.md", dst_dir / "SKILL.md")
-        for rel in py_scripts:
-            dst_py = dst_dir / rel
-            shutil.copy2(src_dir / rel, dst_py)
-            if os.name != "nt":
-                os.chmod(dst_py, 0o755)
+
+        scripts_src = src_dir / "scripts"
+        if scripts_src.is_dir():
+            py_files = _discover_scripts(scripts_src)
+            if not py_files:
+                warn(f"{skill_name}/scripts/ exists but has no installable scripts (.py/.sh)")
+            for src_py in py_files:
+                dst_py = dst_dir / "scripts" / src_py.name
+                shutil.copy2(src_py, dst_py)
+                if os.name != "nt":
+                    os.chmod(dst_py, 0o755)
+
         if skill_name == "view-builder":
             templates_src = src_dir / "templates"
             if templates_src.is_dir():
                 for f in templates_src.iterdir():
                     if f.is_file():
                         shutil.copy2(f, dst_dir / "templates" / f.name)
+
         ok(f"skill: {skill_name}")
 
-    _SHARED_SCRIPTS = [
-        "vault_state.py",
-        "yamlmini.py",
-        "console.py",
-        "review_scope.py",
-        "find_backlinks.py",
-        "linkutil.py",
-    ]
-    for _script in _SHARED_SCRIPTS:
-        _shared_src = script_dir / "skills" / "shared" / _script
-        if _shared_src.exists():
-            shutil.copy2(
-                _shared_src,
-                vault / ".claude" / "skills" / "shared" / _script,
-            )
-            ok(f"shared: {_script}")
-        else:
-            warn(f"skills/shared/{_script} not found in bundle")
+    # Shared utilities — auto-discover from skills/shared/
+    shared_src = script_dir / "skills" / "shared"
+    shared_dst = vault / ".claude" / "skills" / "shared"
+    py_files = _discover_scripts(shared_src)
+    if not py_files:
+        warn("skills/shared/ has no installable scripts (.py/.sh)")
+    for src_py in py_files:
+        shutil.copy2(src_py, shared_dst / src_py.name)
+        ok(f"shared: {src_py.name}")
 
 
 def install_claude_md(vault: Path, script_dir: Path, yes: bool = False) -> None:
@@ -469,7 +481,7 @@ def print_done(vault: Path) -> None:
     print( "  4. Ask: \"process the inbox\", then \"ingest the new content\"")
     print( "  5. Use /view to build timelines/comparisons/slides")
     print( "  6. Use /save for important conversations")
-    print( "  7. Periodically: /reflect → read wiki/compass.md")
+    print( "  7. Periodically: run /reflect to track your thinking and write wiki/compass.md")
     print(f"  (Manual scripts: {py_cmd} .claude/skills/<skill>/scripts/<script>.py)")
     print()
 

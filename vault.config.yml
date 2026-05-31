@@ -42,3 +42,9 @@ ingest:
 drop_zone:
   path: raw/drop
   enabled: true
+
+# ── Keys below are honored by the LLM/command layer, NOT by any script ────────
+review:
+  # Max pages to run the claim-faithfulness check against per /review run.
+  # Increase for thorough audits; decrease to control token spend.
+  max_faithfulness_pages: 10

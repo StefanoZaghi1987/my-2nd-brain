@@ -72,6 +72,9 @@ _DEFAULTS: dict[str, Any] = {
         "path": "raw/drop",
         "enabled": True,
     },
+    "review": {
+        "max_faithfulness_pages": 10,
+    },
 }
 
 

@@ -18,7 +18,7 @@ agent that reads `CLAUDE.md` or `AGENTS.md`.
 vault-bundle/
 ├── init-vault.sh         bootstrap script — Unix/macOS/WSL
 ├── init_vault.py         bootstrap script — cross-platform (Linux, WSL, Windows)
-├── vault.config.yml      per-vault tunable settings (timeouts, walled domains, lint thresholds)
+├── vault.config.yml      per-vault tunable settings (timeouts, walled domains, lint/review thresholds)
 ├── CLAUDE.md             the contract between you and the agent
 ├── GETTING-STARTED.md    10-minute walkthrough for newcomers
 ├── README.md             this file
@@ -86,9 +86,8 @@ python3 init_vault.py ~/knowledge/X    # Windows / cross-platform (canonical pat
 
 What happens on re-run:
 
-- **Always refreshed** — `skills/`, `commands/`, and shared utilities
-  (`vault_state.py`, `yamlmini.py`, `console.py`, `review_scope.py`,
-  `find_backlinks.py`, `linkutil.py` under `skills/shared/`).
+- **Always refreshed** — `skills/`, `commands/`, and all shared utilities
+  under `skills/shared/` (auto-discovered — any `.py` or `.sh` there is installed).
   This is the whole point of the update: new operations, fixes, and
   slash commands land in the vault.
 - **Prompts you** — `CLAUDE.md`. Default is *keep* (answer `y` to
@@ -97,7 +96,8 @@ What happens on re-run:
 - **Created only if missing** — `vault.config.yml`, `inbox.md`,
   `wiki/index.md`, `wiki/log.md`, `wiki/hot.md`, `.lint/state.yaml`,
   `.review/state.yaml`, `.gitignore`. Edit `vault.config.yml` to
-  customise timeouts, walled domains, and lint thresholds. List values
+  customise timeouts, walled domains, lint thresholds, and review depth
+  (`review.max_faithfulness_pages`). List values
   support both inline (`[a, b, c]`) and block-list (`- item` per line)
   syntax.
 - **Never touched** — `raw/`, `wiki/pages/`, `wiki/sources/`,
@@ -107,6 +107,22 @@ What happens on re-run:
 The canonical bootstrapper is `init_vault.py`. `init-vault.sh` is a
 thin shim that delegates to it — so there is one implementation to
 maintain and both entry points stay in sync automatically.
+
+---
+
+## This repo is the template, not a vault
+
+Cloning this repo gives you the **engine**. Live content — `raw/`, `wiki/`,
+`inbox.md` — exists only in a *deployed vault* created by `init_vault.py`
+(default target: `./second-brain-vault/`, gitignored).
+
+The `.claude/...` paths that appear throughout `CLAUDE.md` (e.g.
+`.claude/commands/ingest.md`, `.claude/skills/vault-linter/`) refer to the
+deployed vault layout after `init_vault.py` installs commands and skills
+there — not to this template repository.
+
+`AGENTS.md` is generated at bootstrap as a copy of (or symlink to) `CLAUDE.md`.
+It is not committed to this repo.
 
 ---
 
@@ -125,17 +141,14 @@ question can draw on.
 
 ## Design principles
 
-Six invariants:
+The vault is governed by a small set of rules the agent follows strictly.
+Hard invariants are integrity guarantees (raw is immutable, every claim
+cites a source, summaries are paraphrased). Operating rules cover how the
+agent works (you curate, it maintains; ≤15 files per operation; `wiki/index.md`
+and `wiki/log.md` updated after every write; `shareable: true` views are frozen).
 
-1. **Raw is immutable.** If the wiki is corrupted, it's recompilable
-   from `raw/` alone. Scripts (`fetch_inbox.py`, `adopt_drop.py`) write
-   to `raw/` — the agent doesn't.
-2. **Every claim cites a source.** No orphan claims in the wiki.
-3. **Paraphrase, don't copy.** Summaries are in the agent's words.
-4. **You curate, the agent maintains.** No auto-fetching, no
-   auto-structural changes, no views without your request.
-5. **`shareable: true` views are frozen.** Anything else evolves.
-6. **Touch ≤15 files per operation.** If more are needed, stop and ask — split the work across sessions.
+The authoritative set — with operating rules distinguished from hard invariants —
+is in [CLAUDE.md — Invariants and operating rules](CLAUDE.md#invariants-and-operating-rules).
 
 ---
 
