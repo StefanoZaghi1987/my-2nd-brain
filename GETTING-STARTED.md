@@ -100,52 +100,30 @@ is higher than the operation count.
 
 ## Slash commands
 
+The commands you'll use most in the first weeks:
+
 - **`/fetch`** — process the URL queue in `inbox.md`. Run this before
   `/ingest` — ingest needs the raw files that fetch downloads.
-- **`/retry`** — re-attempt only previously-failed (`⚠`-marked) inbox
-  entries. Use after a transient network failure or once a blocked URL
-  becomes accessible. Never touches plain unchecked or already-processed
-  entries.
 - **`/ingest [slug]`** — compile raw sources into the wiki. Without a
-  slug, first adopts any PDFs or Markdown files waiting in `raw/drop/` (prompts once for
-  tags/notes), then discovers all uningested sources and confirms before starting.
-- **`/playwright-fetch`** — retrieve walled, paywalled, or JS-rendered
-  URLs that `/fetch` couldn't download. One URL at a time, with your
-  confirmation per URL.
+  slug, first adopts any PDFs or Markdown files waiting in `raw/drop/`
+  (prompts once for tags/notes), then discovers all uningested sources
+  and confirms before starting.
 - **`/save [name]`** — save the current conversation to
   `conversations/`. These feed `/reflect` and `/promote` later.
-- **`/view [kind] [topic]`** — build a view. Kinds: `timeline`,
-  `comparison`, `concept-map`, `chart`, `slides`, `report`, `post`.
 - **`/reflect`** — write `compass.md`: where my thinking is going,
   what I'm not looking at, one question worth sitting with.
-- **`/forget <source>`** — cascade-remove a source. Interactive:
-  per-claim decisions, never deletes prose without asking.
 - **`/lint`** — run deterministic vault health checks. Also triggers
   automatically after 5 fetches or 7 days.
-- **`/promote [slug] [page]`** — lift synthesis claims from a saved
-  conversation into a wiki page, with full citation. Interactive only.
-- **`/refresh <source>`** — re-fetch a source whose content has
-  changed, re-ingest it, and flag pages that may need review.
 - **`/expand <page>`** — deepen an existing page by reading its cited
   source(s) in full and appending a `## Deep dive` section. Leaves
-  the overview sections intact. Interactive only. Use `/review` to
-  discover which pages are thin enough to benefit.
-- **`/review [scope]`** — semantic health pass: checks for
-  contradictions between pages, claims that don't trace to their
-  source, and thin/copied summaries. Report-only (proposes fixes,
-  never applies them). Scoped to changed pages by default; use
-  `/review --all` for a full sweep (expensive, asks to confirm).
-- **`/merge <page-A> <page-B>`** — merge two near-duplicate pages
-  into one canonical page with full backlink rewriting. Interactive:
-  shows a content diff, asks for direction and title, checks fanout
-  (stops if >15 files linked), rewrites all link forms including
-  aliased `[[page|Display]]` links. Closes the loop on `check_duplicates`
-  lint findings and `/review` contradiction findings.
-- **`/split <page> <new-page-A> <new-page-B>`** — split an overgrown
-  page into two focused ones. Fanout check before any writes; asks
-  per-link when the destination is ambiguous. Inverse of `/merge`.
-- **`/hot`** — flush session state to `wiki/hot.md`. The agent runs
-  this automatically at the end of any writing session.
+  the overview sections intact. Interactive only.
+- **`/review [scope]`** — semantic health pass: contradictions, claim
+  faithfulness, thin summaries. Report-only; scoped to changed pages
+  by default.
+
+For the complete reference — including `/retry`, `/playwright-fetch`,
+`/forget`, `/promote`, `/refresh`, `/merge`, `/split`, `/view`, and
+`/hot` — see [CLAUDE.md — Slash commands](CLAUDE.md#slash-commands).
 
 For everything else, just ask in plain language.
 
@@ -206,20 +184,20 @@ compounding — and this is when you see it.
 
 ---
 
-## Six rules the agent follows
+## How the agent behaves
 
-These are invariants. The agent won't break them. Good to know they
-exist:
+The agent follows a set of hard invariants and operating rules defined
+in [CLAUDE.md — Invariants and operating rules](CLAUDE.md#invariants-and-operating-rules).
 
-1. **`raw/` is immutable.** Scripts write there (`fetch_inbox.py`, `adopt_drop.py`) — the agent generally doesn't.
-2. **Every claim cites a source.** No orphan claims in the wiki.
-3. **Paraphrase, don't copy.** Summaries are in the agent's words.
-4. **You curate, it maintains.** No auto-fetching, no silent
-   structural changes, no views without your request.
-5. **`shareable: true` views are frozen.** New version = new dated
-   file. Everything else can evolve in place.
-6. **Touch ≤15 files per operation.** If more are needed, the agent
-   stops and asks — split across sessions.
+The short version: it keeps `raw/` immutable, cites every claim,
+paraphrases rather than copies, and asks before making structural
+changes. It touches at most 15 files in a single operation and keeps
+`wiki/index.md` and `wiki/log.md` up to date after every write.
+`shareable: true` views are frozen snapshots the agent won't silently
+change.
+
+If the agent does something unexpected, it's worth checking those
+rules — they're designed to be strict.
 
 ---
 
