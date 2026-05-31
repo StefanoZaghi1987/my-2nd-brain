@@ -1,10 +1,10 @@
 ---
 id: TASK-0099
 title: Correctness fixes + documentation restructure (single-source-of-truth)
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-05-30 23:33'
-updated_date: '2026-05-30 23:41'
+updated_date: '2026-05-31 00:42'
 labels:
   - documentation
   - correctness
@@ -45,3 +45,9 @@ This parent task tracks the full fix. All implementation detail, exact code, and
 - [ ] #5 Fresh vault (python init_vault.py --yes) bootstraps without referencing non-existent compass.md
 - [ ] #6 Installer auto-discovers new .py scripts; test_*.py excluded
 <!-- AC:END -->
+
+## Final Summary
+
+<!-- SECTION:FINAL_SUMMARY:BEGIN -->
+All 9 subtasks complete across 7 files. Commits: 0819b2d (config), d8a48ba (TDD red), 514e9c6 (spec/plan .sh extension), 1c35616 (installer auto-discovery), 5e4cd5a (CLAUDE.md tiered invariants), d3142e6 (CLAUDE.md mechanical), 8958b76 (GS headings), 43de424 (GS content), c8af2d7 (README), ceaabab (banner+verify). 204/204 tests green. Drift eliminated. Single-source-of-truth enforced.
+<!-- SECTION:FINAL_SUMMARY:END -->
