@@ -13,6 +13,9 @@ need to edit the wiki directly — that's your job.
 
 ## Vault structure
 
+> *Note: paths beginning with `.claude/` refer to the deployed vault layout after
+> `init_vault.py` installs commands and skills there — not to this template repository.*
+
 ```
 inbox.md              URL queue — user adds URLs, you fetch them
 raw/                  Immutable sources. Never write here.
@@ -153,7 +156,7 @@ than pad with "none discussed."
 
 ---
 
-## Twelve operations
+## Operations
 
 ### FETCH
 User says "process inbox" → run `inbox-fetcher` skill, which pulls
@@ -328,21 +331,21 @@ Not available unattended.
 
 ## Skill dispatch
 
-| Operation | Skill          | Backed by                      |
-|-----------|----------------|--------------------------------|
-| FETCH     | inbox-fetcher  | scripts/fetch_inbox.py         |
-| LINT      | vault-linter   | scripts/lint.py                |
-| VIEW      | view-builder   | templates/ + LLM               |
-| INGEST    | (LLM only)     | adopt_drop.py (pre-flight)     |
-| QUERY     | (LLM only)     | —                              |
-| REFLECT   | (LLM only)     | —                              |
-| PROMOTE   | (LLM only)     | —                              |
-| REFRESH   | (LLM only)     | —                              |
-| EXPAND    | (LLM only)     | —                              |
-| FORGET    | (LLM only)     | —                              |
-| REVIEW    | (LLM only)     | —                              |
-| MERGE     | (LLM only)     | find_backlinks.py              |
-| SPLIT     | (LLM only)     | find_backlinks.py              |
+| Operation | Skill          | Backed by                                               |
+|-----------|----------------|---------------------------------------------------------|
+| FETCH     | inbox-fetcher  | skills/inbox-fetcher/scripts/fetch_inbox.py             |
+| LINT      | vault-linter   | skills/vault-linter/scripts/lint.py                     |
+| VIEW      | view-builder   | skills/view-builder/templates/ + LLM                    |
+| INGEST    | (LLM only)     | skills/inbox-fetcher/scripts/adopt_drop.py (pre-flight) |
+| QUERY     | (LLM only)     | —                                                       |
+| REFLECT   | (LLM only)     | —                                                       |
+| PROMOTE   | (LLM only)     | —                                                       |
+| REFRESH   | (LLM only)     | —                                                       |
+| EXPAND    | (LLM only)     | —                                                       |
+| FORGET    | (LLM only)     | —                                                       |
+| REVIEW    | (LLM only)     | —                                                       |
+| MERGE     | (LLM only)     | skills/shared/find_backlinks.py                         |
+| SPLIT     | (LLM only)     | skills/shared/find_backlinks.py                         |
 
 ---
 
@@ -366,9 +369,11 @@ At the start of every session:
    - `fetches_since_last_lint` ≥ `lint.auto_trigger_after_fetches` (from `vault.config.yml`)
    - Days since `last_lint` ≥ `lint.auto_trigger_after_days`
    If either condition is met, run `/lint` before proceeding with the session.
-3. Read the `updated` field from `wiki/compass.md` frontmatter. If the file is
-   absent or its `updated` date is more than `lint.reflect_reminder_days` days
-   ago, suggest running `/reflect`.
+3. Check whether `wiki/compass.md` exists.
+   - **If absent** (e.g. fresh vault, `/reflect` not yet run): suggest running
+     `/reflect` to create it. No further action needed this step.
+   - **If present**: read its `updated` frontmatter field. If `updated` is more
+     than `lint.reflect_reminder_days` days ago, suggest running `/reflect`.
 
 ---
 
@@ -423,6 +428,7 @@ URLs on topic X" — just ask.
 
 Keep the vault honest. Keep it small. Keep it useful.
 
+<!-- ───── Tooling config below — not part of the vault contract ───── -->
 <!-- BACKLOG.MD MCP GUIDELINES START -->
 
 <CRITICAL_INSTRUCTION>
