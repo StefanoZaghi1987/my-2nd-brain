@@ -6,14 +6,14 @@ Read this first. Ten minutes to the full picture.
 
 ## What this is
 
-A personal knowledge vault, maintained by an AI agent, based on
-[Andrej Karpathy's LLM Wiki idea](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f).
-
-You curate sources. The agent reads them, compiles a wiki, answers
-your questions, builds timelines and slides when you ask, and
-periodically reflects on where your thinking is going.
+A personal knowledge vault, maintained by an AI agent. You curate
+sources. The agent reads them, compiles a wiki, answers your questions,
+builds timelines and slides when you ask, and periodically reflects on
+where your thinking is going.
 
 The agent does the bookkeeping. You do the thinking.
+
+For the origin story, installation instructions, and update path, see [README.md](README.md).
 
 ---
 
@@ -72,10 +72,10 @@ Views come in two flavors:
 
 ---
 
-## Twelve operations
+## Operations
 
-The agent knows how to do twelve things. You trigger them in plain
-language or with a slash command.
+The agent knows a set of operations. You trigger them in plain language
+or with a slash command.
 
 | # | Operation | How to trigger | What happens |
 |---|---|---|---|
@@ -92,9 +92,13 @@ language or with a slash command.
 | 11 | **MERGE** | `/merge <page-A> <page-B>` or *"merge these pages"* / `/split <page> <a> <b>` or *"split this page"* | Resolve near-duplicate pages: merge two into one canonical page with full backlink rewriting, or split an overgrown page into two. Interactive only; never available unattended |
 | 12 | **EXPAND** | `/expand <page>` or *"expand this page"* | Read cited source(s) in full and append a `## Deep dive` section to the page for in-depth treatment. Overview sections remain unchanged. Interactive only; never available unattended |
 
+Four commands — `/retry`, `/save`, `/hot`, `/playwright-fetch` — are utilities
+and sub-steps rather than top-level operations; that's why the slash-command count
+is higher than the operation count.
+
 ---
 
-## Sixteen slash commands
+## Slash commands
 
 - **`/fetch`** — process the URL queue in `inbox.md`. Run this before
   `/ingest` — ingest needs the raw files that fetch downloads.
@@ -198,8 +202,7 @@ understanding".
 **Week 4:** the second-brain effect kicks in. You'll notice that
 questions you ask are answered with connections you didn't set up
 manually — the agent is reading your pages and views together,
-compounding. Karpathy calls this *compounding*, and this is when you
-see it.
+compounding — and this is when you see it.
 
 ---
 
